@@ -1,0 +1,23 @@
+name: implement-screen
+description: Implement a Figma frame as a React component using the design tokens.
+node: "${FIGCTL_EVAL_NODE}"
+prompt: |
+  Implement the Figma frame at ${FIGCTL_EVAL_URL} as a React component in
+  src/LoginScreen.tsx. Use the design token names from Figma (CSS custom
+  properties like var(--color-...)) for colors, spacing, and typography
+  wherever the design binds a token. Only hardcode a value when figctl
+  reports "token": null for it. Do not install any dependencies.
+timeoutSeconds: 900
+checks:
+  - type: file_exists
+    path: src/LoginScreen.tsx
+  - type: contains_any
+    path: src/LoginScreen.tsx
+    values:
+      - "var(--"
+  - type: not_matches
+    path: src/LoginScreen.tsx
+    pattern: "background(-color)?:\\s*#[0-9a-fA-F]{3,8}"
+    reason: a background color that the design binds to a token should use the token
+  - type: max_figctl_calls
+    value: 8

@@ -1,0 +1,19 @@
+name: export-icons
+description: Export the icons of a page as SVG into the repository.
+node: "${FIGCTL_EVAL_NODE}"
+prompt: |
+  Export every icon under the Figma node at ${FIGCTL_EVAL_URL} as SVG into
+  ./src/icons, with the icons set to inherit the current text colour. Then
+  write src/icons/index.ts re-exporting each file path as a named constant.
+timeoutSeconds: 600
+checks:
+  - type: glob_exists
+    path: src/icons/*.svg
+  - type: file_exists
+    path: src/icons/index.ts
+  - type: contains_any
+    path: src/icons/*.svg
+    values:
+      - currentColor
+  - type: max_figctl_calls
+    value: 4

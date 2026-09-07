@@ -1,0 +1,23 @@
+name: list-colors
+description: Report every color used in a screen with its design token name.
+node: "${FIGCTL_EVAL_NODE}"
+prompt: |
+  Write colors.md listing every colour used in the Figma node at
+  ${FIGCTL_EVAL_URL}. One markdown table with three columns: the hex value,
+  the design token name, and the layer it is used on. Write "unbound" in the
+  token column when the value is not bound to a variable or style. Do not
+  guess token names.
+timeoutSeconds: 600
+checks:
+  - type: file_exists
+    path: colors.md
+  - type: contains_any
+    path: colors.md
+    values:
+      - "|"
+  - type: matches
+    path: colors.md
+    pattern: "#[0-9a-fA-F]{6}"
+    reason: the report should carry the resolved hex values
+  - type: max_figctl_calls
+    value: 4
