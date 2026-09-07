@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "command": "node.inspect",
+  "profile": {
+    "name": "env"
+  },
+  "file": {
+    "key": "FixTuReDeSiGnSySt3m01",
+    "name": "Fixture Design System",
+    "version": "2100123456",
+    "lastModified": "2026-09-01T10:15:00Z"
+  },
+  "data": [
+    {
+      "id": "2:3",
+      "name": "Heading",
+      "type": "TEXT",
+      "visible": true,
+      "path": [
+        "Screens",
+        "Onboarding",
+        "Login"
+      ],
+      "box": {
+        "x": 24,
+        "y": 24,
+        "w": 342,
+        "h": 34,
+        "relative": {
+          "x": 24,
+          "y": 24
+        }
+      },
+      "layout": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": {
+            "mode": "fill",
+            "px": 342
+          },
+          "vertical": {
+            "mode": "hug",
+            "px": 34
+          }
+        },
+        "position": "auto",
+        "layoutAlign": "stretch"
+      },
+      "visual": {
+        "fills": [
+          {
+            "type": "solid",
+            "hex": "#111827",
+            "rgba": "rgba(17, 24, 39, 1)",
+            "token": {
+              "variableId": "VariableID:1:202",
+              "name": "text/primary",
+              "collection": "Semantic",
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "--text-primary"
+              },
+              "values": {
+                "Dark": "#ffffff",
+                "Light": "#111827"
+              },
+              "chain": [
+                "text/primary",
+                "neutral/900"
+              ]
+            }
+          }
+        ]
+      },
+      "text": {
+        "characters": "Welcome back",
+        "fontFamily": "Inter",
+        "fontPostScriptName": "Inter-Bold",
+        "weight": 700,
+        "size": 28,
+        "lineHeight": {
+          "px": 34,
+          "unitless": 1.21,
+          "percent": 121.4,
+          "unit": "px"
+        },
+        "letterSpacing": {
+          "px": -0.5,
+          "em": -0.018
+        },
+        "alignHorizontal": "left",
+        "alignVertical": "top",
+        "autoResize": "height",
+        "tokens": {
+          "fontFamily": {
+            "variableId": "VariableID:1:105",
+            "name": "font/family/sans",
+            "collection": "Primitives",
+            "resolvedType": "STRING",
+            "codeSyntax": {
+              "WEB": "--font-sans"
+            },
+            "values": {
+              "Default": "Inter"
+            }
+          },
+          "fontSize": null,
+          "fontWeight": null,
+          "letterSpacing": null,
+          "lineHeight": null
+        },
+        "style": {
+          "id": "5:2",
+          "key": "5f4e3d2c1b0a9f8e7d6c5b4a39281706f5e4d502",
+          "name": "heading/lg",
+          "type": "TEXT"
+        }
+      },
+      "tokens": {
+        "variables": {
+          "fills[0]": "text/primary",
+          "fontFamily": "font/family/sans"
+        },
+        "styles": {
+          "text": "heading/lg"
+        }
+      },
+      "css": {
+        "align-self": "stretch",
+        "color": "var(--text-primary)",
+        "font-family": "var(--font-sans)",
+        "font-size": "28px",
+        "font-weight": "700",
+        "letter-spacing": "-0.5px",
+        "line-height": "34px"
+      }
+    }
+  ],
+  "truncated": false,
+  "nextCursor": null,
+  "hints": []
+}

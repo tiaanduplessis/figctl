@@ -1,0 +1,345 @@
+{
+  "schemaVersion": 1,
+  "command": "tokens.export",
+  "profile": {
+    "name": "env"
+  },
+  "file": {
+    "key": "FixTuReDeSiGnSySt3m01",
+    "name": "Fixture Design System",
+    "version": "2100123456",
+    "lastModified": "2026-09-01T10:15:00Z"
+  },
+  "data": {
+    "format": "dtcg",
+    "summary": {
+      "tokens": 12,
+      "variables": 8,
+      "styles": 4,
+      "byType": {
+        "boolean": 1,
+        "color": 6,
+        "dimension": 1,
+        "fontFamily": 1,
+        "shadow": 1,
+        "string": 1,
+        "typography": 1
+      },
+      "collections": [
+        {
+          "name": "Primitives",
+          "tokens": 6,
+          "modes": [
+            "Default"
+          ]
+        },
+        {
+          "name": "Semantic",
+          "tokens": 2,
+          "modes": [
+            "Light",
+            "Dark"
+          ]
+        },
+        {
+          "name": "Styles",
+          "tokens": 4
+        }
+      ]
+    },
+    "tokens": {
+      "bg": {
+        "surface": {
+          "$description": "Default surface background.",
+          "$extensions": {
+            "com.figma": {
+              "codeSyntax": {
+                "WEB": "--bg-surface"
+              },
+              "collection": "Semantic",
+              "modes": {
+                "Dark": "#111827",
+                "Light": "#ffffff"
+              },
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL"
+              ],
+              "variableId": "VariableID:1:201"
+            }
+          },
+          "$type": "color",
+          "$value": "{neutral.0}"
+        }
+      },
+      "brand": {
+        "500": {
+          "$description": "Primary brand blue.",
+          "$extensions": {
+            "com.figma": {
+              "codeSyntax": {
+                "WEB": "--color-brand-500"
+              },
+              "collection": "Primitives",
+              "variableId": "VariableID:1:101"
+            }
+          },
+          "$type": "color",
+          "$value": "#3366ff"
+        }
+      },
+      "color": {
+        "brand": {
+          "500": {
+            "$description": "Primary brand color.",
+            "$extensions": {
+              "com.figma": {
+                "styleId": "5:1",
+                "styleKey": "5f4e3d2c1b0a9f8e7d6c5b4a39281706f5e4d501",
+                "styleType": "FILL"
+              }
+            },
+            "$type": "color",
+            "$value": "#3366ff"
+          }
+        }
+      },
+      "feature": {
+        "show-helper": {
+          "$description": "Toggles helper text under inputs.",
+          "$extensions": {
+            "com.figma": {
+              "collection": "Primitives",
+              "variableId": "VariableID:1:106"
+            }
+          },
+          "$type": "boolean",
+          "$value": true
+        }
+      },
+      "font": {
+        "family": {
+          "sans": {
+            "$extensions": {
+              "com.figma": {
+                "codeSyntax": {
+                  "WEB": "--font-sans"
+                },
+                "collection": "Primitives",
+                "scopes": [
+                  "FONT_FAMILY"
+                ],
+                "variableId": "VariableID:1:105"
+              }
+            },
+            "$type": "fontFamily",
+            "$value": "Inter"
+          }
+        }
+      },
+      "grid": {
+        "12": {
+          "$description": "12 column layout grid. DTCG has no layout grid type; the grid definition is under $extensions.com.figma.grid.",
+          "$extensions": {
+            "com.figma": {
+              "grid": [
+                {
+                  "alignment": "stretch",
+                  "count": 12,
+                  "gutter": 16,
+                  "offset": 24,
+                  "pattern": "columns",
+                  "sectionSize": 19.5
+                }
+              ],
+              "styleId": "5:4",
+              "styleKey": "5f4e3d2c1b0a9f8e7d6c5b4a39281706f5e4d504",
+              "styleType": "GRID"
+            }
+          },
+          "$type": "string",
+          "$value": "columns 12 gutter 16px margin 24px"
+        }
+      },
+      "heading": {
+        "lg": {
+          "$description": "Large heading, Inter Bold 28/34.",
+          "$extensions": {
+            "com.figma": {
+              "styleId": "5:2",
+              "styleKey": "5f4e3d2c1b0a9f8e7d6c5b4a39281706f5e4d502",
+              "styleType": "TEXT"
+            }
+          },
+          "$type": "typography",
+          "$value": {
+            "fontFamily": "Inter",
+            "fontSize": {
+              "unit": "px",
+              "value": 28
+            },
+            "fontWeight": 700,
+            "letterSpacing": {
+              "unit": "px",
+              "value": -0.5
+            },
+            "lineHeight": 1.21
+          }
+        }
+      },
+      "neutral": {
+        "0": {
+          "$extensions": {
+            "com.figma": {
+              "collection": "Primitives",
+              "variableId": "VariableID:1:103"
+            }
+          },
+          "$type": "color",
+          "$value": "#ffffff"
+        },
+        "900": {
+          "$extensions": {
+            "com.figma": {
+              "collection": "Primitives",
+              "variableId": "VariableID:1:102"
+            }
+          },
+          "$type": "color",
+          "$value": "#111827"
+        }
+      },
+      "shadow": {
+        "md": {
+          "$description": "Medium elevation shadow.",
+          "$extensions": {
+            "com.figma": {
+              "styleId": "5:3",
+              "styleKey": "5f4e3d2c1b0a9f8e7d6c5b4a39281706f5e4d503",
+              "styleType": "EFFECT"
+            }
+          },
+          "$type": "shadow",
+          "$value": {
+            "blur": {
+              "unit": "px",
+              "value": 12
+            },
+            "color": "#0000001a",
+            "offsetX": {
+              "unit": "px",
+              "value": 0
+            },
+            "offsetY": {
+              "unit": "px",
+              "value": 4
+            },
+            "spread": {
+              "unit": "px",
+              "value": 0
+            }
+          }
+        }
+      },
+      "space": {
+        "4": {
+          "$description": "Base spacing step 4 (16px).",
+          "$extensions": {
+            "com.figma": {
+              "codeSyntax": {
+                "WEB": "--space-4"
+              },
+              "collection": "Primitives",
+              "scopes": [
+                "GAP",
+                "WIDTH_HEIGHT"
+              ],
+              "variableId": "VariableID:1:104"
+            }
+          },
+          "$type": "dimension",
+          "$value": {
+            "unit": "px",
+            "value": 16
+          }
+        }
+      },
+      "text": {
+        "primary": {
+          "$description": "Primary text color.",
+          "$extensions": {
+            "com.figma": {
+              "codeSyntax": {
+                "WEB": "--text-primary"
+              },
+              "collection": "Semantic",
+              "modes": {
+                "Dark": "#ffffff",
+                "Light": "#111827"
+              },
+              "scopes": [
+                "TEXT_FILL"
+              ],
+              "variableId": "VariableID:1:202"
+            }
+          },
+          "$type": "color",
+          "$value": "{neutral.900}"
+        }
+      }
+    },
+    "names": [
+      {
+        "name": "brand.500",
+        "type": "color"
+      },
+      {
+        "name": "feature.show-helper",
+        "type": "boolean"
+      },
+      {
+        "name": "font.family.sans",
+        "type": "fontFamily"
+      },
+      {
+        "name": "neutral.0",
+        "type": "color"
+      },
+      {
+        "name": "neutral.900",
+        "type": "color"
+      },
+      {
+        "name": "space.4",
+        "type": "dimension"
+      },
+      {
+        "name": "bg.surface",
+        "type": "color"
+      },
+      {
+        "name": "text.primary",
+        "type": "color"
+      },
+      {
+        "name": "shadow.md",
+        "type": "shadow"
+      },
+      {
+        "name": "color.brand.500",
+        "type": "color"
+      },
+      {
+        "name": "grid.12",
+        "type": "string"
+      },
+      {
+        "name": "heading.lg",
+        "type": "typography"
+      }
+    ]
+  },
+  "truncated": false,
+  "nextCursor": null,
+  "hints": []
+}

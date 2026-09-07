@@ -1,0 +1,1581 @@
+{
+  "schemaVersion": 1,
+  "command": "node.inspect",
+  "profile": {
+    "name": "env"
+  },
+  "file": {
+    "key": "FixTuReDeSiGnSySt3m01",
+    "name": "Fixture Design System",
+    "version": "2100123456",
+    "lastModified": "2026-09-01T10:15:00Z"
+  },
+  "data": [
+    {
+      "id": "2:2",
+      "name": "Login",
+      "type": "FRAME",
+      "visible": true,
+      "path": [
+        "Screens",
+        "Onboarding"
+      ],
+      "box": {
+        "x": 0,
+        "y": 0,
+        "w": 390,
+        "h": 844,
+        "relative": {
+          "x": 40,
+          "y": 80
+        }
+      },
+      "layout": {
+        "mode": "column",
+        "gap": 16,
+        "padding": {
+          "top": 24,
+          "right": 24,
+          "bottom": 24,
+          "left": 24,
+          "shorthand": "24px"
+        },
+        "justify": "flex-start",
+        "align": "flex-start",
+        "sizing": {
+          "horizontal": {
+            "mode": "fixed",
+            "px": 390
+          },
+          "vertical": {
+            "mode": "fixed",
+            "px": 844
+          }
+        },
+        "position": "absolute",
+        "offset": {
+          "x": 40,
+          "y": 80
+        },
+        "constraints": {
+          "horizontal": "left",
+          "vertical": "top"
+        },
+        "clips": true,
+        "tokens": {
+          "gap": {
+            "variableId": "VariableID:1:104",
+            "name": "space/4",
+            "collection": "Primitives",
+            "resolvedType": "FLOAT",
+            "codeSyntax": {
+              "WEB": "--space-4"
+            },
+            "values": {
+              "Default": 16
+            }
+          },
+          "paddingBottom": null,
+          "paddingLeft": null,
+          "paddingRight": null,
+          "paddingTop": null
+        }
+      },
+      "visual": {
+        "fills": [
+          {
+            "type": "solid",
+            "hex": "#ffffff",
+            "rgba": "rgba(255, 255, 255, 1)",
+            "token": {
+              "variableId": "VariableID:1:201",
+              "name": "bg/surface",
+              "collection": "Semantic",
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "--bg-surface"
+              },
+              "values": {
+                "Dark": "#111827",
+                "Light": "#ffffff"
+              },
+              "chain": [
+                "bg/surface",
+                "neutral/0"
+              ]
+            }
+          }
+        ],
+        "effects": [
+          {
+            "type": "drop-shadow",
+            "property": "box-shadow",
+            "css": "0px 4px 12px rgba(0, 0, 0, 0.1)",
+            "hex": "#000000",
+            "rgba": "rgba(0, 0, 0, 0.1)",
+            "offset": {
+              "x": 0,
+              "y": 4
+            },
+            "radius": 12,
+            "token": null,
+            "style": {
+              "id": "5:3",
+              "key": "5f4e3d2c1b0a9f8e7d6c5b4a39281706f5e4d503",
+              "name": "shadow/md",
+              "type": "EFFECT"
+            }
+          }
+        ],
+        "layoutGrids": [
+          {
+            "pattern": "columns",
+            "count": 12,
+            "gutter": 16,
+            "offset": 24,
+            "sectionSize": 19.5,
+            "alignment": "stretch",
+            "visible": true,
+            "style": {
+              "id": "5:4",
+              "key": "5f4e3d2c1b0a9f8e7d6c5b4a39281706f5e4d504",
+              "name": "grid/12",
+              "type": "GRID"
+            }
+          }
+        ]
+      },
+      "tokens": {
+        "variables": {
+          "fills[0]": "bg/surface",
+          "gap": "space/4"
+        },
+        "styles": {
+          "effect": "shadow/md",
+          "grid": "grid/12"
+        }
+      },
+      "childCount": 8,
+      "children": [
+        {
+          "id": "2:3",
+          "name": "Heading",
+          "type": "TEXT",
+          "visible": true,
+          "path": [
+            "Screens",
+            "Onboarding",
+            "Login"
+          ],
+          "box": {
+            "x": 24,
+            "y": 24,
+            "w": 342,
+            "h": 34,
+            "relative": {
+              "x": 24,
+              "y": 24
+            }
+          },
+          "layout": {
+            "mode": "none",
+            "sizing": {
+              "horizontal": {
+                "mode": "fill",
+                "px": 342
+              },
+              "vertical": {
+                "mode": "hug",
+                "px": 34
+              }
+            },
+            "position": "auto",
+            "layoutAlign": "stretch"
+          },
+          "visual": {
+            "fills": [
+              {
+                "type": "solid",
+                "hex": "#111827",
+                "rgba": "rgba(17, 24, 39, 1)",
+                "token": {
+                  "variableId": "VariableID:1:202",
+                  "name": "text/primary",
+                  "collection": "Semantic",
+                  "resolvedType": "COLOR",
+                  "codeSyntax": {
+                    "WEB": "--text-primary"
+                  },
+                  "values": {
+                    "Dark": "#ffffff",
+                    "Light": "#111827"
+                  },
+                  "chain": [
+                    "text/primary",
+                    "neutral/900"
+                  ]
+                }
+              }
+            ]
+          },
+          "text": {
+            "characters": "Welcome back",
+            "fontFamily": "Inter",
+            "fontPostScriptName": "Inter-Bold",
+            "weight": 700,
+            "size": 28,
+            "lineHeight": {
+              "px": 34,
+              "unitless": 1.21,
+              "percent": 121.4,
+              "unit": "px"
+            },
+            "letterSpacing": {
+              "px": -0.5,
+              "em": -0.018
+            },
+            "alignHorizontal": "left",
+            "alignVertical": "top",
+            "autoResize": "height",
+            "tokens": {
+              "fontFamily": {
+                "variableId": "VariableID:1:105",
+                "name": "font/family/sans",
+                "collection": "Primitives",
+                "resolvedType": "STRING",
+                "codeSyntax": {
+                  "WEB": "--font-sans"
+                },
+                "values": {
+                  "Default": "Inter"
+                }
+              },
+              "fontSize": null,
+              "fontWeight": null,
+              "letterSpacing": null,
+              "lineHeight": null
+            },
+            "style": {
+              "id": "5:2",
+              "key": "5f4e3d2c1b0a9f8e7d6c5b4a39281706f5e4d502",
+              "name": "heading/lg",
+              "type": "TEXT"
+            }
+          },
+          "tokens": {
+            "variables": {
+              "fills[0]": "text/primary",
+              "fontFamily": "font/family/sans"
+            },
+            "styles": {
+              "text": "heading/lg"
+            }
+          }
+        },
+        {
+          "id": "2:4",
+          "name": "Body",
+          "type": "TEXT",
+          "visible": true,
+          "path": [
+            "Screens",
+            "Onboarding",
+            "Login"
+          ],
+          "box": {
+            "x": 24,
+            "y": 74,
+            "w": 342,
+            "h": 24,
+            "relative": {
+              "x": 24,
+              "y": 74
+            }
+          },
+          "layout": {
+            "mode": "none",
+            "sizing": {
+              "horizontal": {
+                "mode": "fill",
+                "px": 342
+              },
+              "vertical": {
+                "mode": "hug",
+                "px": 24
+              }
+            },
+            "position": "auto",
+            "layoutAlign": "stretch"
+          },
+          "visual": {
+            "fills": [
+              {
+                "type": "solid",
+                "hex": "#6b7280",
+                "rgba": "rgba(107, 114, 128, 1)",
+                "token": null
+              }
+            ]
+          },
+          "text": {
+            "characters": "Sign in to continue to your account.",
+            "fontFamily": "Inter",
+            "weight": 400,
+            "size": 16,
+            "lineHeight": {
+              "px": 24,
+              "unitless": 1.5,
+              "percent": 150,
+              "unit": "percent"
+            },
+            "letterSpacing": {
+              "px": 0,
+              "em": 0
+            },
+            "alignHorizontal": "left",
+            "alignVertical": "top",
+            "autoResize": "height",
+            "runs": [
+              {
+                "start": 11,
+                "end": 19,
+                "text": "continue",
+                "overrides": {
+                  "fontPostScriptName": "Inter-SemiBold",
+                  "weight": 600,
+                  "hyperlink": "https://example.com/help"
+                },
+                "fill": {
+                  "type": "solid",
+                  "hex": "#3366ff",
+                  "rgba": "rgba(51, 102, 255, 1)",
+                  "token": {
+                    "variableId": "VariableID:1:101",
+                    "name": "brand/500",
+                    "collection": "Primitives",
+                    "resolvedType": "COLOR",
+                    "codeSyntax": {
+                      "WEB": "--color-brand-500"
+                    },
+                    "values": {
+                      "Default": "#3366ff"
+                    }
+                  }
+                }
+              }
+            ],
+            "tokens": {
+              "fontFamily": null,
+              "fontSize": null,
+              "fontWeight": null,
+              "letterSpacing": null,
+              "lineHeight": null
+            }
+          },
+          "tokens": {
+            "variables": {
+              "runs[0].fill": "brand/500"
+            }
+          }
+        },
+        {
+          "id": "2:5",
+          "name": "Input/Text",
+          "type": "INSTANCE",
+          "visible": true,
+          "path": [
+            "Screens",
+            "Onboarding",
+            "Login"
+          ],
+          "box": {
+            "x": 24,
+            "y": 114,
+            "w": 342,
+            "h": 56,
+            "relative": {
+              "x": 24,
+              "y": 114
+            }
+          },
+          "layout": {
+            "mode": "column",
+            "gap": 4,
+            "padding": {
+              "top": 0,
+              "right": 0,
+              "bottom": 0,
+              "left": 0,
+              "shorthand": "0px"
+            },
+            "justify": "flex-start",
+            "align": "flex-start",
+            "sizing": {
+              "horizontal": {
+                "mode": "fill",
+                "px": 342
+              },
+              "vertical": {
+                "mode": "hug",
+                "px": 56
+              }
+            },
+            "position": "auto",
+            "layoutAlign": "stretch",
+            "tokens": {
+              "gap": null,
+              "paddingBottom": null,
+              "paddingLeft": null,
+              "paddingRight": null,
+              "paddingTop": null
+            }
+          },
+          "visual": {
+            "fills": []
+          },
+          "component": {
+            "isInstance": true,
+            "key": "a1b2c3d4e5f60718293a4b5c6d7e8f9012345320",
+            "mainComponentId": "3:20",
+            "mainComponentName": "Input/Text",
+            "properties": {
+              "Label": {
+                "type": "TEXT",
+                "value": "Email",
+                "key": "Label#12:0"
+              },
+              "Show helper": {
+                "type": "BOOLEAN",
+                "value": false,
+                "key": "Show helper#12:1"
+              }
+            },
+            "overrides": [
+              {
+                "nodeId": "I2:5;3:21",
+                "fields": [
+                  "characters"
+                ]
+              }
+            ],
+            "description": "Single line text input with a label and optional helper text.",
+            "documentationLinks": [
+              "https://example.com/design-system/input"
+            ]
+          },
+          "childCount": 2,
+          "children": [
+            {
+              "id": "I2:5;3:21",
+              "name": "Label",
+              "type": "TEXT",
+              "visible": true,
+              "path": [
+                "Screens",
+                "Onboarding",
+                "Login",
+                "Input/Text"
+              ],
+              "box": {
+                "x": 24,
+                "y": 114,
+                "w": 342,
+                "h": 12,
+                "relative": {
+                  "x": 0,
+                  "y": 0
+                }
+              },
+              "layout": {
+                "mode": "none",
+                "sizing": {
+                  "horizontal": {
+                    "mode": "fill",
+                    "px": 342
+                  },
+                  "vertical": {
+                    "mode": "hug",
+                    "px": 12
+                  }
+                },
+                "position": "auto",
+                "layoutAlign": "stretch"
+              },
+              "visual": {
+                "fills": [
+                  {
+                    "type": "solid",
+                    "hex": "#111827",
+                    "rgba": "rgba(17, 24, 39, 1)",
+                    "token": null
+                  }
+                ]
+              },
+              "text": {
+                "characters": "Email",
+                "fontFamily": "Inter",
+                "fontPostScriptName": "Inter-Medium",
+                "weight": 500,
+                "size": 12,
+                "lineHeight": {
+                  "px": 12,
+                  "unitless": 1,
+                  "percent": 100,
+                  "unit": "auto"
+                },
+                "letterSpacing": {
+                  "px": 0,
+                  "em": 0
+                },
+                "alignHorizontal": "left",
+                "alignVertical": "top",
+                "autoResize": "height",
+                "tokens": {
+                  "fontFamily": null,
+                  "fontSize": null,
+                  "fontWeight": null,
+                  "letterSpacing": null,
+                  "lineHeight": null
+                }
+              }
+            },
+            {
+              "id": "I2:5;3:22",
+              "name": "Field",
+              "type": "FRAME",
+              "visible": true,
+              "path": [
+                "Screens",
+                "Onboarding",
+                "Login",
+                "Input/Text"
+              ],
+              "box": {
+                "x": 24,
+                "y": 130,
+                "w": 342,
+                "h": 40,
+                "relative": {
+                  "x": 0,
+                  "y": 16
+                }
+              },
+              "layout": {
+                "mode": "row",
+                "gap": 8,
+                "padding": {
+                  "top": 0,
+                  "right": 12,
+                  "bottom": 0,
+                  "left": 12,
+                  "shorthand": "0px 12px"
+                },
+                "justify": "flex-start",
+                "align": "center",
+                "sizing": {
+                  "horizontal": {
+                    "mode": "fill",
+                    "px": 342
+                  },
+                  "vertical": {
+                    "mode": "fixed",
+                    "px": 40
+                  }
+                },
+                "position": "auto",
+                "clips": true,
+                "layoutAlign": "stretch",
+                "tokens": {
+                  "gap": null,
+                  "paddingBottom": null,
+                  "paddingLeft": null,
+                  "paddingRight": null,
+                  "paddingTop": null
+                }
+              },
+              "visual": {
+                "fills": [
+                  {
+                    "type": "solid",
+                    "hex": "#ffffff",
+                    "rgba": "rgba(255, 255, 255, 1)",
+                    "token": null
+                  }
+                ],
+                "strokes": [
+                  {
+                    "type": "solid",
+                    "hex": "#6b7280",
+                    "rgba": "rgba(107, 114, 128, 1)",
+                    "token": null
+                  }
+                ],
+                "strokeWeight": {
+                  "top": 1,
+                  "right": 1,
+                  "bottom": 1,
+                  "left": 1
+                },
+                "strokeAlign": "inside",
+                "radius": {
+                  "uniform": 6,
+                  "token": null
+                }
+              },
+              "childCount": 1,
+              "children": [
+                {
+                  "id": "I2:5;3:23",
+                  "name": "Placeholder",
+                  "type": "TEXT",
+                  "visible": true,
+                  "path": [
+                    "Screens",
+                    "Onboarding",
+                    "Login",
+                    "Input/Text",
+                    "Field"
+                  ],
+                  "box": {
+                    "x": 36,
+                    "y": 140,
+                    "w": 318,
+                    "h": 20,
+                    "relative": {
+                      "x": 12,
+                      "y": 10
+                    }
+                  },
+                  "layout": {
+                    "mode": "none",
+                    "sizing": {
+                      "horizontal": {
+                        "mode": "fill",
+                        "px": 318
+                      },
+                      "vertical": {
+                        "mode": "hug",
+                        "px": 20
+                      }
+                    },
+                    "position": "auto",
+                    "grow": 1
+                  },
+                  "visual": {
+                    "fills": [
+                      {
+                        "type": "solid",
+                        "hex": "#6b7280",
+                        "rgba": "rgba(107, 114, 128, 1)",
+                        "token": null
+                      }
+                    ]
+                  },
+                  "text": {
+                    "characters": "you@example.com",
+                    "fontFamily": "Inter",
+                    "weight": 400,
+                    "size": 16,
+                    "lineHeight": {
+                      "px": 20,
+                      "unitless": 1.25,
+                      "percent": 125,
+                      "unit": "px"
+                    },
+                    "letterSpacing": {
+                      "px": 0,
+                      "em": 0
+                    },
+                    "alignHorizontal": "left",
+                    "alignVertical": "middle",
+                    "autoResize": "height",
+                    "tokens": {
+                      "fontFamily": null,
+                      "fontSize": null,
+                      "fontWeight": null,
+                      "letterSpacing": null,
+                      "lineHeight": null
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "2:6",
+          "name": "Button/Primary",
+          "type": "INSTANCE",
+          "visible": true,
+          "path": [
+            "Screens",
+            "Onboarding",
+            "Login"
+          ],
+          "box": {
+            "x": 24,
+            "y": 186,
+            "w": 342,
+            "h": 48,
+            "relative": {
+              "x": 24,
+              "y": 186
+            }
+          },
+          "layout": {
+            "mode": "row",
+            "gap": 8,
+            "padding": {
+              "top": 12,
+              "right": 20,
+              "bottom": 12,
+              "left": 20,
+              "shorthand": "12px 20px"
+            },
+            "justify": "center",
+            "align": "center",
+            "sizing": {
+              "horizontal": {
+                "mode": "fill",
+                "px": 342
+              },
+              "vertical": {
+                "mode": "fixed",
+                "px": 48
+              }
+            },
+            "position": "auto",
+            "clips": true,
+            "layoutAlign": "stretch",
+            "tokens": {
+              "gap": null,
+              "paddingBottom": null,
+              "paddingLeft": null,
+              "paddingRight": null,
+              "paddingTop": null
+            }
+          },
+          "visual": {
+            "fills": [
+              {
+                "type": "solid",
+                "hex": "#3366ff",
+                "rgba": "rgba(51, 102, 255, 1)",
+                "token": {
+                  "variableId": "VariableID:1:101",
+                  "name": "brand/500",
+                  "collection": "Primitives",
+                  "resolvedType": "COLOR",
+                  "codeSyntax": {
+                    "WEB": "--color-brand-500"
+                  },
+                  "values": {
+                    "Default": "#3366ff"
+                  }
+                },
+                "style": {
+                  "id": "5:1",
+                  "key": "5f4e3d2c1b0a9f8e7d6c5b4a39281706f5e4d501",
+                  "name": "color/brand/500",
+                  "type": "FILL"
+                }
+              }
+            ],
+            "radius": {
+              "uniform": 8,
+              "token": null
+            }
+          },
+          "component": {
+            "isInstance": true,
+            "key": "a1b2c3d4e5f60718293a4b5c6d7e8f9012345311",
+            "mainComponentId": "3:11",
+            "mainComponentName": "Variant=Primary, Size=md",
+            "setId": "3:10",
+            "setName": "Button",
+            "variantProperties": {
+              "Size": "md",
+              "Variant": "Primary"
+            },
+            "properties": {
+              "Label": {
+                "type": "TEXT",
+                "value": "Sign in",
+                "key": "Label#5:0"
+              }
+            },
+            "overrides": [
+              {
+                "nodeId": "2:6",
+                "fields": [
+                  "layoutSizingHorizontal",
+                  "layoutAlign"
+                ]
+              },
+              {
+                "nodeId": "I2:6;3:12",
+                "fields": [
+                  "characters"
+                ]
+              }
+            ],
+            "description": "Primary call to action.",
+            "documentationLinks": [
+              "https://example.com/design-system/button"
+            ]
+          },
+          "tokens": {
+            "variables": {
+              "fills[0]": "brand/500"
+            },
+            "styles": {
+              "fill": "color/brand/500"
+            }
+          },
+          "childCount": 1,
+          "children": [
+            {
+              "id": "I2:6;3:12",
+              "name": "Label",
+              "type": "TEXT",
+              "visible": true,
+              "path": [
+                "Screens",
+                "Onboarding",
+                "Login",
+                "Button/Primary"
+              ],
+              "box": {
+                "x": 169,
+                "y": 198,
+                "w": 52,
+                "h": 24,
+                "relative": {
+                  "x": 145,
+                  "y": 12
+                }
+              },
+              "layout": {
+                "mode": "none",
+                "sizing": {
+                  "horizontal": {
+                    "mode": "hug",
+                    "px": 52
+                  },
+                  "vertical": {
+                    "mode": "hug",
+                    "px": 24
+                  }
+                },
+                "position": "auto"
+              },
+              "visual": {
+                "fills": [
+                  {
+                    "type": "solid",
+                    "hex": "#ffffff",
+                    "rgba": "rgba(255, 255, 255, 1)",
+                    "token": {
+                      "variableId": "VariableID:1:103",
+                      "name": "neutral/0",
+                      "collection": "Primitives",
+                      "resolvedType": "COLOR",
+                      "values": {
+                        "Default": "#ffffff"
+                      }
+                    }
+                  }
+                ]
+              },
+              "text": {
+                "characters": "Sign in",
+                "fontFamily": "Inter",
+                "fontPostScriptName": "Inter-SemiBold",
+                "weight": 600,
+                "size": 16,
+                "lineHeight": {
+                  "px": 24,
+                  "unitless": 1.5,
+                  "percent": 150,
+                  "unit": "percent"
+                },
+                "letterSpacing": {
+                  "px": 0,
+                  "em": 0
+                },
+                "alignHorizontal": "center",
+                "alignVertical": "middle",
+                "autoResize": "width-and-height",
+                "tokens": {
+                  "fontFamily": null,
+                  "fontSize": null,
+                  "fontWeight": null,
+                  "letterSpacing": null,
+                  "lineHeight": null
+                }
+              },
+              "tokens": {
+                "variables": {
+                  "fills[0]": "neutral/0"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "2:7",
+          "name": "Social",
+          "type": "FRAME",
+          "visible": true,
+          "path": [
+            "Screens",
+            "Onboarding",
+            "Login"
+          ],
+          "box": {
+            "x": 24,
+            "y": 250,
+            "w": 342,
+            "h": 40,
+            "relative": {
+              "x": 24,
+              "y": 250
+            }
+          },
+          "layout": {
+            "mode": "wrap",
+            "gap": 12,
+            "rowGap": 8,
+            "padding": {
+              "top": 0,
+              "right": 0,
+              "bottom": 0,
+              "left": 0,
+              "shorthand": "0px"
+            },
+            "justify": "flex-start",
+            "align": "center",
+            "sizing": {
+              "horizontal": {
+                "mode": "fill",
+                "px": 342
+              },
+              "vertical": {
+                "mode": "hug",
+                "px": 40
+              }
+            },
+            "position": "auto",
+            "layoutAlign": "stretch",
+            "tokens": {
+              "gap": null,
+              "paddingBottom": null,
+              "paddingLeft": null,
+              "paddingRight": null,
+              "paddingTop": null,
+              "rowGap": null
+            }
+          },
+          "visual": {
+            "fills": []
+          },
+          "childCount": 2,
+          "children": [
+            {
+              "id": "2:8",
+              "name": "Avatar",
+              "type": "RECTANGLE",
+              "visible": true,
+              "path": [
+                "Screens",
+                "Onboarding",
+                "Login",
+                "Social"
+              ],
+              "box": {
+                "x": 24,
+                "y": 250,
+                "w": 40,
+                "h": 40,
+                "relative": {
+                  "x": 0,
+                  "y": 0
+                }
+              },
+              "layout": {
+                "mode": "none",
+                "sizing": {
+                  "horizontal": {
+                    "mode": "fixed",
+                    "px": 40
+                  },
+                  "vertical": {
+                    "mode": "fixed",
+                    "px": 40
+                  }
+                },
+                "position": "auto"
+              },
+              "visual": {
+                "fills": [
+                  {
+                    "type": "image",
+                    "imageRef": "img1",
+                    "scaleMode": "fill",
+                    "token": null
+                  }
+                ],
+                "radius": {
+                  "uniform": 20,
+                  "smoothing": 0.6,
+                  "token": null
+                }
+              }
+            },
+            {
+              "id": "2:9",
+              "name": "icon/arrow-right",
+              "type": "VECTOR",
+              "visible": true,
+              "path": [
+                "Screens",
+                "Onboarding",
+                "Login",
+                "Social"
+              ],
+              "box": {
+                "x": 76,
+                "y": 258,
+                "w": 24,
+                "h": 24,
+                "relative": {
+                  "x": 52,
+                  "y": 8
+                }
+              },
+              "layout": {
+                "mode": "none",
+                "sizing": {
+                  "horizontal": {
+                    "mode": "fixed",
+                    "px": 24
+                  },
+                  "vertical": {
+                    "mode": "fixed",
+                    "px": 24
+                  }
+                },
+                "position": "auto"
+              },
+              "visual": {
+                "fills": [
+                  {
+                    "type": "solid",
+                    "hex": "#111827",
+                    "rgba": "rgba(17, 24, 39, 1)",
+                    "token": null
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "2:10",
+          "name": "Decor",
+          "type": "GROUP",
+          "visible": true,
+          "path": [
+            "Screens",
+            "Onboarding",
+            "Login"
+          ],
+          "box": {
+            "x": 24,
+            "y": 306,
+            "w": 342,
+            "h": 120,
+            "relative": {
+              "x": 24,
+              "y": 306
+            }
+          },
+          "layout": {
+            "mode": "none",
+            "sizing": {
+              "horizontal": {
+                "mode": "fixed",
+                "px": 342
+              },
+              "vertical": {
+                "mode": "fixed",
+                "px": 120
+              }
+            },
+            "position": "auto"
+          },
+          "visual": {
+            "fills": [],
+            "opacity": 0.9
+          },
+          "childCount": 2,
+          "children": [
+            {
+              "id": "2:11",
+              "name": "Blob",
+              "type": "ELLIPSE",
+              "visible": true,
+              "path": [
+                "Screens",
+                "Onboarding",
+                "Login",
+                "Decor"
+              ],
+              "box": {
+                "x": 24,
+                "y": 306,
+                "w": 120,
+                "h": 120,
+                "relative": {
+                  "x": 0,
+                  "y": 0
+                }
+              },
+              "layout": {
+                "mode": "none",
+                "sizing": {
+                  "horizontal": {
+                    "mode": "fixed",
+                    "px": 120
+                  },
+                  "vertical": {
+                    "mode": "fixed",
+                    "px": 120
+                  }
+                },
+                "position": "absolute",
+                "offset": {
+                  "x": 0,
+                  "y": 0
+                },
+                "constraints": {
+                  "horizontal": "scale",
+                  "vertical": "scale"
+                }
+              },
+              "visual": {
+                "fills": [
+                  {
+                    "type": "gradient",
+                    "gradient": {
+                      "type": "linear",
+                      "css": "linear-gradient(90deg, #3366ff 0%, #9933ff 100%)",
+                      "angle": 90,
+                      "stops": [
+                        {
+                          "position": 0,
+                          "hex": "#3366ff",
+                          "rgba": "rgba(51, 102, 255, 1)",
+                          "css": "#3366ff 0%",
+                          "token": {
+                            "variableId": "VariableID:1:101",
+                            "name": "brand/500",
+                            "collection": "Primitives",
+                            "resolvedType": "COLOR",
+                            "codeSyntax": {
+                              "WEB": "--color-brand-500"
+                            },
+                            "values": {
+                              "Default": "#3366ff"
+                            }
+                          }
+                        },
+                        {
+                          "position": 1,
+                          "hex": "#9933ff",
+                          "rgba": "rgba(153, 51, 255, 1)",
+                          "css": "#9933ff 100%",
+                          "token": null
+                        }
+                      ]
+                    },
+                    "token": null
+                  }
+                ],
+                "effects": [
+                  {
+                    "type": "layer-blur",
+                    "property": "filter",
+                    "css": "blur(1px)",
+                    "radius": 2,
+                    "token": null
+                  }
+                ]
+              },
+              "tokens": {
+                "variables": {
+                  "fills[0].stops[0]": "brand/500"
+                }
+              }
+            },
+            {
+              "id": "2:12",
+              "name": "Divider",
+              "type": "LINE",
+              "visible": true,
+              "path": [
+                "Screens",
+                "Onboarding",
+                "Login",
+                "Decor"
+              ],
+              "box": {
+                "x": 160,
+                "y": 366,
+                "w": 206,
+                "h": 0,
+                "relative": {
+                  "x": 136,
+                  "y": 60
+                }
+              },
+              "layout": {
+                "mode": "none",
+                "sizing": {
+                  "horizontal": {
+                    "mode": "fixed",
+                    "px": 206
+                  },
+                  "vertical": {
+                    "mode": "fixed",
+                    "px": 0
+                  }
+                },
+                "position": "absolute",
+                "offset": {
+                  "x": 136,
+                  "y": 60
+                },
+                "constraints": {
+                  "horizontal": "scale",
+                  "vertical": "scale"
+                }
+              },
+              "visual": {
+                "fills": [],
+                "strokes": [
+                  {
+                    "type": "solid",
+                    "hex": "#f3f4f6",
+                    "rgba": "rgba(243, 244, 246, 1)",
+                    "token": null
+                  }
+                ],
+                "strokeWeight": {
+                  "top": 1,
+                  "right": 1,
+                  "bottom": 1,
+                  "left": 1
+                },
+                "strokeAlign": "center",
+                "strokeDashes": [
+                  4,
+                  4
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "2:14",
+          "name": "Stats",
+          "type": "FRAME",
+          "visible": true,
+          "path": [
+            "Screens",
+            "Onboarding",
+            "Login"
+          ],
+          "box": {
+            "x": 24,
+            "y": 498,
+            "w": 342,
+            "h": 120,
+            "relative": {
+              "x": 24,
+              "y": 498
+            }
+          },
+          "layout": {
+            "mode": "grid",
+            "padding": {
+              "top": 0,
+              "right": 0,
+              "bottom": 0,
+              "left": 0,
+              "shorthand": "0px"
+            },
+            "sizing": {
+              "horizontal": {
+                "mode": "fill",
+                "px": 342
+              },
+              "vertical": {
+                "mode": "fixed",
+                "px": 120
+              }
+            },
+            "position": "auto",
+            "grid": {
+              "rows": 2,
+              "columns": 2,
+              "rowGap": 8,
+              "columnGap": 8,
+              "rowsSizing": "minmax(0, 1fr) minmax(0, 1fr)",
+              "columnsSizing": "minmax(0, 1fr) minmax(0, 1fr)"
+            },
+            "layoutAlign": "stretch",
+            "tokens": {
+              "columnGap": null,
+              "paddingBottom": null,
+              "paddingLeft": null,
+              "paddingRight": null,
+              "paddingTop": null,
+              "rowGap": null
+            }
+          },
+          "visual": {
+            "fills": []
+          },
+          "childCount": 3,
+          "children": [
+            {
+              "id": "2:15",
+              "name": "Stat",
+              "type": "FRAME",
+              "visible": true,
+              "path": [
+                "Screens",
+                "Onboarding",
+                "Login",
+                "Stats"
+              ],
+              "box": {
+                "x": 24,
+                "y": 498,
+                "w": 167,
+                "h": 120,
+                "relative": {
+                  "x": 0,
+                  "y": 0
+                }
+              },
+              "layout": {
+                "mode": "none",
+                "sizing": {
+                  "horizontal": {
+                    "mode": "fill",
+                    "px": 167
+                  },
+                  "vertical": {
+                    "mode": "fill",
+                    "px": 120
+                  }
+                },
+                "position": "auto",
+                "gridChild": {
+                  "rowSpan": 2,
+                  "columnSpan": 1,
+                  "row": 0,
+                  "column": 0
+                }
+              },
+              "visual": {
+                "fills": [
+                  {
+                    "type": "solid",
+                    "hex": "#f3f4f6",
+                    "rgba": "rgba(243, 244, 246, 1)",
+                    "token": null
+                  }
+                ],
+                "radius": {
+                  "uniform": 8,
+                  "token": null
+                }
+              }
+            },
+            {
+              "id": "2:16",
+              "name": "Count",
+              "type": "TEXT",
+              "visible": true,
+              "path": [
+                "Screens",
+                "Onboarding",
+                "Login",
+                "Stats"
+              ],
+              "box": {
+                "x": 199,
+                "y": 498,
+                "w": 167,
+                "h": 56,
+                "relative": {
+                  "x": 175,
+                  "y": 0
+                }
+              },
+              "layout": {
+                "mode": "none",
+                "sizing": {
+                  "horizontal": {
+                    "mode": "hug",
+                    "px": 167
+                  },
+                  "vertical": {
+                    "mode": "hug",
+                    "px": 56
+                  }
+                },
+                "position": "auto",
+                "gridChild": {
+                  "rowSpan": 1,
+                  "columnSpan": 1,
+                  "row": 0,
+                  "column": 1,
+                  "alignHorizontal": "center",
+                  "alignVertical": "center"
+                }
+              },
+              "visual": {
+                "fills": [
+                  {
+                    "type": "solid",
+                    "hex": "#111827",
+                    "rgba": "rgba(17, 24, 39, 1)",
+                    "token": null
+                  }
+                ]
+              },
+              "text": {
+                "characters": "128",
+                "fontFamily": "Inter",
+                "fontPostScriptName": "Inter-Bold",
+                "weight": 700,
+                "size": 24,
+                "lineHeight": {
+                  "px": 28,
+                  "unitless": 1.17,
+                  "percent": 116.7,
+                  "unit": "px"
+                },
+                "letterSpacing": {
+                  "px": 0,
+                  "em": 0
+                },
+                "case": "uppercase",
+                "alignHorizontal": "center",
+                "alignVertical": "middle",
+                "autoResize": "width-and-height",
+                "tabularNumbers": true,
+                "tokens": {
+                  "fontFamily": null,
+                  "fontSize": null,
+                  "fontWeight": null,
+                  "letterSpacing": null,
+                  "lineHeight": null
+                }
+              }
+            },
+            {
+              "id": "2:17",
+              "name": "Caption",
+              "type": "TEXT",
+              "visible": true,
+              "path": [
+                "Screens",
+                "Onboarding",
+                "Login",
+                "Stats"
+              ],
+              "box": {
+                "x": 199,
+                "y": 562,
+                "w": 167,
+                "h": 56,
+                "relative": {
+                  "x": 175,
+                  "y": 64
+                }
+              },
+              "layout": {
+                "mode": "none",
+                "sizing": {
+                  "horizontal": {
+                    "mode": "hug",
+                    "px": 167
+                  },
+                  "vertical": {
+                    "mode": "hug",
+                    "px": 56
+                  }
+                },
+                "position": "auto",
+                "gridChild": {
+                  "rowSpan": 1,
+                  "columnSpan": 1,
+                  "row": 1,
+                  "column": 1,
+                  "alignHorizontal": "center",
+                  "alignVertical": "start"
+                }
+              },
+              "visual": {
+                "fills": [
+                  {
+                    "type": "solid",
+                    "hex": "#6b7280",
+                    "rgba": "rgba(107, 114, 128, 1)",
+                    "token": null
+                  }
+                ]
+              },
+              "text": {
+                "characters": "Designs shipped",
+                "fontFamily": "Inter",
+                "weight": 400,
+                "size": 12,
+                "lineHeight": {
+                  "px": 16,
+                  "unitless": 1.33,
+                  "percent": 133.3,
+                  "unit": "px"
+                },
+                "letterSpacing": {
+                  "px": 0.2,
+                  "em": 0.017
+                },
+                "alignHorizontal": "center",
+                "alignVertical": "top",
+                "autoResize": "width-and-height",
+                "truncation": "ending",
+                "maxLines": 1,
+                "tokens": {
+                  "fontFamily": null,
+                  "fontSize": null,
+                  "fontWeight": null,
+                  "letterSpacing": null,
+                  "lineHeight": null
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "truncated": false,
+  "nextCursor": null,
+  "hints": []
+}

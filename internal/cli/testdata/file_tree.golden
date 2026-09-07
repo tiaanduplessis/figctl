@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "command": "file.tree",
+  "profile": {
+    "name": "env"
+  },
+  "file": {
+    "key": "FixTuReDeSiGnSySt3m01",
+    "name": "Fixture Design System",
+    "version": "2100123456",
+    "lastModified": "2026-09-01T10:15:00Z"
+  },
+  "data": [
+    {
+      "id": "0:1",
+      "type": "CANVAS",
+      "name": "Screens",
+      "depth": 1,
+      "childCount": 1,
+      "flags": {}
+    },
+    {
+      "id": "2:1",
+      "type": "SECTION",
+      "name": "Onboarding",
+      "x": -40,
+      "y": -80,
+      "w": 470,
+      "h": 964,
+      "depth": 2,
+      "childCount": 1,
+      "flags": {
+        "devStatus": "READY_FOR_DEV"
+      }
+    },
+    {
+      "id": "1:2",
+      "type": "CANVAS",
+      "name": "Design System",
+      "depth": 1,
+      "childCount": 3,
+      "flags": {}
+    },
+    {
+      "id": "3:10",
+      "type": "COMPONENT_SET",
+      "name": "Button",
+      "x": 0,
+      "y": 0,
+      "w": 368,
+      "h": 132,
+      "depth": 2,
+      "childCount": 4,
+      "flags": {
+        "component": true
+      }
+    },
+    {
+      "id": "3:20",
+      "type": "COMPONENT",
+      "name": "Input/Text",
+      "x": 0,
+      "y": 160,
+      "w": 342,
+      "h": 56,
+      "depth": 2,
+      "childCount": 3,
+      "flags": {
+        "component": true,
+        "autoLayout": "column"
+      }
+    },
+    {
+      "id": "4:0",
+      "type": "FRAME",
+      "name": "Styles",
+      "x": 0,
+      "y": 260,
+      "w": 520,
+      "h": 168,
+      "depth": 2,
+      "childCount": 4,
+      "flags": {
+        "autoLayout": "row"
+      }
+    }
+  ],
+  "truncated": false,
+  "nextCursor": null,
+  "hints": [
+    "Next: figctl file tree FixTuReDeSiGnSySt3m01 --node <id> --depth 3 to go deeper, or figctl node context FixTuReDeSiGnSySt3m01 --node <id> to implement a node."
+  ]
+}

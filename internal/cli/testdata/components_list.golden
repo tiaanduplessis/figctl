@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "command": "components.list",
+  "profile": {
+    "name": "env"
+  },
+  "file": {
+    "key": "FixTuReDeSiGnSySt3m01",
+    "name": "Fixture Design System",
+    "version": "2100123456",
+    "lastModified": "2026-09-01T10:15:00Z"
+  },
+  "data": [
+    {
+      "key": "a1b2c3d4e5f60718293a4b5c6d7e8f9012345311",
+      "nodeId": "3:11",
+      "name": "Variant=Primary, Size=md",
+      "description": "Primary call to action.",
+      "setName": "Button",
+      "setNodeId": "3:10",
+      "variantProperties": {
+        "Size": "md",
+        "Variant": "Primary"
+      },
+      "page": "Design System",
+      "frame": "Button",
+      "documentationLinks": [
+        "https://example.com/design-system/button"
+      ],
+      "remote": false,
+      "published": true
+    },
+    {
+      "key": "a1b2c3d4e5f60718293a4b5c6d7e8f9012345313",
+      "nodeId": "3:13",
+      "name": "Variant=Secondary, Size=md",
+      "description": "Secondary action next to a primary button.",
+      "setName": "Button",
+      "setNodeId": "3:10",
+      "variantProperties": {
+        "Size": "md",
+        "Variant": "Secondary"
+      },
+      "page": "Design System",
+      "frame": "Button",
+      "documentationLinks": [
+        "https://example.com/design-system/button"
+      ],
+      "remote": false,
+      "published": true
+    },
+    {
+      "key": "a1b2c3d4e5f60718293a4b5c6d7e8f9012345315",
+      "nodeId": "3:15",
+      "name": "Variant=Primary, Size=sm",
+      "description": "Primary call to action, compact.",
+      "setName": "Button",
+      "setNodeId": "3:10",
+      "variantProperties": {
+        "Size": "sm",
+        "Variant": "Primary"
+      },
+      "page": "Design System",
+      "frame": "Button",
+      "documentationLinks": [
+        "https://example.com/design-system/button"
+      ],
+      "remote": false,
+      "published": true
+    },
+    {
+      "key": "a1b2c3d4e5f60718293a4b5c6d7e8f9012345317",
+      "nodeId": "3:17",
+      "name": "Variant=Secondary, Size=sm",
+      "description": "Secondary action, compact.",
+      "setName": "Button",
+      "setNodeId": "3:10",
+      "variantProperties": {
+        "Size": "sm",
+        "Variant": "Secondary"
+      },
+      "page": "Design System",
+      "frame": "Button",
+      "documentationLinks": [
+        "https://example.com/design-system/button"
+      ],
+      "remote": false,
+      "published": true
+    },
+    {
+      "key": "a1b2c3d4e5f60718293a4b5c6d7e8f9012345320",
+      "nodeId": "3:20",
+      "name": "Input/Text",
+      "description": "Single line text input with a label and optional helper text.",
+      "page": "Design System",
+      "documentationLinks": [
+        "https://example.com/design-system/input"
+      ],
+      "remote": false,
+      "published": true
+    }
+  ],
+  "truncated": false,
+  "nextCursor": null,
+  "hints": [
+    "Next: figctl components get FixTuReDeSiGnSySt3m01 --node <nodeId> for property definitions and variants."
+  ]
+}
