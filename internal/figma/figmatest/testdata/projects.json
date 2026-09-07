@@ -1,0 +1,7 @@
+{
+  "name": "Fixture Team",
+  "projects": [
+    { "id": "1001", "name": "Web" },
+    { "id": "1002", "name": "Mobile" }
+  ]
+}

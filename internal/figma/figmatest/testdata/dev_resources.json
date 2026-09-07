@@ -1,0 +1,18 @@
+{
+  "dev_resources": [
+    {
+      "id": "dr-1",
+      "name": "Button in Storybook",
+      "url": "https://storybook.example.com/?path=/story/button--primary",
+      "file_key": "FixTuReDeSiGnSySt3m01",
+      "node_id": "3:11"
+    },
+    {
+      "id": "dr-2",
+      "name": "Input.tsx on GitHub",
+      "url": "https://github.com/example/design-system/blob/main/src/Input.tsx",
+      "file_key": "FixTuReDeSiGnSySt3m01",
+      "node_id": "3:20"
+    }
+  ]
+}

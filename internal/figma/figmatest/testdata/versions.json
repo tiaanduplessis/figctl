@@ -1,0 +1,23 @@
+{
+  "versions": [
+    {
+      "id": "2100123456",
+      "created_at": "2026-09-01T10:15:00Z",
+      "label": "Login v2",
+      "description": "Reworked the login screen with the new button set.",
+      "user": { "id": "1234567890", "handle": "Fixture Designer", "img_url": "https://s3-alpha.figma.com/profile/1234567890" },
+      "thumbnail_url": "https://s3-alpha.figma.com/thumbnails/FixTuReDeSiGnSySt3m01-2100123456.png"
+    },
+    {
+      "id": "2100120000",
+      "created_at": "2026-08-20T09:00:00Z",
+      "label": null,
+      "description": null,
+      "user": { "id": "1234567890", "handle": "Fixture Designer", "img_url": "https://s3-alpha.figma.com/profile/1234567890" },
+      "thumbnail_url": "https://s3-alpha.figma.com/thumbnails/FixTuReDeSiGnSySt3m01-2100120000.png"
+    }
+  ],
+  "pagination": {
+    "next_page": "https://api.figma.com/v1/files/FixTuReDeSiGnSySt3m01/versions?before=2100120000&page_size=2"
+  }
+}

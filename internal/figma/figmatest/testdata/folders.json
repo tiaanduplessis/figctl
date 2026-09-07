@@ -1,0 +1,7 @@
+{
+  "name": "Fixture Team",
+  "folders": [
+    { "id": "2001", "name": "Web", "parent_folder_id": null },
+    { "id": "2002", "name": "Mobile", "parent_folder_id": null }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "status": 200,
+  "error": false,
+  "meta": {
+    "styles": [
+      {
+        "key": "5f4e3d2c1b0a9f8e7d6c5b4a39281706f5e4d501",
+        "file_key": "FixTuReDeSiGnSySt3m01",
+        "node_id": "5:1",
+        "style_type": "FILL",
+        "thumbnail_url": "https://s3-alpha.figma.com/styles/5-1.png",
+        "name": "color/brand/500",
+        "description": "Primary brand color.",
+        "created_at": "2026-08-01T09:00:00Z",
+        "updated_at": "2026-08-20T09:00:00Z",
+        "user": { "id": "1234567890", "handle": "Fixture Designer", "img_url": "https://s3-alpha.figma.com/profile/1234567890" },
+        "sort_position": "!"
+      },
+      {
+        "key": "5f4e3d2c1b0a9f8e7d6c5b4a39281706f5e4d502",
+        "file_key": "FixTuReDeSiGnSySt3m01",
+        "node_id": "5:2",
+        "style_type": "TEXT",
+        "thumbnail_url": "https://s3-alpha.figma.com/styles/5-2.png",
+        "name": "heading/lg",
+        "description": "Large heading, Inter Bold 28/34.",
+        "created_at": "2026-08-01T09:00:00Z",
+        "updated_at": "2026-08-20T09:00:00Z",
+        "user": { "id": "1234567890", "handle": "Fixture Designer", "img_url": "https://s3-alpha.figma.com/profile/1234567890" },
+        "sort_position": "\""
+      },
+      {
+        "key": "5f4e3d2c1b0a9f8e7d6c5b4a39281706f5e4d503",
+        "file_key": "FixTuReDeSiGnSySt3m01",
+        "node_id": "5:3",
+        "style_type": "EFFECT",
+        "thumbnail_url": "https://s3-alpha.figma.com/styles/5-3.png",
+        "name": "shadow/md",
+        "description": "Medium elevation shadow.",
+        "created_at": "2026-08-01T09:00:00Z",
+        "updated_at": "2026-08-20T09:00:00Z",
+        "user": { "id": "1234567890", "handle": "Fixture Designer", "img_url": "https://s3-alpha.figma.com/profile/1234567890" },
+        "sort_position": "#"
+      },
+      {
+        "key": "5f4e3d2c1b0a9f8e7d6c5b4a39281706f5e4d504",
+        "file_key": "FixTuReDeSiGnSySt3m01",
+        "node_id": "5:4",
+        "style_type": "GRID",
+        "thumbnail_url": "https://s3-alpha.figma.com/styles/5-4.png",
+        "name": "grid/12",
+        "description": "12 column layout grid.",
+        "created_at": "2026-08-01T09:00:00Z",
+        "updated_at": "2026-08-20T09:00:00Z",
+        "user": { "id": "1234567890", "handle": "Fixture Designer", "img_url": "https://s3-alpha.figma.com/profile/1234567890" },
+        "sort_position": "$"
+      }
+    ]
+  }
+}

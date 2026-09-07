@@ -1,0 +1,8 @@
+{
+  "err": null,
+  "images": {
+    "2:2": "https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/2-2.png",
+    "2:9": "https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/2-9.png",
+    "2:13": null
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "status": 200,
+  "error": false,
+  "meta": {
+    "variableCollections": {
+      "VariableCollectionId:1:100": {
+        "id": "VariableCollectionId:1:100",
+        "subscribed_id": "VariableCollectionId:1:100/1",
+        "name": "Primitives",
+        "key": "9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1100",
+        "updatedAt": "2026-08-20T09:00:00Z"
+      },
+      "VariableCollectionId:1:200": {
+        "id": "VariableCollectionId:1:200",
+        "subscribed_id": "VariableCollectionId:1:200/1",
+        "name": "Semantic",
+        "key": "9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1200",
+        "updatedAt": "2026-08-20T09:00:00Z"
+      }
+    },
+    "variables": {
+      "VariableID:1:101": { "id": "VariableID:1:101", "subscribed_id": "VariableID:1:101/1", "name": "brand/500", "key": "7c1e5a9b3d2f4e6a8c0b1d3f5e7a9c2b4d6f8101", "variableCollectionId": "VariableCollectionId:1:100", "resolvedDataType": "COLOR", "updatedAt": "2026-08-20T09:00:00Z" },
+      "VariableID:1:102": { "id": "VariableID:1:102", "subscribed_id": "VariableID:1:102/1", "name": "neutral/900", "key": "7c1e5a9b3d2f4e6a8c0b1d3f5e7a9c2b4d6f8102", "variableCollectionId": "VariableCollectionId:1:100", "resolvedDataType": "COLOR", "updatedAt": "2026-08-20T09:00:00Z" },
+      "VariableID:1:103": { "id": "VariableID:1:103", "subscribed_id": "VariableID:1:103/1", "name": "neutral/0", "key": "7c1e5a9b3d2f4e6a8c0b1d3f5e7a9c2b4d6f8103", "variableCollectionId": "VariableCollectionId:1:100", "resolvedDataType": "COLOR", "updatedAt": "2026-08-20T09:00:00Z" },
+      "VariableID:1:104": { "id": "VariableID:1:104", "subscribed_id": "VariableID:1:104/1", "name": "space/4", "key": "7c1e5a9b3d2f4e6a8c0b1d3f5e7a9c2b4d6f8104", "variableCollectionId": "VariableCollectionId:1:100", "resolvedDataType": "FLOAT", "updatedAt": "2026-08-20T09:00:00Z" },
+      "VariableID:1:105": { "id": "VariableID:1:105", "subscribed_id": "VariableID:1:105/1", "name": "font/family/sans", "key": "7c1e5a9b3d2f4e6a8c0b1d3f5e7a9c2b4d6f8105", "variableCollectionId": "VariableCollectionId:1:100", "resolvedDataType": "STRING", "updatedAt": "2026-08-20T09:00:00Z" },
+      "VariableID:1:201": { "id": "VariableID:1:201", "subscribed_id": "VariableID:1:201/1", "name": "bg/surface", "key": "7c1e5a9b3d2f4e6a8c0b1d3f5e7a9c2b4d6f8201", "variableCollectionId": "VariableCollectionId:1:200", "resolvedDataType": "COLOR", "updatedAt": "2026-08-20T09:00:00Z" },
+      "VariableID:1:202": { "id": "VariableID:1:202", "subscribed_id": "VariableID:1:202/1", "name": "text/primary", "key": "7c1e5a9b3d2f4e6a8c0b1d3f5e7a9c2b4d6f8202", "variableCollectionId": "VariableCollectionId:1:200", "resolvedDataType": "COLOR", "updatedAt": "2026-08-20T09:00:00Z" }
+    }
+  }
+}

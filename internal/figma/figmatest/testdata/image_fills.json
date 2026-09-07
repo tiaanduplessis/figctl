@@ -1,0 +1,9 @@
+{
+  "error": false,
+  "status": 200,
+  "meta": {
+    "images": {
+      "img1": "https://figma-alpha-api.s3.us-west-2.amazonaws.com/img/img1"
+    }
+  }
+}

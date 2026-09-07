@@ -1,0 +1,46 @@
+{
+  "comments": [
+    {
+      "id": "9001",
+      "client_meta": { "node_id": "2:2", "node_offset": { "x": 24, "y": 186 } },
+      "file_key": "FixTuReDeSiGnSySt3m01",
+      "parent_id": "",
+      "user": { "id": "1234567890", "handle": "Fixture Designer", "img_url": "https://s3-alpha.figma.com/profile/1234567890" },
+      "created_at": "2026-08-28T14:02:00Z",
+      "resolved_at": null,
+      "message": "Use the **primary** button here; the label should read \"Sign in\".",
+      "order_id": "1",
+      "reactions": [
+        {
+          "user": { "id": "2345678901", "handle": "Fixture Engineer", "img_url": "https://s3-alpha.figma.com/profile/2345678901" },
+          "emoji": ":+1:",
+          "created_at": "2026-08-28T15:00:00Z"
+        }
+      ]
+    },
+    {
+      "id": "9002",
+      "client_meta": null,
+      "file_key": "FixTuReDeSiGnSySt3m01",
+      "parent_id": "9001",
+      "user": { "id": "2345678901", "handle": "Fixture Engineer", "img_url": "https://s3-alpha.figma.com/profile/2345678901" },
+      "created_at": "2026-08-28T16:30:00Z",
+      "resolved_at": null,
+      "message": "Done, using Button/Primary.",
+      "order_id": null,
+      "reactions": []
+    },
+    {
+      "id": "9003",
+      "client_meta": { "x": 120, "y": 320 },
+      "file_key": "FixTuReDeSiGnSySt3m01",
+      "parent_id": "",
+      "user": { "id": "1234567890", "handle": "Fixture Designer", "img_url": "https://s3-alpha.figma.com/profile/1234567890" },
+      "created_at": "2026-08-25T09:10:00Z",
+      "resolved_at": "2026-08-27T11:00:00Z",
+      "message": "Decorative blob can be dropped on small screens.",
+      "order_id": "2",
+      "reactions": []
+    }
+  ]
+}

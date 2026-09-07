@@ -1,0 +1,15 @@
+{
+  "file": {
+    "name": "Fixture Design System",
+    "folder_name": "Web",
+    "last_touched_at": "2026-09-01T10:15:00Z",
+    "creator": { "id": "1234567890", "handle": "Fixture Designer", "img_url": "https://s3-alpha.figma.com/profile/1234567890" },
+    "last_touched_by": { "id": "1234567890", "handle": "Fixture Designer", "img_url": "https://s3-alpha.figma.com/profile/1234567890" },
+    "thumbnail_url": "https://s3-alpha.figma.com/thumbnails/FixTuReDeSiGnSySt3m01.png",
+    "editorType": "figma",
+    "role": "editor",
+    "link_access": "org_view",
+    "url": "https://www.figma.com/design/FixTuReDeSiGnSySt3m01/Fixture-Design-System",
+    "version": "2100123456"
+  }
+}
