@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "command": "node.inspect",
+  "profile": {
+    "name": "acme",
+    "handle": "tiaan"
+  },
+  "file": {
+    "key": "ABC",
+    "name": "Web App",
+    "version": "123",
+    "lastModified": "2026-09-01T10:00:00Z"
+  },
+  "data": {
+    "id": "12:34",
+    "name": "Login",
+    "type": "FRAME"
+  },
+  "truncated": true,
+  "nextCursor": "page2",
+  "hints": [
+    "Use --depth 2 to see children of frame 12:34"
+  ]
+}

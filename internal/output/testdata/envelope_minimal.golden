@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "command": "version",
+  "profile": null,
+  "file": null,
+  "data": {
+    "version": "dev"
+  },
+  "truncated": false,
+  "nextCursor": null,
+  "hints": []
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "error": {
+    "code": "RATE_LIMITED",
+    "message": "Figma rate limit hit for tier 1 endpoints (plan: pro, seat: high).",
+    "hint": "Retry after 42s. Reuse the cached file with 'figctl file tree ABC' instead of re-fetching.",
+    "retryAfterSeconds": 42,
+    "httpStatus": 429
+  }
+}

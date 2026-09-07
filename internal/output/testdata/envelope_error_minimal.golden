@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "error": {
+    "code": "INTERNAL",
+    "message": "boom"
+  }
+}
