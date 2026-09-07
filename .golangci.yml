@@ -1,0 +1,64 @@
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - errcheck
+    - govet
+    - staticcheck
+    - revive
+    - gosec
+    - unused
+    - ineffassign
+    - misspell
+  settings:
+    errcheck:
+      # Best-effort writes to stderr and other io.Writer sinks; there is
+      # nothing to do when they fail.
+      exclude-functions:
+        - fmt.Fprint
+        - fmt.Fprintf
+        - fmt.Fprintln
+    gosec:
+      excludes:
+        # G304: file paths come from user flags (--token-file) by design.
+        - G304
+    revive:
+      rules:
+        - name: exported
+        - name: package-comments
+        - name: unused-parameter
+        - name: var-naming
+        - name: error-strings
+        - name: error-return
+        - name: increment-decrement
+        - name: indent-error-flow
+        - name: receiver-naming
+        - name: blank-imports
+        - name: context-as-argument
+        - name: dot-imports
+        - name: errorf
+        - name: superfluous-else
+        - name: unreachable-code
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters:
+          - gosec
+      # Generators and the evaluation harness write documentation,
+      # transcripts, and results that are meant to be world readable, and
+      # the harness launches the agent binary named by a flag. Secrets are
+      # written by internal/config, which is not excluded.
+      - path: ^(cmd|eval)/
+        linters:
+          - gosec
+        text: (G204|G301|G306|G703)
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/tiaanduplessis/figctl

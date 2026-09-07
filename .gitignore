@@ -1,0 +1,11 @@
+/bin/
+/dist/
+/figctl
+coverage.out
+*.test
+.DS_Store
+/.figctl/
+/eval/results/
+npm/bin/figctl
+npm/bin/figctl.exe
+npm/node_modules/
