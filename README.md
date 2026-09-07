@@ -54,22 +54,6 @@ The CLI gives up bidirectional communication with the Figma app. In exchange
 there is no server process, no per-turn tool schema tax, and the same commands
 run in CI, in a Dockerfile, and over SSH.
 
-### Compared with the other Figma CLIs
-
-| | figctl | [`@sahajamit/figma-cli`](https://github.com/sahajamit/figma-cli) | [`@figma-export/cli`](https://github.com/marcomontalbano/figma-export) |
-| --- | --- | --- | --- |
-| Shape | agent-first reader | thin REST wrapper with agent skills | build-pipeline exporter driven by a config file |
-| Node output | normalized model: CSS-equivalent layout, hex colours, token names | raw Figma JSON | none |
-| Design tokens | variables and styles across modes, DTCG 2025.10 | inferred from styles and node values | styles via Style Dictionary and other outputters |
-| Caching | whole file cached per version, validated with the cheap meta endpoint | none | none |
-| Rate limits | `Retry-After` honoured, surfaced in the error envelope | none | none |
-| Transformers and outputters | fixed set (DTCG, CSS, Tailwind, JSON, SVG cleanup) | none | pluggable, the reason to pick it |
-| Binary name | `figctl` | `figma` (collides with Figma's official Code Connect CLI) | `figma-export` |
-
-`@figma-export/cli` remains the better tool for a repeatable, configurable
-asset and style build in a JavaScript repo. figctl is aimed at an agent
-implementing a screen right now.
-
 The binary is called `figctl` because `figma` is already taken by Figma's own
 Code Connect CLI, which is widely installed in design-system repositories.
 
