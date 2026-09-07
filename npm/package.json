@@ -1,0 +1,48 @@
+{
+  "name": "figctl",
+  "version": "0.1.0",
+  "description": "Agent-first Figma CLI: read a Figma design and everything needed to implement it",
+  "keywords": [
+    "figma",
+    "cli",
+    "design-tokens",
+    "dtcg",
+    "design-system",
+    "ai-agent"
+  ],
+  "homepage": "https://github.com/tiaanduplessis/figctl#readme",
+  "bugs": {
+    "url": "https://github.com/tiaanduplessis/figctl/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tiaanduplessis/figctl.git",
+    "directory": "npm"
+  },
+  "license": "MIT",
+  "author": "Tiaan du Plessis",
+  "type": "commonjs",
+  "bin": {
+    "figctl": "bin/figctl.js"
+  },
+  "files": [
+    "bin/figctl.js",
+    "postinstall.js",
+    "README.md"
+  ],
+  "scripts": {
+    "postinstall": "node postinstall.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ]
+}

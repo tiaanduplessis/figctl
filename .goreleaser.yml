@@ -1,0 +1,159 @@
+# GoReleaser v2 configuration.
+# Validate with: goreleaser check
+# Dry run with:  goreleaser release --snapshot --clean
+version: 2
+
+project_name: figctl
+
+before:
+  hooks:
+    - go mod download
+
+builds:
+  - id: figctl
+    main: ./cmd/figctl
+    binary: figctl
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    # Keep these in sync with LDFLAGS in the Makefile.
+    ldflags:
+      - -s
+      - -w
+      - -X github.com/tiaanduplessis/figctl/internal/cli.version={{ .Version }}
+      - -X github.com/tiaanduplessis/figctl/internal/cli.commit={{ .ShortCommit }}
+      - -X github.com/tiaanduplessis/figctl/internal/cli.date={{ .Date }}
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+archives:
+  - id: figctl
+    ids:
+      - figctl
+    # figctl_0.1.0_darwin_arm64.tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    formats:
+      - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+    files:
+      - LICENSE
+      - README.md
+      - CHANGELOG.md
+
+source:
+  enabled: true
+  name_template: "{{ .ProjectName }}_{{ .Version }}_source"
+
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-snapshot"
+
+changelog:
+  use: github
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - "^ci:"
+      - "^build:"
+      - "^style:"
+      - "^refactor:"
+      - "merge conflict"
+      - Merge pull request
+      - Merge branch
+  groups:
+    - title: Features
+      regexp: '^.*?feat(\(.+\))??!?:.+$'
+      order: 0
+    - title: Bug fixes
+      regexp: '^.*?fix(\(.+\))??!?:.+$'
+      order: 1
+    - title: Performance
+      regexp: '^.*?perf(\(.+\))??!?:.+$'
+      order: 2
+    - title: Other
+      order: 999
+
+release:
+  github:
+    owner: tiaanduplessis
+    name: figctl
+  prerelease: auto
+  footer: |
+    ## Installation
+
+    ```sh
+    brew install tiaanduplessis/tap/figctl
+    go install github.com/tiaanduplessis/figctl/cmd/figctl@{{ .Tag }}
+    npx figctl@{{ .Version }} --help
+    ```
+
+    Verify a downloaded archive against `checksums.txt`:
+
+    ```sh
+    sha256sum -c checksums.txt --ignore-missing
+    ```
+
+homebrew_casks:
+  - name: figctl
+    ids:
+      - figctl
+    binaries:
+      - figctl
+    repository:
+      owner: tiaanduplessis
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    directory: Casks
+    homepage: https://github.com/tiaanduplessis/figctl
+    description: Agent-first Figma CLI - read a design and everything needed to implement it
+    license: MIT
+    commit_author:
+      name: goreleaser
+      email: noreply@github.com
+    generate_completions_from_executable:
+      executable: figctl
+      args:
+        - completion
+      shells:
+        - bash
+        - zsh
+        - fish
+    hooks:
+      post:
+        # The binaries are not notarized, so clear the quarantine flag macOS
+        # adds to anything downloaded, or the first run is blocked.
+        install: |
+          if system_command("/usr/bin/xattr", args: ["-h"]).exit_status == 0
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/figctl"]
+          end
+
+scoops:
+  - name: figctl
+    ids:
+      - figctl
+    repository:
+      owner: tiaanduplessis
+      name: scoop-bucket
+      token: "{{ .Env.SCOOP_BUCKET_TOKEN }}"
+    homepage: https://github.com/tiaanduplessis/figctl
+    description: Agent-first Figma CLI - read a design and everything needed to implement it
+    license: MIT
+    commit_author:
+      name: goreleaser
+      email: noreply@github.com
