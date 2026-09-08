@@ -117,9 +117,11 @@ padding: 24px;
 ```
 ````
 
-Square brackets are variables, braces are styles. A value reported with
-`"token": null` is not bound to anything in Figma, so the agent knows to
-hardcode it or ask rather than inventing a token that does not exist.
+Square brackets are variables, braces are styles. The `token` field has three
+states: a `name` means it is resolved, a bare `variableId` with
+`"unresolved": true` means a variable governs the value but naming it needs an
+Enterprise plan, and `null` means the designer typed it by hand. Only the last
+is safe to hardcode.
 
 Trim the payload with `--depth`, `--max-nodes`, `--no-assets`, `--no-comments`,
 `--no-screenshot`, `--no-css`.

@@ -294,6 +294,17 @@ type VariableBinding struct {
 	Fields  map[string]VariableAlias
 }
 
+// First returns the single alias a binding carries, or the first of a list.
+// Figma sends a bare object for some properties and an array for others, so a
+// caller that wants "the variable bound here" should not have to care which.
+func (b VariableBinding) First() (VariableAlias, bool) {
+	all := b.All()
+	if len(all) == 0 {
+		return VariableAlias{}, false
+	}
+	return all[0], true
+}
+
 // All returns every alias in the binding.
 func (b VariableBinding) All() []VariableAlias {
 	switch {
@@ -349,12 +360,12 @@ func (b VariableBinding) MarshalJSON() ([]byte, error) {
 
 // Paint is a fill or stroke.
 type Paint struct {
-	Type           string                   `json:"type"`
-	Visible        *bool                    `json:"visible,omitempty"`
-	Opacity        *float64                 `json:"opacity,omitempty"`
-	BlendMode      string                   `json:"blendMode,omitempty"`
-	Color          *Color                   `json:"color,omitempty"`
-	BoundVariables map[string]VariableAlias `json:"boundVariables,omitempty"`
+	Type           string                     `json:"type"`
+	Visible        *bool                      `json:"visible,omitempty"`
+	Opacity        *float64                   `json:"opacity,omitempty"`
+	BlendMode      string                     `json:"blendMode,omitempty"`
+	Color          *Color                     `json:"color,omitempty"`
+	BoundVariables map[string]VariableBinding `json:"boundVariables,omitempty"`
 
 	// Gradient paints.
 	GradientHandlePositions []Vector    `json:"gradientHandlePositions,omitempty"`
@@ -385,36 +396,36 @@ func (p Paint) IsVisible() bool {
 
 // ColorStop is one stop of a gradient.
 type ColorStop struct {
-	Position       float64                  `json:"position"`
-	Color          Color                    `json:"color"`
-	BoundVariables map[string]VariableAlias `json:"boundVariables,omitempty"`
+	Position       float64                    `json:"position"`
+	Color          Color                      `json:"color"`
+	BoundVariables map[string]VariableBinding `json:"boundVariables,omitempty"`
 }
 
 // LayoutGrid is a layout grid on a frame.
 type LayoutGrid struct {
-	Pattern        string                   `json:"pattern"`
-	SectionSize    float64                  `json:"sectionSize"`
-	Visible        bool                     `json:"visible"`
-	Color          Color                    `json:"color"`
-	Alignment      string                   `json:"alignment,omitempty"`
-	GutterSize     float64                  `json:"gutterSize"`
-	Offset         float64                  `json:"offset"`
-	Count          float64                  `json:"count"`
-	BoundVariables map[string]VariableAlias `json:"boundVariables,omitempty"`
+	Pattern        string                     `json:"pattern"`
+	SectionSize    float64                    `json:"sectionSize"`
+	Visible        bool                       `json:"visible"`
+	Color          Color                      `json:"color"`
+	Alignment      string                     `json:"alignment,omitempty"`
+	GutterSize     float64                    `json:"gutterSize"`
+	Offset         float64                    `json:"offset"`
+	Count          float64                    `json:"count"`
+	BoundVariables map[string]VariableBinding `json:"boundVariables,omitempty"`
 }
 
 // Effect is a shadow, blur, noise, or texture effect.
 type Effect struct {
-	Type                 string                   `json:"type"`
-	Visible              *bool                    `json:"visible,omitempty"`
-	Color                *Color                   `json:"color,omitempty"`
-	BlendMode            string                   `json:"blendMode,omitempty"`
-	Offset               *Vector                  `json:"offset,omitempty"`
-	Radius               *float64                 `json:"radius,omitempty"`
-	Spread               *float64                 `json:"spread,omitempty"`
-	ShowShadowBehindNode *bool                    `json:"showShadowBehindNode,omitempty"`
-	BlurType             string                   `json:"blurType,omitempty"`
-	BoundVariables       map[string]VariableAlias `json:"boundVariables,omitempty"`
+	Type                 string                     `json:"type"`
+	Visible              *bool                      `json:"visible,omitempty"`
+	Color                *Color                     `json:"color,omitempty"`
+	BlendMode            string                     `json:"blendMode,omitempty"`
+	Offset               *Vector                    `json:"offset,omitempty"`
+	Radius               *float64                   `json:"radius,omitempty"`
+	Spread               *float64                   `json:"spread,omitempty"`
+	ShowShadowBehindNode *bool                      `json:"showShadowBehindNode,omitempty"`
+	BlurType             string                     `json:"blurType,omitempty"`
+	BoundVariables       map[string]VariableBinding `json:"boundVariables,omitempty"`
 }
 
 // IsVisible reports whether the effect is visible. Figma omits the property
@@ -425,34 +436,34 @@ func (e Effect) IsVisible() bool {
 
 // TypeStyle is the typography of a text node or a text run.
 type TypeStyle struct {
-	FontFamily                string                   `json:"fontFamily,omitempty"`
-	FontPostScriptName        *string                  `json:"fontPostScriptName,omitempty"`
-	FontStyle                 string                   `json:"fontStyle,omitempty"`
-	Italic                    *bool                    `json:"italic,omitempty"`
-	FontWeight                *float64                 `json:"fontWeight,omitempty"`
-	FontSize                  *float64                 `json:"fontSize,omitempty"`
-	TextCase                  string                   `json:"textCase,omitempty"`
-	TextDecoration            string                   `json:"textDecoration,omitempty"`
-	TextAutoResize            string                   `json:"textAutoResize,omitempty"`
-	TextTruncation            string                   `json:"textTruncation,omitempty"`
-	MaxLines                  *int                     `json:"maxLines,omitempty"`
-	TextAlignHorizontal       string                   `json:"textAlignHorizontal,omitempty"`
-	TextAlignVertical         string                   `json:"textAlignVertical,omitempty"`
-	LetterSpacing             *float64                 `json:"letterSpacing,omitempty"`
-	Fills                     []Paint                  `json:"fills,omitempty"`
-	Hyperlink                 *Hyperlink               `json:"hyperlink,omitempty"`
-	OpentypeFlags             map[string]float64       `json:"opentypeFlags,omitempty"`
-	SemanticWeight            string                   `json:"semanticWeight,omitempty"`
-	SemanticItalic            string                   `json:"semanticItalic,omitempty"`
-	ParagraphSpacing          *float64                 `json:"paragraphSpacing,omitempty"`
-	ParagraphIndent           *float64                 `json:"paragraphIndent,omitempty"`
-	ListSpacing               *float64                 `json:"listSpacing,omitempty"`
-	LineHeightPx              *float64                 `json:"lineHeightPx,omitempty"`
-	LineHeightPercent         *float64                 `json:"lineHeightPercent,omitempty"`
-	LineHeightPercentFontSize *float64                 `json:"lineHeightPercentFontSize,omitempty"`
-	LineHeightUnit            string                   `json:"lineHeightUnit,omitempty"`
-	IsOverrideOverTextStyle   *bool                    `json:"isOverrideOverTextStyle,omitempty"`
-	BoundVariables            map[string]VariableAlias `json:"boundVariables,omitempty"`
+	FontFamily                string                     `json:"fontFamily,omitempty"`
+	FontPostScriptName        *string                    `json:"fontPostScriptName,omitempty"`
+	FontStyle                 string                     `json:"fontStyle,omitempty"`
+	Italic                    *bool                      `json:"italic,omitempty"`
+	FontWeight                *float64                   `json:"fontWeight,omitempty"`
+	FontSize                  *float64                   `json:"fontSize,omitempty"`
+	TextCase                  string                     `json:"textCase,omitempty"`
+	TextDecoration            string                     `json:"textDecoration,omitempty"`
+	TextAutoResize            string                     `json:"textAutoResize,omitempty"`
+	TextTruncation            string                     `json:"textTruncation,omitempty"`
+	MaxLines                  *int                       `json:"maxLines,omitempty"`
+	TextAlignHorizontal       string                     `json:"textAlignHorizontal,omitempty"`
+	TextAlignVertical         string                     `json:"textAlignVertical,omitempty"`
+	LetterSpacing             *float64                   `json:"letterSpacing,omitempty"`
+	Fills                     []Paint                    `json:"fills,omitempty"`
+	Hyperlink                 *Hyperlink                 `json:"hyperlink,omitempty"`
+	OpentypeFlags             map[string]float64         `json:"opentypeFlags,omitempty"`
+	SemanticWeight            string                     `json:"semanticWeight,omitempty"`
+	SemanticItalic            string                     `json:"semanticItalic,omitempty"`
+	ParagraphSpacing          *float64                   `json:"paragraphSpacing,omitempty"`
+	ParagraphIndent           *float64                   `json:"paragraphIndent,omitempty"`
+	ListSpacing               *float64                   `json:"listSpacing,omitempty"`
+	LineHeightPx              *float64                   `json:"lineHeightPx,omitempty"`
+	LineHeightPercent         *float64                   `json:"lineHeightPercent,omitempty"`
+	LineHeightPercentFontSize *float64                   `json:"lineHeightPercentFontSize,omitempty"`
+	LineHeightUnit            string                     `json:"lineHeightUnit,omitempty"`
+	IsOverrideOverTextStyle   *bool                      `json:"isOverrideOverTextStyle,omitempty"`
+	BoundVariables            map[string]VariableBinding `json:"boundVariables,omitempty"`
 }
 
 // Hyperlink is a link on a text run.
@@ -476,7 +487,7 @@ type ComponentProperty struct {
 	Type            string                       `json:"type"`
 	Value           any                          `json:"value"`
 	PreferredValues []InstanceSwapPreferredValue `json:"preferredValues,omitempty"`
-	BoundVariables  map[string]VariableAlias     `json:"boundVariables,omitempty"`
+	BoundVariables  map[string]VariableBinding   `json:"boundVariables,omitempty"`
 }
 
 // InstanceSwapPreferredValue is an allowed value of an INSTANCE_SWAP

@@ -89,15 +89,17 @@ func (r *Resolver) BoundAt(node *figma.Node, property string, i int) *model.Toke
 // the node level binding of the list property at the paint's index.
 func (r *Resolver) PaintToken(node *figma.Node, property string, i int, p figma.Paint) *model.TokenRef {
 	if a, ok := p.BoundVariables["color"]; ok {
-		return r.Token(a.ID)
+		return r.Token(first(a))
 	}
 	return r.BoundAt(node, property, i)
 }
 
 // AliasToken returns the token for a bound variable alias map entry.
-func (r *Resolver) AliasToken(bound map[string]figma.VariableAlias, field string) *model.TokenRef {
-	if a, ok := bound[field]; ok {
-		return r.Token(a.ID)
+func (r *Resolver) AliasToken(bound map[string]figma.VariableBinding, field string) *model.TokenRef {
+	if b, ok := bound[field]; ok {
+		if a, ok := b.First(); ok {
+			return r.Token(a.ID)
+		}
 	}
 	return nil
 }
@@ -119,4 +121,14 @@ func CSSVar(t *model.TokenRef) string {
 		name = "--" + name
 	}
 	return "var(" + name + ")"
+}
+
+// first is the variable id a binding points at, or the empty string. Figma
+// sends a bare alias for some properties and a list for others; callers that
+// want "the variable bound here" should not have to branch on that.
+func first(b figma.VariableBinding) string {
+	if a, ok := b.First(); ok {
+		return a.ID
+	}
+	return ""
 }

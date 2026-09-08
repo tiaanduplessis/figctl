@@ -73,7 +73,7 @@ func (r *Resolver) Paint(p figma.Paint) *model.Fill {
 		f.Type = strings.ToLower(p.Type)
 	}
 	if a, ok := p.BoundVariables["color"]; ok {
-		f.Token = r.Token(a.ID)
+		f.Token = r.Token(first(a))
 	}
 	return f
 }
@@ -118,7 +118,7 @@ func (r *Resolver) Effect(e figma.Effect) *model.Effect {
 		m.Radius = *e.Radius
 	}
 	if a, ok := e.BoundVariables["color"]; ok {
-		m.Token = r.Token(a.ID)
+		m.Token = r.Token(first(a))
 	}
 	switch e.Type {
 	case "DROP_SHADOW", "INNER_SHADOW":

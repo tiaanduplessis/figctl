@@ -127,9 +127,12 @@ width: 390px;
 ```
 ````
 
-Square brackets are variables, braces are styles. A value with `"token": null`
-in JSON output is not bound to anything in Figma, so the agent knows it has to
-hardcode it or ask.
+Square brackets are variables, braces are styles. In JSON the `token` field has
+three states, and the difference matters: a token with a `name` is resolved, a
+token with only a `variableId` and `"unresolved": true` is governed by a
+variable whose name needs an Enterprise plan to read, and `null` means the
+designer really did type the value by hand. Only the third is safe to
+hardcode.
 
 Measurements are the distances a designer pinned in Dev Mode, resolved to
 pixels from the two nodes' bounding boxes because the API reports only what

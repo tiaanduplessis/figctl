@@ -135,8 +135,14 @@ Bound values carry the design system name; unbound values do not:
 {"property":"fill","value":"#F3F4F6","token":null}
 ```
 
-`"token": null` means the designer used an ad hoc value. Use the token name when
-there is one; hardcode only where `token` is null, and say so.
+The `token` field has three states, and they mean different things:
+
+- a token with a `name`: use that design token in code.
+- a token with only a `variableId` and `"unresolved": true`: a variable governs
+  this value, but reading its name needs an Enterprise plan. Do not hardcode it
+  as if it were ad hoc; use the nearest equivalent token in the codebase, and
+  say which value it came from.
+- `null`: the designer typed the value by hand. Hardcode it, and say so.
 
 ## Measurements
 

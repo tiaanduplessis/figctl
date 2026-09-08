@@ -45,7 +45,7 @@ func (r *Resolver) Gradient(p figma.Paint) *model.Gradient {
 			CSS:      c.CSS() + " " + Num(s.Position*100, 2) + "%",
 		}
 		if alias, ok := s.BoundVariables["color"]; ok {
-			stop.Token = r.Token(alias.ID)
+			stop.Token = r.Token(first(alias))
 		}
 		g.Stops = append(g.Stops, stop)
 	}

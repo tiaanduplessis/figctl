@@ -28,7 +28,7 @@ func (r *Resolver) Typography(ts *figma.TypeStyle, style *model.StyleRef) *model
 	}
 	for key, alias := range ts.BoundVariables {
 		if _, ok := tokens[key]; !ok {
-			tokens[key] = r.Token(alias.ID)
+			tokens[key] = r.Token(first(alias))
 		}
 	}
 	t.Tokens = tokens

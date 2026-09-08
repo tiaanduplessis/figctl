@@ -66,8 +66,10 @@ func (in *inspector) instance(n *figma.Node) *model.Component {
 			c.Properties = map[string]model.Property{}
 		}
 		prop := model.Property{Type: p.Type, Value: p.Value, Key: key}
-		for _, alias := range p.BoundVariables {
-			prop.Token = in.r.Token(alias.ID)
+		for _, binding := range p.BoundVariables {
+			if a, ok := binding.First(); ok {
+				prop.Token = in.r.Token(a.ID)
+			}
 			break
 		}
 		c.Properties[propertyName(key)] = prop

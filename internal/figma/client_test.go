@@ -101,10 +101,10 @@ func TestGetFileDecodes(t *testing.T) {
 		t.Fatalf("layout grids: %+v", login.LayoutGrids)
 	}
 	heading := file.Document.Find("2:3")
-	if heading.Characters != "Welcome back" || *heading.Style.FontWeight != 700 || *heading.Style.LineHeightPx != 34 || heading.Style.BoundVariables["fontFamily"].ID != "VariableID:1:105" {
+	if heading.Characters != "Welcome back" || *heading.Style.FontWeight != 700 || *heading.Style.LineHeightPx != 34 || firstID(heading.Style.BoundVariables["fontFamily"]) != "VariableID:1:105" {
 		t.Fatalf("heading: %+v", heading.Style)
 	}
-	if heading.Fills[0].BoundVariables["color"].ID != "VariableID:1:202" {
+	if firstID(heading.Fills[0].BoundVariables["color"]) != "VariableID:1:202" {
 		t.Fatalf("heading fill binding: %+v", heading.Fills[0])
 	}
 	body := file.Document.Find("2:4")
@@ -134,7 +134,7 @@ func TestGetFileDecodes(t *testing.T) {
 		t.Fatalf("icon: %+v", icon)
 	}
 	blob := file.Document.Find("2:11")
-	if blob.Fills[0].Type != "GRADIENT_LINEAR" || len(blob.Fills[0].GradientStops) != 2 || blob.Fills[0].GradientStops[0].BoundVariables["color"].ID != "VariableID:1:101" {
+	if blob.Fills[0].Type != "GRADIENT_LINEAR" || len(blob.Fills[0].GradientStops) != 2 || firstID(blob.Fills[0].GradientStops[0].BoundVariables["color"]) != "VariableID:1:101" {
 		t.Fatalf("gradient: %+v", blob.Fills[0])
 	}
 	if debug := file.Document.Find("2:13"); debug.IsVisible() || debug.AbsoluteRenderBounds != nil {
@@ -640,4 +640,12 @@ func TestBaseURLDefault(t *testing.T) {
 	if c.LastRateLimit().Seen {
 		t.Fatal("no rate limit should be seen yet")
 	}
+}
+
+// firstID is the variable id a binding points at, for assertions.
+func firstID(b figma.VariableBinding) string {
+	if a, ok := b.First(); ok {
+		return a.ID
+	}
+	return ""
 }
