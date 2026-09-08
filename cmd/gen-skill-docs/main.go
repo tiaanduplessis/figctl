@@ -37,7 +37,7 @@ func main() {
 		fmt.Fprintln(os.Stderr, "gen-skill-docs:", err)
 		os.Exit(1)
 	}
-	if err := publish(*publishTo, *check); err != nil {
+	if err := publish(*out, *publishTo, *check); err != nil {
 		fmt.Fprintln(os.Stderr, "gen-skill-docs:", err)
 		os.Exit(1)
 	}
@@ -80,14 +80,22 @@ func generate(dir string, check bool) error {
 	return nil
 }
 
-// publish mirrors the embedded skill into a directory a skill installer can
-// discover. The published copy carries no ownership marker: another tool
-// installs it, so figctl does not claim it.
-func publish(dir string, check bool) error {
+// publish mirrors the skill into a directory a skill installer can discover.
+// The published copy carries no ownership marker: another tool installs it, so
+// figctl does not claim it.
+//
+// The templates are read from disk rather than from the embedded copy. The
+// embedded copy is fixed when this program was built, so publishing it would
+// republish the previous contents of any file generate has just rewritten.
+func publish(templateDir, dir string, check bool) error {
 	var stale []string
 	for _, f := range skill.Files() {
 		path := filepath.Join(dir, filepath.FromSlash(f.Path))
-		want := f.Template()
+		source, err := os.ReadFile(filepath.Join(templateDir, filepath.FromSlash(f.Path)))
+		if err != nil {
+			return fmt.Errorf("reading %s: %w", f.Path, err)
+		}
+		want := string(source)
 		got, err := os.ReadFile(path)
 		if err != nil && !os.IsNotExist(err) {
 			return fmt.Errorf("reading %s: %w", path, err)

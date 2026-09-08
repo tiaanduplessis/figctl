@@ -397,6 +397,15 @@ white-space: nowrap;
 
 Read these files with your image or vision tool before writing code.
 
+## Measurements
+
+Distances the designer pinned in Dev Mode. Prefer these over a gap read off the screenshot.
+
+| value | axis | from | to | note |
+| --- | --- | --- | --- | --- |
+| 56px | vertical | Heading bottom | Input/Text top |  |
+| 16-24 responsive (set by the designer) | vertical | Input/Text bottom | Button/Primary top |  |
+
 ## Comments
 
 - Fixture Designer on 2:2 (2026-08-28T14:02:00Z, open): Use the **primary** button here; the label should read "Sign in".
@@ -407,4 +416,5 @@ Hints:
 - Read the screenshot with your image or vision tool before writing code: <OUT>/login@2x.png
 - Every value with "token": null is not bound to a variable: hardcode it, or ask the designer for a token. Values with a token name should use that design token in code.
 - Assets were written to <OUT>: inline or import the SVG icons and reference the image fills by path.
+- The designer pinned 2 measurement(s) in Dev Mode; see data.measurements. They state a spacing decision outright, so prefer them over a gap read off the screenshot.
 - When the implementation is ready, run figctl render FixTuReDeSiGnSySt3m01 --node 2:2 and compare it with your result.

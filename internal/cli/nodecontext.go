@@ -122,23 +122,25 @@ type contextSummary struct {
 	Assets       int      `json:"assets"`
 	Comments     int      `json:"comments"`
 	DevResources int      `json:"devResources"`
+	Measurements int      `json:"measurements"`
 	Page         string   `json:"page,omitempty"`
 	Path         []string `json:"path"`
 }
 
 // contextData is the data of node context.
 type contextData struct {
-	OutDir       string             `json:"outDir"`
-	Nodes        []contextNode      `json:"nodes"`
-	Tokens       []model.TokenRef   `json:"tokens"`
-	Styles       []model.StyleRef   `json:"styles"`
-	Components   []contextComponent `json:"components"`
-	Assets       contextAssets      `json:"assets"`
-	Comments     []commentRow       `json:"comments"`
-	DevResources []devResourceRow   `json:"devResources"`
-	Summary      contextSummary     `json:"summary"`
-	Failures     []contextFailure   `json:"failures"`
-	Requests     int                `json:"requests"`
+	OutDir       string              `json:"outDir"`
+	Nodes        []contextNode       `json:"nodes"`
+	Tokens       []model.TokenRef    `json:"tokens"`
+	Styles       []model.StyleRef    `json:"styles"`
+	Components   []contextComponent  `json:"components"`
+	Assets       contextAssets       `json:"assets"`
+	Comments     []commentRow        `json:"comments"`
+	DevResources []devResourceRow    `json:"devResources"`
+	Measurements []model.Measurement `json:"measurements"`
+	Summary      contextSummary      `json:"summary"`
+	Failures     []contextFailure    `json:"failures"`
+	Requests     int                 `json:"requests"`
 
 	// devResources indexes every dev resource of the file by node id so
 	// component entries can pick up the ones on their main component. It
@@ -208,6 +210,7 @@ func (d contextData) Markdown() string {
 	d.writeComponentsMarkdown(&b)
 	d.writeAssetsMarkdown(&b)
 	d.writeScreenshotsMarkdown(&b)
+	d.writeMeasurementsMarkdown(&b)
 	d.writeCommentsMarkdown(&b)
 	d.writeDevResourcesMarkdown(&b)
 	d.writeFailuresMarkdown(&b)
@@ -309,6 +312,47 @@ func (d contextData) writeScreenshotsMarkdown(b *strings.Builder) {
 	}
 	writeContextTable(b, []string{"nodeId", "name", "path", "scale"}, rows)
 	b.WriteString("\nRead these files with your image or vision tool before writing code.\n\n")
+}
+
+// writeMeasurementsMarkdown lists the distances a designer pinned in Dev Mode.
+// They are spacing stated outright rather than inferred from layout, so they
+// are worth reading before deciding what a gap should be.
+func (d contextData) writeMeasurementsMarkdown(b *strings.Builder) {
+	if len(d.Measurements) == 0 {
+		return
+	}
+	b.WriteString("## Measurements\n\n")
+	b.WriteString("Distances the designer pinned in Dev Mode. Prefer these over a gap read off the screenshot.\n\n")
+	rows := make([][]string, 0, len(d.Measurements))
+	for _, m := range d.Measurements {
+		value := m.Label
+		if value == "" {
+			value = "unresolved"
+		}
+		if m.FreeText != "" {
+			value += " (set by the designer)"
+		}
+		note := m.Unresolved
+		rows = append(rows, []string{
+			value,
+			m.Axis,
+			pinLabel(m.Start),
+			pinLabel(m.End),
+			note,
+		})
+	}
+	writeContextTable(b, []string{"value", "axis", "from", "to", "note"}, rows)
+	b.WriteString("\n")
+}
+
+// pinLabel names one end of a measurement the way a reader would: the layer
+// name and the side, falling back to the id when the node is not in view.
+func pinLabel(p model.MeasurementPin) string {
+	name := p.Name
+	if name == "" {
+		name = p.NodeID
+	}
+	return name + " " + strings.ToLower(p.Side)
 }
 
 func (d contextData) writeCommentsMarkdown(b *strings.Builder) {
@@ -511,6 +555,7 @@ func runNodeContext(ctx *Context, arg string, opts *contextOptions) error {
 		Assets:       contextAssets{Icons: []assets.Result{}, ImageFills: []fillEntry{}},
 		Comments:     []commentRow{},
 		DevResources: []devResourceRow{},
+		Measurements: []model.Measurement{},
 		Failures:     []contextFailure{},
 	}
 	inspectOpts := inspect.Options{
@@ -533,6 +578,13 @@ func runNodeContext(ctx *Context, arg string, opts *contextOptions) error {
 
 	data.Tokens, data.Styles = usedTokens(models)
 	data.Summary.Tokens, data.Summary.Styles = len(data.Tokens), len(data.Styles)
+
+	// Measurements are pinned on the page rather than on the nodes they
+	// measure, so they are only available when the whole document is in hand.
+	if file != nil && file.Document != nil {
+		data.Measurements = inspect.Measurements(file.Document, roots...)
+	}
+	data.Summary.Measurements = len(data.Measurements)
 
 	components, err := contextComponentsOf(rctx, session, r.FileKey, file, models)
 	if err != nil {
@@ -1075,6 +1127,9 @@ func contextHints(fileKey string, data contextData, opts *contextOptions) []stri
 	}
 	if len(data.Tokens) == 0 && len(data.Styles) == 0 {
 		hints = append(hints, "No variable or style is bound in this subtree, so every value above is raw; figctl tokens export "+fileKey+" lists the design system vocabulary of the whole file.")
+	}
+	if n := len(data.Measurements); n > 0 {
+		hints = append(hints, fmt.Sprintf("The designer pinned %d measurement(s) in Dev Mode; see data.measurements. They state a spacing decision outright, so prefer them over a gap read off the screenshot.", n))
 	}
 	if opts.noComments {
 		hints = append(hints, "Comments and dev resources were skipped (--no-comments); run figctl comments list "+fileKey+" --node "+data.Nodes[0].ID+" to read designer intent.")

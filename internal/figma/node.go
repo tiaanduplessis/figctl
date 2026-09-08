@@ -141,8 +141,10 @@ type Node struct {
 	FlowStartingPoints   []FlowStartingPoint `json:"flowStartingPoints,omitempty"`
 	PrototypeDevice      json.RawMessage     `json:"prototypeDevice,omitempty"`
 
-	// Dev Mode.
-	DevStatus *DevStatus `json:"devStatus,omitempty"`
+	// Dev Mode. Measurements are pinned on the page, not on the nodes they
+	// measure, so they appear on CANVAS nodes only.
+	DevStatus    *DevStatus    `json:"devStatus,omitempty"`
+	Measurements []Measurement `json:"measurements,omitempty"`
 
 	// Type specific extras.
 	SectionContentsHidden *bool    `json:"sectionContentsHidden,omitempty"`
@@ -558,4 +560,37 @@ type ArcData struct {
 	StartingAngle float64 `json:"startingAngle"`
 	EndingAngle   float64 `json:"endingAngle"`
 	InnerRadius   float64 `json:"innerRadius"`
+}
+
+// Measurement is a distance a designer pinned between two nodes in Dev Mode.
+// It is spacing the design depends on that auto layout does not always
+// express, so it is intent worth reading rather than inferring.
+//
+// The API reports what the measurement is pinned to but not how far apart the
+// two sides actually are; that has to be computed from the nodes' bounding
+// boxes.
+type Measurement struct {
+	ID     string              `json:"id"`
+	Start  MeasurementStartEnd `json:"start"`
+	End    MeasurementStartEnd `json:"end"`
+	Offset MeasurementOffset   `json:"offset"`
+	// FreeText is the label the designer typed instead of the measured
+	// value. When it is set, it is what the design actually specifies.
+	FreeText string `json:"freeText,omitempty"`
+}
+
+// MeasurementStartEnd is the node and the side a measurement is pinned to.
+type MeasurementStartEnd struct {
+	NodeID string `json:"nodeId"`
+	// Side is TOP, RIGHT, BOTTOM, or LEFT.
+	Side string `json:"side"`
+}
+
+// MeasurementOffset is where along the side the measurement sits. INNER
+// offsets are a fraction of the start node's side; OUTER offsets are a fixed
+// distance from it.
+type MeasurementOffset struct {
+	Type     string   `json:"type"`
+	Relative *float64 `json:"relative,omitempty"`
+	Fixed    *float64 `json:"fixed,omitempty"`
 }

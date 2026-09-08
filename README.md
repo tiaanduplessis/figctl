@@ -95,8 +95,9 @@ figctl node context KEY --node 2:2
 
 One call returns the normalized model, a PNG screenshot on disk, SVG exports of
 the icon-like layers, the raster image fills, only the tokens the subtree uses,
-the component and variant definitions of every instance, the comments pinned on
-the node, and the dev resource links. Abbreviated `-o md` output:
+the component and variant definitions of every instance, the Dev Mode
+measurements pinned across it, the comments pinned on the node, and the dev
+resource links. Abbreviated `-o md` output:
 
 ````
 ## Node: Login (2:2, FRAME)
@@ -129,6 +130,13 @@ width: 390px;
 Square brackets are variables, braces are styles. A value with `"token": null`
 in JSON output is not bound to anything in Figma, so the agent knows it has to
 hardcode it or ask.
+
+Measurements are the distances a designer pinned in Dev Mode, resolved to
+pixels from the two nodes' bounding boxes because the API reports only what
+each one is pinned to. They are a spacing decision stated outright rather than
+inferred from auto layout or read off the screenshot, so prefer them. When the
+designer typed a value over the measured one, that override is reported as the
+label and the measured number is kept beside it.
 
 Trim the payload with `--depth`, `--max-nodes`, `--no-assets`, `--no-comments`,
 `--no-screenshot`, `--no-css`.

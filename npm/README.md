@@ -91,7 +91,8 @@ npx figctl node context KEY --node 2:2
 One call returns the normalized model, a PNG screenshot written to disk, SVG
 exports of the icon-like layers, the raster image fills, only the design tokens
 that subtree actually uses, the component and variant definitions of every
-instance, the comments pinned on the node, and the Dev Mode resource links.
+instance, the distances the designer pinned in Dev Mode, the comments pinned on
+the node, and the Dev Mode resource links.
 
 ````
 ## Node: Login (2:2, FRAME)

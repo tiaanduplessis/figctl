@@ -138,6 +138,14 @@ Bound values carry the design system name; unbound values do not:
 `"token": null` means the designer used an ad hoc value. Use the token name when
 there is one; hardcode only where `token` is null, and say so.
 
+## Measurements
+
+`node context` reports `measurements`: distances the designer pinned in Dev
+Mode, resolved to pixels. They are a spacing decision stated outright, so use
+them in preference to a gap inferred from layout or estimated from the
+screenshot. When `freeText` is set the designer overrode the measured value,
+and that override is what the design specifies.
+
 Variables need an Enterprise plan and the `file_variables:read` scope. On any
 other plan the variables commands degrade to styles plus raw values and say so
 in `hints`. That is expected, not an error to work around.

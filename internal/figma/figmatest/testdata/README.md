@@ -46,6 +46,9 @@ can be looked up in the others.
 │               ├── 2:15 FRAME "Stat"          gridRowSpan 2
 │               ├── 2:16 TEXT "Count"          "128", UPPER case, tabular numerals
 │               └── 2:17 TEXT "Caption"        "Designs shipped", truncation ENDING, maxLines 1
+│   (the canvas carries two Dev Mode measurements: M:1 pins 2:3 BOTTOM to 2:5 TOP,
+│    a 56px vertical gap; M:2 pins 2:5 BOTTOM to 2:6 TOP, 16px, overridden by the
+│    designer with the free text "16-24 responsive")
 └── 1:2 CANVAS "Design System"
     ├── 3:10 COMPONENT_SET "Button"            props Variant: Primary|Secondary, Size: sm|md, Label#5:0 (TEXT)
     │   ├── 3:11 COMPONENT "Variant=Primary, Size=md"    160x48, fill style 5:1, child 3:12 TEXT "Label"

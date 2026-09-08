@@ -379,3 +379,48 @@ type StyleRef struct {
 	Name string `json:"name"`
 	Type string `json:"type"`
 }
+
+// Measurement is a distance a designer pinned between two nodes in Dev Mode,
+// with the gap resolved to pixels. Figma reports only what the measurement is
+// attached to, so Distance is computed from the two nodes' bounding boxes.
+//
+// A measurement is a spacing decision stated outright rather than inferred
+// from layout, which makes it the design's own answer where auto layout and a
+// screenshot can only be read for clues.
+type Measurement struct {
+	ID string `json:"id"`
+	// Axis is horizontal or vertical, taken from the sides the measurement
+	// is pinned to. It is empty when the two sides do not share an axis.
+	Axis string `json:"axis,omitempty"`
+	// Distance is the gap in pixels, absent when it cannot be computed
+	// because a node is missing a bounding box or the sides disagree.
+	Distance *float64 `json:"distance,omitempty"`
+	// CSS is Distance as a length, for pasting into a rule.
+	CSS string `json:"css,omitempty"`
+	// Label is what the design specifies: the designer's own text when they
+	// overrode the value, otherwise the measured distance.
+	Label string `json:"label,omitempty"`
+	// FreeText is set only when the designer replaced the measured value.
+	FreeText string             `json:"freeText,omitempty"`
+	Start    MeasurementPin     `json:"start"`
+	End      MeasurementPin     `json:"end"`
+	Offset   *MeasurementOffset `json:"offset,omitempty"`
+	// Unresolved says why Distance is absent.
+	Unresolved string `json:"unresolved,omitempty"`
+}
+
+// MeasurementPin is one end of a measurement: the node, its name, and the
+// side the pin sits on.
+type MeasurementPin struct {
+	NodeID string `json:"nodeId"`
+	Name   string `json:"name,omitempty"`
+	Type   string `json:"type,omitempty"`
+	Side   string `json:"side"`
+}
+
+// MeasurementOffset is where along the side the measurement sits.
+type MeasurementOffset struct {
+	Type     string   `json:"type"`
+	Relative *float64 `json:"relative,omitempty"`
+	Fixed    *float64 `json:"fixed,omitempty"`
+}

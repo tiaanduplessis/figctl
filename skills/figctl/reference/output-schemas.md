@@ -433,6 +433,28 @@ items that failed are in `data.failures`).
 | `devResources[].name` | string | yes |  |
 | `devResources[].url` | string | yes |  |
 | `devResources[].nodeId` | string | yes |  |
+| `measurements` | array of Measurement | yes |  |
+| `measurements[].id` | string | yes |  |
+| `measurements[].axis` | string |  |  |
+| `measurements[].distance` | number |  |  |
+| `measurements[].css` | string |  |  |
+| `measurements[].label` | string |  |  |
+| `measurements[].freeText` | string |  |  |
+| `measurements[].start` | MeasurementPin | yes |  |
+| `measurements[].start.nodeId` | string | yes |  |
+| `measurements[].start.name` | string |  |  |
+| `measurements[].start.type` | string |  |  |
+| `measurements[].start.side` | string | yes |  |
+| `measurements[].end` | MeasurementPin | yes |  |
+| `measurements[].end.nodeId` | string | yes |  |
+| `measurements[].end.name` | string |  |  |
+| `measurements[].end.type` | string |  |  |
+| `measurements[].end.side` | string | yes |  |
+| `measurements[].offset` | MeasurementOffset |  |  |
+| `measurements[].offset.type` | string | yes |  |
+| `measurements[].offset.relative` | number |  |  |
+| `measurements[].offset.fixed` | number |  |  |
+| `measurements[].unresolved` | string |  |  |
 | `summary` | contextSummary | yes |  |
 | `summary.nodes` | integer | yes |  |
 | `summary.tokens` | integer | yes |  |
@@ -441,6 +463,7 @@ items that failed are in `data.failures`).
 | `summary.assets` | integer | yes |  |
 | `summary.comments` | integer | yes |  |
 | `summary.devResources` | integer | yes |  |
+| `summary.measurements` | integer | yes |  |
 | `summary.page` | string |  |  |
 | `summary.path` | array of string | yes |  |
 | `failures` | array of contextFailure | yes |  |
