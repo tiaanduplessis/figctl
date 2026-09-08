@@ -933,7 +933,10 @@ items that failed are in `data.failures`).
 - `comments.list`
 - `components.get`
 - `components.list`
+- `devresources.add`
 - `devresources.list`
+- `devresources.remove`
+- `devresources.update`
 - `file.find`
 - `file.get` (no static schema: file get returns the raw Figma file or nodes JSON, whose shape is Figma's own file schema, not a figctl type)
 - `file.info`
@@ -961,6 +964,7 @@ items that failed are in `data.failures`).
 - `tokens.export`
 - `tokens.resolve`
 - `variables.get`
+- `variables.infer`
 - `variables.list`
 - `version`
 - `versions.list`

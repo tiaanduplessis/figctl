@@ -69,6 +69,9 @@ var schemaTargets = []schemaTarget{
 	{name: "components.get", value: componentDetail{}},
 	{name: "components.list", value: componentList{}},
 	{name: "devresources.list", value: devResourceList{}},
+	{name: "devresources.add", value: devResourceWriteData{}},
+	{name: "devresources.update", value: devResourceWriteData{}},
+	{name: "devresources.remove", value: devResourceWriteData{}},
 	{name: "file.find", value: findHits{}},
 	{name: "file.get", note: "file get returns the raw Figma file or nodes JSON, whose shape is Figma's own file schema, not a figctl type."},
 	{name: "file.info", value: fileInfo{}},
@@ -97,6 +100,7 @@ var schemaTargets = []schemaTarget{
 	{name: "tokens.resolve", value: tokenResolution{}},
 	{name: "variables.get", value: variableDetail{}},
 	{name: "variables.list", value: variableList{}},
+	{name: "variables.infer", value: inferData{}},
 	{name: "version", value: versionInfo{}},
 	{name: "versions.list", value: versionList{}},
 }
