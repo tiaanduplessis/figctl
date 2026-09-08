@@ -1,9 +1,11 @@
 package cli
 
 import (
+	"net/http"
 	"strings"
 	"testing"
 
+	"github.com/tiaanduplessis/figctl/internal/figctl"
 	"github.com/tiaanduplessis/figctl/internal/figma/figmatest"
 )
 
@@ -99,5 +101,81 @@ func TestNodeContextMeasurementsScopedToTheNode(t *testing.T) {
 	d := data(t, r, "node.context")
 	if list, _ := d["measurements"].([]any); len(list) != 0 {
 		t.Fatalf("no measurement is pinned to this node, got %v", list)
+	}
+}
+
+// TestNodeContextMeasurementsOnALargeFile covers the path that matters in
+// practice. A production file is often too large for Figma to return whole,
+// and measurements are pinned on the page rather than on the node, so a
+// fallback that fetches only the node subtree loses them entirely along with
+// the page name and the ancestor path.
+func TestNodeContextMeasurementsOnALargeFile(t *testing.T) {
+	api := setup(t)
+	// Refuse the whole document exactly as Figma does for a large file, while
+	// leaving the id-scoped fetch working.
+	api.Handle(http.MethodGet, "/v1/files/"+figmatest.FileKey, func(w http.ResponseWriter, r *http.Request) {
+		q := r.URL.Query()
+		if q.Get("ids") == "" && q.Get("depth") == "" {
+			figmatest.WriteResponse(w, figmatest.Response{
+				Status: http.StatusBadRequest,
+				Body:   map[string]any{"status": 400, "err": "Request too large. If applicable, filter by query params."},
+			})
+			return
+		}
+		api.ServeDefault(w, r)
+	})
+
+	dir := t.TempDir()
+	r := execute(t, "", "node", "context", figmatest.FileKey, "--node", "2:2",
+		"--out", dir, "--no-screenshot", "--no-assets")
+	ok(t, r)
+	d := data(t, r, "node.context")
+
+	if list, _ := d["measurements"].([]any); len(list) != 2 {
+		t.Fatalf("measurements should survive the large-file fallback, got %v", d["measurements"])
+	}
+	node := d["nodes"].([]any)[0].(map[string]any)
+	if node["page"] != "Screens" {
+		t.Errorf("the page should be known through the scoped fetch, got %v", node["page"])
+	}
+	if path, _ := node["path"].([]any); len(path) == 0 {
+		t.Error("the ancestor path should be known through the scoped fetch")
+	}
+}
+
+// TestNodeContextSurvivesARenderTimeout covers a large frame that Figma is
+// slow to render. The inspected model, the tokens, and the components are
+// already resolved by then, and they are the expensive part; discarding them
+// because an image did not arrive turns a recoverable problem into a failed
+// command.
+func TestNodeContextSurvivesARenderTimeout(t *testing.T) {
+	api := setup(t)
+	api.Handle(http.MethodGet, "/v1/images/"+figmatest.FileKey, func(w http.ResponseWriter, _ *http.Request) {
+		figmatest.WriteResponse(w, figmatest.Response{
+			Status: http.StatusGatewayTimeout,
+			Body:   map[string]any{"status": 504, "err": "Gateway timeout"},
+		})
+	})
+
+	dir := t.TempDir()
+	r := execute(t, "", "node", "context", figmatest.FileKey, "--node", "2:2",
+		"--out", dir, "--no-assets")
+	// Partial, not a failure: the bundle is usable.
+	if r.code != figctl.ExitPartial {
+		t.Fatalf("exit = %d, want %d\n%s\n%s", r.code, figctl.ExitPartial, r.stdout, r.stderr)
+	}
+	d := data(t, r, "node.context")
+	if nodes, _ := d["nodes"].([]any); len(nodes) != 1 {
+		t.Fatalf("the inspected model must survive: %v", d["nodes"])
+	}
+	if tokens, _ := d["tokens"].([]any); len(tokens) == 0 {
+		t.Error("the tokens must survive a render failure")
+	}
+	failures, _ := d["failures"].([]any)
+	if len(failures) == 0 {
+		t.Fatal("the lost screenshot should be reported in failures")
+	}
+	if kind := failures[0].(map[string]any)["kind"]; kind != "screenshot" {
+		t.Errorf("failure kind = %v, want screenshot", kind)
 	}
 }

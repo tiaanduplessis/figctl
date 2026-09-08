@@ -844,3 +844,16 @@ func (s *Server) deleteDevResource(w http.ResponseWriter, id string) {
 	}
 	w.WriteHeader(http.StatusOK)
 }
+
+// WriteResponse writes a canned response, for a handler registered with
+// Handle that wants to answer some requests itself and defer the rest.
+func WriteResponse(w http.ResponseWriter, resp Response) { writeResponse(w, resp) }
+
+// ServeDefault runs the server's normal routing. A handler registered with
+// Handle uses it to answer the requests it does not want to intercept, which
+// is how a test can fail one shape of request to a path while leaving the
+// others working.
+func (s *Server) ServeDefault(w http.ResponseWriter, r *http.Request) {
+	body, _ := io.ReadAll(r.Body)
+	s.route(w, r, body)
+}

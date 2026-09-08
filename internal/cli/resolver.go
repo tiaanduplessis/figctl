@@ -116,13 +116,22 @@ func (s *Session) StyleCatalog(ctx context.Context, key string) (map[string]figm
 // fileMetadata returns the whole document when available, otherwise a
 // file built from the metadata carried by the fetched node entries so
 // components, sets, and styles still resolve for large files.
-func (s *Session) fileMetadata(ctx context.Context, key string, nodes *figma.GetFileNodesResponse) (*figma.GetFileResponse, error) {
+func (s *Session) fileMetadata(ctx context.Context, key string, nodes *figma.GetFileNodesResponse, ids ...string) (*figma.GetFileResponse, error) {
 	file, err := s.File(ctx, key)
 	if err == nil {
 		return file, nil
 	}
 	if !errors.Is(err, errTooLarge) {
 		return nil, err
+	}
+	// The whole document is out of reach, but the document narrowed to these
+	// nodes is not, and it still carries the page and the ancestors. Without
+	// it the caller loses the page name, the path, and the measurements the
+	// designer pinned on the page.
+	if scoped, serr := s.Scoped(ctx, key, ids); serr == nil && scoped.Document != nil {
+		return scoped, nil
+	} else if serr != nil && !errors.Is(serr, errTooLarge) {
+		s.ctx.Log.Debugf("scoped document fetch failed for %s: %v", key, serr)
 	}
 	file = &figma.GetFileResponse{
 		Components:    map[string]figma.Component{},

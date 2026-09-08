@@ -300,6 +300,28 @@ type fileHead struct {
 	LastModified string `json:"lastModified"`
 }
 
+// Scoped fetches the document narrowed to the given nodes. Figma returns the
+// requested subtrees plus every node between them and the root, so the result
+// carries the page a node sits on and the ancestors above it.
+//
+// This is how a file too large to return whole is still read as a document.
+// GET nodes returns a subtree with no idea where it sits, which loses the page
+// name, the ancestor path, and the measurements a designer pinned on the page.
+func (s *Session) Scoped(ctx context.Context, key string, ids []string) (*figma.GetFileResponse, error) {
+	if len(ids) == 0 {
+		return nil, errTooLarge
+	}
+	opts := figma.FileOptions{Version: s.version, IDs: ids}
+	file, err := cached(ctx, s, key, cache.Key("file", opts.Query()), func(ctx context.Context) (*figma.GetFileResponse, error) {
+		return s.Client.GetFile(ctx, key, opts)
+	})
+	if err != nil {
+		return nil, err
+	}
+	s.touch(key, file.Name, file.Version, file.LastModified)
+	return file, nil
+}
+
 // Overview returns the file with pages and their top level children
 // (depth 2), served from the whole document when available.
 func (s *Session) Overview(ctx context.Context, key string) (*figma.GetFileResponse, error) {

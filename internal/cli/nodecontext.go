@@ -524,7 +524,7 @@ func runNodeContext(ctx *Context, arg string, opts *contextOptions) error {
 	if err != nil {
 		return err
 	}
-	file, err := session.fileMetadata(rctx, r.FileKey, resp)
+	file, err := session.fileMetadata(rctx, r.FileKey, resp, ids...)
 	if err != nil {
 		return err
 	}
@@ -676,6 +676,19 @@ func renderContextScreenshots(rctx context.Context, session *Session, key, versi
 	}
 	out, err := assets.Render(rctx, session.Client, session.Cache, key, version, req)
 	if err != nil {
+		// Rendering a large frame can outlast the timeout or drop the
+		// connection. The inspected model, the tokens, and the components are
+		// already in hand, and they are the part that cannot be recovered by
+		// running one more command, so record the loss and keep them.
+		if code := figctl.From(err).Code; code == figctl.CodeNetwork || code == figctl.CodeRateLimited {
+			for _, item := range req.Items {
+				data.Failures = append(data.Failures, contextFailure{
+					Kind: failureScreenshot, ID: item.NodeID, Name: item.Name,
+					Error: figctl.From(err).Message,
+				})
+			}
+			return nil
+		}
 		return err
 	}
 	data.Requests += out.Requests
@@ -701,6 +714,14 @@ func exportContextAssets(rctx context.Context, session *Session, key, version, d
 	}
 	out, err := assets.Render(rctx, session.Client, session.Cache, key, version, req)
 	if err != nil {
+		// Assets are supporting material; losing them to a timeout must not
+		// discard the model and tokens already resolved.
+		if code := figctl.From(err).Code; code == figctl.CodeNetwork || code == figctl.CodeRateLimited {
+			data.Failures = append(data.Failures, contextFailure{
+				Kind: failureIcon, Error: figctl.From(err).Message,
+			})
+			return nil
+		}
 		return err
 	}
 	data.Requests += out.Requests

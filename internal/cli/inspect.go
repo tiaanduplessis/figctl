@@ -493,7 +493,7 @@ func init() {
 		if err != nil {
 			return err
 		}
-		file, err := session.fileMetadata(rctx, r.FileKey, result)
+		file, err := session.fileMetadata(rctx, r.FileKey, result, ids...)
 		if err != nil {
 			return err
 		}
