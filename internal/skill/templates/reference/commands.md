@@ -1095,6 +1095,46 @@ Example:
 figctl variables get KEY --id VariableID:1:201
 ```
 
+### figctl variables infer
+
+Reconstruct the variables a file uses from how they are used.
+
+```
+figctl variables infer [ref] [flags]
+```
+
+Report the variables a file uses by walking its nodes, for accounts that
+cannot read the variables endpoint.
+
+Reading variables needs an Enterprise plan, but the bindings do not: every node
+says which variable governs each of its properties, and the value that variable
+resolved to sits on the same node. Walking the file therefore recovers which
+values are governed, which places share one, and what each resolves to.
+
+What it cannot recover is the designer's name for a variable and the collection
+it belongs to. Names here are derived from the category and the most common
+observed value, and every entry says so, because a plausible invented name
+reads as authoritative and cannot be checked.
+
+A variable seen resolving to more than one value is reported as likely having
+modes, which is what light and dark look like from the outside.
+
+On a plan that can read variables, prefer figctl variables list: it has the
+real names, collections, and every mode.
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--include-hidden` |  | walk nodes the designer turned off |
+| `--min-usages int` |  | drop variables bound fewer times than this |
+| `--node stringArray` |  | limit the walk to these nodes; repeatable |
+| `--samples int` | `3` | node ids kept per observed value |
+
+Example:
+
+```
+figctl variables infer design-system
+```
+
 ### figctl variables list
 
 List variables with values per mode, code syntax, scopes, and descriptions.

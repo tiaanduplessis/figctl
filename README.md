@@ -421,6 +421,34 @@ API does not expose it:
 figctl auth login --profile acme --expires 2026-12-01
 ```
 
+### Recovering variables without Enterprise
+
+Reading variables needs an Enterprise plan, but the bindings do not. Every node
+reports which variable governs each of its properties with ordinary file
+content access, and the value that variable resolved to sits on the same node:
+
+```sh
+figctl variables infer design-system --min-usages 20
+```
+
+```
+name                  category  values             usages  modes
+color/b0b0b0          color     #b0b0b0 (13934)    13942
+color/262626          color     #262626 (10896)    10930
+color/56a7a2-3-4      color     #56a7a2 (2725)     2762
+```
+
+That recovers which values are governed, which places share one, and what each
+resolves to. A variable seen resolving to more than one value is reported as
+likely having modes, which is what light and dark look like from the outside.
+
+What it cannot recover is the designer's name and the collection. Names are
+derived from the category and the most common value, every entry says so, and
+two variables that resolve to the same value are kept apart by their id rather
+than by a counter, so the names are stable between runs. On a plan that can
+read variables, `figctl variables list` is better in every way and the command
+says so.
+
 Variables need an Enterprise plan and a full seat. The `file_variables:read`
 scope is not offered on the token screen on other plans, so a token simply
 cannot carry it and `figctl variables list` fails with `AUTH_SCOPE` naming the

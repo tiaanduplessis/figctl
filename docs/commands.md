@@ -74,6 +74,7 @@ codes, and error codes.
 | [`figctl tokens resolve`](#figctl-tokens-resolve) | Resolve one variable or style to concrete values across modes |
 | [`figctl variables`](#figctl-variables) | Raw variables and collections with values resolved per mode (Enterprise) |
 | [`figctl variables get`](#figctl-variables-get) | Show one variable with its alias chain per mode |
+| [`figctl variables infer`](#figctl-variables-infer) | Reconstruct the variables a file uses from how they are used |
 | [`figctl variables list`](#figctl-variables-list) | List variables with values per mode, code syntax, scopes, and descriptions |
 | [`figctl version`](#figctl-version) | Print the figctl version |
 | [`figctl versions`](#figctl-versions) | List saved versions of a file |
@@ -1763,6 +1764,7 @@ figctl variables [command]
 Subcommands:
 
 - [`figctl variables get`](#figctl-variables-get) Show one variable with its alias chain per mode
+- [`figctl variables infer`](#figctl-variables-infer) Reconstruct the variables a file uses from how they are used
 - [`figctl variables list`](#figctl-variables-list) List variables with values per mode, code syntax, scopes, and descriptions
 
 Plus the [global flags](#global-flags).
@@ -1788,6 +1790,52 @@ Flags:
 | --- | --- | --- | --- |
 | `--id` | `string` | - | variable id (VariableID:1:2) or subscribed id |
 | `--name` | `string` | - | variable name (for example color/brand/500) |
+
+Plus the [global flags](#global-flags).
+
+## figctl variables infer
+
+Reconstruct the variables a file uses from how they are used
+
+```
+figctl variables infer [ref] [flags]
+```
+
+Report the variables a file uses by walking its nodes, for accounts that
+cannot read the variables endpoint.
+
+Reading variables needs an Enterprise plan, but the bindings do not: every node
+says which variable governs each of its properties, and the value that variable
+resolved to sits on the same node. Walking the file therefore recovers which
+values are governed, which places share one, and what each resolves to.
+
+What it cannot recover is the designer's name for a variable and the collection
+it belongs to. Names here are derived from the category and the most common
+observed value, and every entry says so, because a plausible invented name
+reads as authoritative and cannot be checked.
+
+A variable seen resolving to more than one value is reported as likely having
+modes, which is what light and dark look like from the outside.
+
+On a plan that can read variables, prefer figctl variables list: it has the
+real names, collections, and every mode.
+
+Examples:
+
+```sh
+figctl variables infer design-system
+figctl variables infer KEY --node 2:2
+figctl variables infer KEY --json > variables.json
+```
+
+Flags:
+
+| Flag | Type | Default | Description |
+| --- | --- | --- | --- |
+| `--include-hidden` | `bool` | `false` | walk nodes the designer turned off |
+| `--min-usages` | `int` | `0` | drop variables bound fewer times than this |
+| `--node` | `string (repeatable)` | - | limit the walk to these nodes; repeatable |
+| `--samples` | `int` | `3` | node ids kept per observed value |
 
 Plus the [global flags](#global-flags).
 

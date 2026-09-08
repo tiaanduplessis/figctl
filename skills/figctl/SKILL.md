@@ -144,6 +144,17 @@ The `token` field has three states, and they mean different things:
   say which value it came from.
 - `null`: the designer typed the value by hand. Hardcode it, and say so.
 
+## Variables without an Enterprise plan
+
+When `variables list` fails with `AUTH_SCOPE` or `PLAN_REQUIRED`, use
+`figctl variables infer <ref>` instead. It walks the file and reports which
+variables govern which values, how widely each is used, and what each resolves
+to, none of which needs the Enterprise endpoint.
+
+The names it reports are derived from the values, not the designer's names.
+Treat them as identifiers for mapping onto the tokens already in the codebase,
+and do not present them to a person as the design system's own names.
+
 ## Measurements
 
 `node context` reports `measurements`: distances the designer pinned in Dev
