@@ -1,0 +1,121 @@
+name: nightly
+
+# The live checks talk to the real Figma API, so they run once a night
+# rather than on every pull request: Tier 1 endpoints (get file, get nodes,
+# render images) allow as few as 10 requests per minute.
+on:
+  schedule:
+    # 03:20 UTC, off peak for both European and US working hours.
+    - cron: "20 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  integration:
+    name: live integration test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for the FIGMA_TOKEN secret
+        id: guard
+        env:
+          FIGMA_TOKEN: ${{ secrets.FIGMA_TOKEN }}
+        run: |
+          if [ -z "${FIGMA_TOKEN}" ]; then
+            echo "The FIGMA_TOKEN secret is not set, so the live integration test and the Style Dictionary round trip are skipped." | tee -a "$GITHUB_STEP_SUMMARY"
+            echo "Add a Figma personal access token as the repository secret FIGMA_TOKEN to enable them." | tee -a "$GITHUB_STEP_SUMMARY"
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.guard.outputs.run == 'true'
+
+      - uses: actions/setup-go@v5
+        if: steps.guard.outputs.run == 'true'
+        with:
+          go-version: "1.27"
+          check-latest: true
+
+      - name: Build
+        if: steps.guard.outputs.run == 'true'
+        run: make build
+
+      # The test drives bin/figctl, so it exercises the shipped artefact.
+      # It reuses one cache directory, never passes --refresh or
+      # --no-cache, and asserts its own Tier 1 request budget.
+      - name: Live integration test
+        if: steps.guard.outputs.run == 'true'
+        env:
+          FIGCTL_INTEGRATION: "1"
+          FIGMA_TOKEN: ${{ secrets.FIGMA_TOKEN }}
+          FIGCTL_INTEGRATION_FILE: ${{ vars.FIGCTL_INTEGRATION_FILE }}
+          FIGCTL_INTEGRATION_NODE: ${{ vars.FIGCTL_INTEGRATION_NODE }}
+        run: go test -tags integration -v -count=1 -timeout 15m ./integration/...
+
+      - name: Set up Node for Style Dictionary
+        if: steps.guard.outputs.run == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # Phase 5 of plan.md: prove the DTCG export is a document the real
+      # Style Dictionary accepts. Node is used for this check only, never
+      # in make check.
+      - name: Export design tokens as DTCG
+        if: steps.guard.outputs.run == 'true'
+        env:
+          FIGMA_TOKEN: ${{ secrets.FIGMA_TOKEN }}
+          FIGCTL_INTEGRATION_FILE: ${{ vars.FIGCTL_INTEGRATION_FILE }}
+        run: |
+          set -euo pipefail
+          file_key="${FIGCTL_INTEGRATION_FILE:-fzYhvQpqwhZDUImRz431Qo}"
+          mkdir -p style-dictionary/tokens
+          ./bin/figctl tokens export "$file_key" \
+            --format dtcg \
+            --out style-dictionary/tokens \
+            --json > style-dictionary/export.json
+          jq -e '.data.files | length > 0' style-dictionary/export.json > /dev/null
+          jq -r '.hints[]?' style-dictionary/export.json
+
+      - name: Round trip the tokens through Style Dictionary v4
+        if: steps.guard.outputs.run == 'true'
+        working-directory: style-dictionary
+        run: |
+          set -euo pipefail
+          cat > config.json <<'JSON'
+          {
+            "source": ["tokens/*.json"],
+            "platforms": {
+              "json": {
+                "transformGroup": "js",
+                "buildPath": "build/",
+                "files": [{ "destination": "tokens.json", "format": "json/nested" }]
+              },
+              "css": {
+                "transformGroup": "css",
+                "buildPath": "build/",
+                "files": [{ "destination": "tokens.css", "format": "css/variables" }]
+              }
+            }
+          }
+          JSON
+          npx --yes style-dictionary@4 build --config config.json
+          for f in build/tokens.json build/tokens.css; do
+            if [ ! -s "$f" ]; then
+              echo "Style Dictionary produced no $f from the DTCG export" >&2
+              exit 1
+            fi
+          done
+          echo "Style Dictionary v4 accepted the DTCG export." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload the artefacts of a failed run
+        if: failure() && steps.guard.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-style-dictionary
+          path: style-dictionary/
+          retention-days: 7
+          if-no-files-found: ignore
