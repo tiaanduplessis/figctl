@@ -847,26 +847,35 @@ figctl skill install [flags]
 
 Write the skill for the selected agent.
 
-  claude   ~/.claude/skills/figctl/ (SKILL.md and reference/), or
-           .claude/skills/figctl/ with --project
+.agents/skills is the canonical location that Codex and most other clients
+read, so the skill is written there once and other clients are pointed at it.
+
+  agents   .agents/skills/figctl/ (SKILL.md and reference/)
+  codex    the same directory; Codex reads .agents/skills directly
+  generic  the same directory, for any client that reads .agents/skills
+  claude   .claude/skills/figctl symlinked to the canonical directory
   cursor   .cursor/rules/figctl.mdc
   copilot  a marked block in .github/copilot-instructions.md
-  codex    a marked block in AGENTS.md
-  generic  the same AGENTS.md block as codex
-  all      claude, cursor, copilot, and codex
+  all      agents, claude, cursor, and copilot
 
-Every target but claude is project scoped and is written under the
-working directory whether or not --project is given.
+The skill directory goes under the home directory by default and under the
+working directory with --project. Cursor and Copilot read their files from
+the repository, so those two are always project scoped.
+
+A skill is not written into AGENTS.md. That file holds the always-on rules
+for a repository, while a skill is a directory loaded on demand, which is
+the reason to ship one.
 
 Installs are idempotent. Files figctl owns carry a marker comment and are
 replaced in place; a file of the same name that figctl did not write is
-left alone unless --force. Shared instruction files keep everything
-outside the <!-- BEGIN figctl --> and <!-- END figctl --> markers. Run it
-again after upgrading figctl to refresh the generated reference.
+left alone unless --force, as is a link that points somewhere else. Shared
+instruction files keep everything outside the <!-- BEGIN figctl --> and
+<!-- END figctl --> markers. Run it again after upgrading figctl to refresh
+the generated reference.
 
 | Flag | Default | Description |
 | --- | --- | --- |
-| `--agent string` | `claude` | target agent: claude, cursor, copilot, codex, generic, all |
+| `--agent string` | `claude` | target agent: agents, claude, cursor, copilot, codex, generic, all |
 | `--dry-run` |  | list what would be written, with byte counts, without writing |
 | `--force` |  | replace a file of the same name that figctl did not write |
 | `--project` |  | install the claude skill into this repository instead of the home directory |
@@ -889,9 +898,9 @@ Print one skill document instead of installing it, for manual
 placement or for reading the reference without a file on disk.
 
 --file selects the document: SKILL, commands, schemas, or workflows.
---agent selects the shape of SKILL: the skill file for claude, the .mdc
-rule for cursor, and the marked block for copilot, codex, and generic.
-The reference documents are the same for every agent.
+--agent selects the shape of SKILL: the skill file for agents, codex,
+generic, and claude, the .mdc rule for cursor, and the marked block for
+copilot. The reference documents are the same for every agent.
 
 In JSON mode the document is a string field of the envelope; in every
 other mode the document itself is written to stdout, so "-o md" can be
@@ -899,7 +908,7 @@ redirected into a file.
 
 | Flag | Default | Description |
 | --- | --- | --- |
-| `--agent string` | `claude` | shape of the SKILL document: claude, cursor, copilot, codex, generic, all |
+| `--agent string` | `claude` | shape of the SKILL document: agents, claude, cursor, copilot, codex, generic, all |
 | `--file string` | `SKILL` | document to print: SKILL, commands, schemas, workflows |
 
 Example:
@@ -926,7 +935,7 @@ terminal.
 
 | Flag | Default | Description |
 | --- | --- | --- |
-| `--agent string` | `claude` | target agent: claude, cursor, copilot, codex, generic, all |
+| `--agent string` | `claude` | target agent: agents, claude, cursor, copilot, codex, generic, all |
 | `--dry-run` |  | list what would be removed without removing it |
 | `--force` |  | remove a file of the same name that figctl did not write |
 | `--project` |  | remove the claude skill from this repository instead of the home directory |

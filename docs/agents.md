@@ -19,23 +19,38 @@ figctl skill uninstall --yes               # remove what was installed
 
 ## Where each agent reads from
 
+`.agents/skills` is the canonical location that Codex and most other clients
+read. The skill is written there once and every other client is pointed at it,
+so the two locations cannot drift apart.
+
 | Agent | Location | Shape |
 | --- | --- | --- |
-| Claude Code | `~/.claude/skills/figctl/` (or `.claude/skills/figctl/` in the repo) | a `SKILL.md` plus generated reference files, all owned by figctl |
+| Codex, generic | `~/.agents/skills/figctl/` (or `.agents/skills/figctl/` with `--project`) | a `SKILL.md` plus generated reference files, all owned by figctl |
+| Claude Code | `.claude/skills/figctl` | a relative symlink to the canonical directory |
 | Cursor | `.cursor/rules/figctl.mdc` in the repo | one rule file with front matter, owned by figctl |
 | GitHub Copilot | `.github/copilot-instructions.md` in the repo | a delimited block inside a file the project owns |
-| Codex | `AGENTS.md` in the repo | a delimited block inside a file the project owns |
-| Generic | `AGENTS.md` in the repo | the same block, for any agent that reads `AGENTS.md` |
 
-Every target but `claude` is project-scoped and is written under the working
-directory whether or not `--project` is given; `--project` only moves the Claude
-Code skill from `~/.claude/skills/figctl/` into `.claude/skills/figctl/`.
+The skill directory goes under the home directory by default and under the
+working directory with `--project`. Cursor and Copilot read their files from
+the repository, so those two are always project-scoped.
+
+The link is relative, so it keeps working when the project is moved or cloned.
+Where symlinks are unavailable, notably Windows without developer mode, the
+files are copied instead and the result says so.
+
+### A skill is not written into AGENTS.md
+
+`AGENTS.md` holds the always-on rules for a repository. A skill is a directory
+loaded on demand when a task matches its description, which is the reason to
+ship one rather than a block of instructions that occupies every turn. figctl
+therefore never edits `AGENTS.md`. If you want a one-line pointer there, add it
+by hand.
 
 Files figctl owns outright carry a marker comment. A re-install replaces a file
 that carries the marker and leaves a file of the same name that figctl did not
-write alone, unless `--force`. Shared files such as `AGENTS.md` and
-`copilot-instructions.md` are edited between `<!-- BEGIN figctl -->` and
-`<!-- END figctl -->`, so everything else in them survives. Installs are
+write alone, unless `--force`; the same applies to a link that points somewhere
+else. `copilot-instructions.md` is edited between `<!-- BEGIN figctl -->` and
+`<!-- END figctl -->`, so everything else in it survives. Installs are
 idempotent: run `skill install` again after upgrading figctl to refresh the
 generated reference. `--dry-run` shows what would change, with byte counts.
 

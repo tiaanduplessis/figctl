@@ -64,12 +64,15 @@ func TestSkillInstallProject(t *testing.T) {
 	r := execute(t, "", "skill", "install", "--project")
 	ok(t, r)
 	paths := skillPaths(t, r, "skill.install")
-	base := filepath.Join(cwd, ".claude", "skills", "figctl")
+	// .agents/skills is the canonical location every client reads, and
+	// .claude/skills links to it rather than holding a second copy.
+	base := filepath.Join(cwd, ".agents", "skills", "figctl")
 	want := []string{
 		filepath.Join(base, "SKILL.md"),
 		filepath.Join(base, "reference", "commands.md"),
 		filepath.Join(base, "reference", "output-schemas.md"),
 		filepath.Join(base, "reference", "workflows.md"),
+		filepath.Join(cwd, ".claude", "skills", "figctl"),
 	}
 	if len(paths) != len(want) {
 		t.Fatalf("paths = %v, want %v", paths, want)
@@ -77,6 +80,14 @@ func TestSkillInstallProject(t *testing.T) {
 	for i, path := range want {
 		if paths[i] != path {
 			t.Fatalf("path %d = %s, want %s", i, paths[i], path)
+		}
+		// The last entry is the link into the canonical tree, which resolves
+		// to a directory rather than a document.
+		if info, err := os.Stat(path); err == nil && info.IsDir() {
+			if _, err := os.Readlink(path); err != nil {
+				t.Fatalf("%s should be a symlink to the canonical skill: %v", path, err)
+			}
+			continue
 		}
 		body, err := os.ReadFile(path)
 		if err != nil {
@@ -146,11 +157,11 @@ func TestSkillPrint(t *testing.T) {
 		}
 	}
 
-	// The block form is what an AGENTS.md gets.
-	r = execute(t, "", "skill", "print", "--agent", "codex", "-o", "md")
+	// Copilot reads an instructions file, so its form is the marked block.
+	r = execute(t, "", "skill", "print", "--agent", "copilot", "-o", "md")
 	ok(t, r)
 	if !strings.HasPrefix(r.stdout, skill.BlockBegin) {
-		t.Fatalf("codex output should be a marked block:\n%s", r.stdout[:min(200, len(r.stdout))])
+		t.Fatalf("copilot output should be a marked block:\n%s", r.stdout[:min(200, len(r.stdout))])
 	}
 
 	r = execute(t, "", "skill", "print", "--file", "nope")
@@ -204,22 +215,48 @@ func TestSkillInstallBlockTargets(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	agents := filepath.Join(cwd, "AGENTS.md")
-	if err := os.WriteFile(agents, []byte("# House rules\n\nNo emoji.\n"), 0o644); err != nil {
+	instructions := filepath.Join(cwd, ".github", "copilot-instructions.md")
+	if err := os.MkdirAll(filepath.Dir(instructions), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	r := execute(t, "", "skill", "install", "--agent", "codex")
+	if err := os.WriteFile(instructions, []byte("# House rules\n\nNo emoji.\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	r := execute(t, "", "skill", "install", "--agent", "copilot")
 	ok(t, r)
-	body := string(mustRead(t, agents))
+	body := string(mustRead(t, instructions))
 	for _, want := range []string{"# House rules", "No emoji.", skill.BlockBegin, skill.BlockEnd} {
 		if !strings.Contains(body, want) {
-			t.Fatalf("AGENTS.md is missing %q:\n%s", want, body)
+			t.Fatalf("the instructions file is missing %q:\n%s", want, body)
 		}
 	}
-	r = execute(t, "", "skill", "uninstall", "--agent", "codex", "--yes")
+	r = execute(t, "", "skill", "uninstall", "--agent", "copilot", "--yes")
 	ok(t, r)
-	body = string(mustRead(t, agents))
+	body = string(mustRead(t, instructions))
 	if strings.Contains(body, skill.BlockBegin) || !strings.Contains(body, "No emoji.") {
 		t.Fatalf("uninstall did not restore the file:\n%s", body)
+	}
+}
+
+// TestSkillInstallDoesNotTouchAgentsMd keeps a skill out of the always-on
+// instruction file. AGENTS.md holds repository rules that load every turn; a
+// skill is a directory loaded on demand, which is the point of shipping one.
+func TestSkillInstallDoesNotTouchAgentsMd(t *testing.T) {
+	isolate(t)
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	agents := filepath.Join(cwd, "AGENTS.md")
+	original := "# House rules\n\nNo emoji.\n"
+	if err := os.WriteFile(agents, []byte(original), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	for _, agent := range []string{"codex", "generic", "agents", "all"} {
+		r := execute(t, "", "skill", "install", "--agent", agent)
+		ok(t, r)
+	}
+	if body := string(mustRead(t, agents)); body != original {
+		t.Fatalf("AGENTS.md was modified:\n%s", body)
 	}
 }

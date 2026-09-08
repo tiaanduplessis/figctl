@@ -16,6 +16,9 @@ type Agent string
 // The supported install targets. AgentAll expands to every target that
 // writes a distinct path.
 const (
+	// AgentAgents is the canonical cross-client location, .agents/skills.
+	// Codex and most other tools read it directly, so it is the default.
+	AgentAgents  Agent = "agents"
 	AgentClaude  Agent = "claude"
 	AgentCursor  Agent = "cursor"
 	AgentCopilot Agent = "copilot"
@@ -24,14 +27,16 @@ const (
 	AgentAll     Agent = "all"
 )
 
-// Agents lists the individual targets in install order. AgentGeneric is
-// omitted because it writes the same AGENTS.md block as AgentCodex.
-var Agents = []Agent{AgentClaude, AgentCursor, AgentCopilot, AgentCodex}
+// Agents lists the individual targets in install order. AgentCodex and
+// AgentGeneric are omitted because they read the canonical .agents/skills
+// directory that AgentAgents writes, so naming them again would write the
+// same files twice.
+var Agents = []Agent{AgentAgents, AgentClaude, AgentCursor, AgentCopilot}
 
 // AgentNames lists every accepted --agent value.
 func AgentNames() []string {
 	return []string{
-		string(AgentClaude), string(AgentCursor), string(AgentCopilot),
+		string(AgentAgents), string(AgentClaude), string(AgentCursor), string(AgentCopilot),
 		string(AgentCodex), string(AgentGeneric), string(AgentAll),
 	}
 }
@@ -40,7 +45,7 @@ func AgentNames() []string {
 func ParseAgent(s string) (Agent, error) {
 	a := Agent(strings.ToLower(strings.TrimSpace(s)))
 	switch a {
-	case AgentClaude, AgentCursor, AgentCopilot, AgentCodex, AgentGeneric, AgentAll:
+	case AgentAgents, AgentClaude, AgentCursor, AgentCopilot, AgentCodex, AgentGeneric, AgentAll:
 		return a, nil
 	}
 	return "", fmt.Errorf("unknown agent %q, want one of %s", s, strings.Join(AgentNames(), ", "))
@@ -49,6 +54,7 @@ func ParseAgent(s string) (Agent, error) {
 // The operations an action reports.
 const (
 	OpWrite        = "write"
+	OpLink         = "link"
 	OpReplace      = "replace"
 	OpAppendBlock  = "append-block"
 	OpReplaceBlock = "replace-block"
@@ -75,7 +81,7 @@ type Action struct {
 // have, under --dry-run).
 func (a Action) Written() bool {
 	switch a.Op {
-	case OpWrite, OpReplace, OpAppendBlock, OpReplaceBlock, OpRemove, OpRemoveBlock:
+	case OpWrite, OpReplace, OpLink, OpAppendBlock, OpReplaceBlock, OpRemove, OpRemoveBlock:
 		return true
 	}
 	return false
@@ -114,6 +120,7 @@ const (
 	kindDirectory kind = iota
 	kindFile
 	kindBlock
+	kindSymlink
 )
 
 // target is one resolved install location.
@@ -140,6 +147,21 @@ func (o Options) home() (string, error) {
 	return home, nil
 }
 
+// base returns the directory the canonical skill tree goes under: the
+// project when --project is set, the user home otherwise.
+func (o Options) base() (string, error) {
+	if o.Project {
+		return o.dir()
+	}
+	return o.home()
+}
+
+// canonicalRoot is the cross-client skill location. Codex and most other
+// tools read .agents/skills directly; Claude Code is linked to it.
+func canonicalRoot(base string) string {
+	return filepath.Join(base, ".agents", "skills", "figctl")
+}
+
 func (o Options) dir() (string, error) {
 	if o.Dir != "" {
 		return o.Dir, nil
@@ -153,8 +175,13 @@ func (o Options) dir() (string, error) {
 
 // expand turns AgentAll into the list of targets to act on.
 func expand(a Agent) []Agent {
-	if a == AgentAll {
+	switch a {
+	case AgentAll:
 		return append([]Agent(nil), Agents...)
+	case AgentClaude:
+		// The Claude target is a link into the canonical tree, so that tree
+		// has to exist first or the link dangles.
+		return []Agent{AgentAgents, AgentClaude}
 	}
 	return []Agent{a}
 }
@@ -162,11 +189,19 @@ func expand(a Agent) []Agent {
 // resolveTargets builds the install locations for the requested agents.
 func resolveTargets(opts Options) ([]target, error) {
 	var out []target
+	seen := map[string]bool{}
 	for _, agent := range expand(opts.Agent) {
 		t, err := resolveTarget(agent, opts)
 		if err != nil {
 			return nil, err
 		}
+		// Several agents share the canonical tree, so writing it once keeps
+		// the report honest about what actually happened.
+		key := fmt.Sprintf("%d\x00%s\x00%s", t.kind, t.root, t.path)
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
 		out = append(out, t)
 	}
 	return out, nil
@@ -174,22 +209,28 @@ func resolveTargets(opts Options) ([]target, error) {
 
 func resolveTarget(agent Agent, opts Options) (target, error) {
 	switch agent {
-	case AgentClaude:
-		base := ""
-		if opts.Project {
-			dir, err := opts.dir()
-			if err != nil {
-				return target{}, err
-			}
-			base = dir
-		} else {
-			home, err := opts.home()
-			if err != nil {
-				return target{}, err
-			}
-			base = home
+	case AgentAgents, AgentCodex, AgentGeneric:
+		base, err := opts.base()
+		if err != nil {
+			return target{}, err
 		}
-		return target{agent: agent, kind: kindDirectory, root: filepath.Join(base, ".claude", "skills", "figctl")}, nil
+		return target{agent: agent, kind: kindDirectory, root: canonicalRoot(base)}, nil
+	case AgentClaude:
+		// Claude Code reads .claude/skills, so link it at the canonical
+		// directory rather than keeping a second copy of the same files.
+		base, err := opts.base()
+		if err != nil {
+			return target{}, err
+		}
+		root := filepath.Join(base, ".claude", "skills")
+		return target{
+			agent: agent,
+			kind:  kindSymlink,
+			root:  root,
+			path:  filepath.Join(root, "figctl"),
+			// Relative so the link survives the project being moved or cloned.
+			content: filepath.Join("..", "..", ".agents", "skills", "figctl"),
+		}, nil
 	case AgentCursor:
 		dir, err := opts.dir()
 		if err != nil {
@@ -204,12 +245,6 @@ func resolveTarget(agent Agent, opts Options) (target, error) {
 		}
 		root := filepath.Join(dir, ".github")
 		return target{agent: agent, kind: kindBlock, root: root, path: filepath.Join(root, "copilot-instructions.md"), content: portableBody()}, nil
-	case AgentCodex, AgentGeneric:
-		dir, err := opts.dir()
-		if err != nil {
-			return target{}, err
-		}
-		return target{agent: agent, kind: kindBlock, root: dir, path: filepath.Join(dir, "AGENTS.md"), content: portableBody()}, nil
 	}
 	return target{}, fmt.Errorf("unknown agent %q", agent)
 }
@@ -264,8 +299,81 @@ func installTarget(t target, opts Options) ([]Action, error) {
 			return nil, err
 		}
 		return []Action{action}, nil
+	case kindSymlink:
+		action, err := writeLink(t, opts)
+		if err != nil {
+			return nil, err
+		}
+		return []Action{action}, nil
 	}
 	return nil, fmt.Errorf("unknown target kind for agent %q", t.agent)
+}
+
+// writeLink points one client's skill directory at the canonical tree. A
+// link keeps a single copy of the content, so the two locations cannot drift
+// apart. Where symlinks are unavailable, notably Windows without developer
+// mode, the files are copied instead and the action says so.
+func writeLink(t target, opts Options) (Action, error) {
+	action := Action{Agent: t.agent, Path: t.path, Op: OpLink, Bytes: len(t.content)}
+	switch existing, err := os.Readlink(t.path); {
+	case err == nil && existing == t.content:
+		action.Op = OpUnchanged
+		return action, nil
+	case err == nil:
+		// A link to somewhere else is someone's deliberate arrangement.
+		if !opts.Force {
+			action.Op = OpSkip
+			action.Reason = "the path already links to " + existing + "; pass --force to repoint it"
+			return action, nil
+		}
+		action.Op = OpReplace
+	default:
+		if info, statErr := os.Lstat(t.path); statErr == nil && info.IsDir() && !opts.Force {
+			action.Op = OpSkip
+			action.Reason = "the path is a directory, not a link to the canonical skill; pass --force to replace it"
+			return action, nil
+		} else if statErr == nil {
+			action.Op = OpReplace
+		}
+	}
+	if opts.DryRun {
+		return action, nil
+	}
+	if err := os.MkdirAll(t.root, dirPerm); err != nil {
+		return Action{}, fmt.Errorf("creating %s: %w", t.root, err)
+	}
+	if action.Op == OpReplace {
+		if err := os.RemoveAll(t.path); err != nil {
+			return Action{}, fmt.Errorf("replacing %s: %w", t.path, err)
+		}
+	}
+	if err := os.Symlink(t.content, t.path); err != nil {
+		// Fall back to real files so the skill still works.
+		copied, cerr := copyCanonical(t, opts)
+		if cerr != nil {
+			return Action{}, fmt.Errorf("linking %s: %w", t.path, err)
+		}
+		copied.Reason = "symlinks are unavailable here, so the files were copied instead"
+		return copied, nil
+	}
+	return action, nil
+}
+
+// copyCanonical writes the skill files directly, for platforms that refuse
+// symlinks.
+func copyCanonical(t target, opts Options) (Action, error) {
+	action := Action{Agent: t.agent, Path: t.path, Op: OpWrite}
+	for _, f := range files {
+		path, err := safeJoin(t.path, f.Path)
+		if err != nil {
+			return Action{}, err
+		}
+		if _, err := writeOwned(t.agent, path, f.Content(), opts); err != nil {
+			return Action{}, err
+		}
+		action.Bytes += len(f.Content())
+	}
+	return action, nil
 }
 
 // writeOwned writes a file figctl owns. An existing file that does not
@@ -386,8 +494,42 @@ func uninstallTarget(t target, opts Options) ([]Action, error) {
 			return nil, err
 		}
 		return []Action{action}, nil
+	case kindSymlink:
+		action, err := removeLink(t, opts)
+		if err != nil {
+			return nil, err
+		}
+		return []Action{action}, nil
 	}
 	return nil, fmt.Errorf("unknown target kind for agent %q", t.agent)
+}
+
+// removeLink deletes a link figctl created, leaving a link that points
+// somewhere else alone.
+func removeLink(t target, opts Options) (Action, error) {
+	action := Action{Agent: t.agent, Path: t.path, Op: OpRemove}
+	existing, err := os.Readlink(t.path)
+	if err != nil {
+		if _, statErr := os.Lstat(t.path); statErr != nil {
+			action.Op = OpAbsent
+			return action, nil
+		}
+		action.Op = OpSkip
+		action.Reason = "the path is not a link written by figctl; remove it by hand"
+		return action, nil
+	}
+	if existing != t.content && !opts.Force {
+		action.Op = OpSkip
+		action.Reason = "the link points at " + existing + " rather than the figctl skill"
+		return action, nil
+	}
+	if opts.DryRun {
+		return action, nil
+	}
+	if err := os.Remove(t.path); err != nil {
+		return Action{}, fmt.Errorf("removing %s: %w", t.path, err)
+	}
+	return action, nil
 }
 
 func removeOwned(agent Agent, path string, opts Options) (Action, error) {
@@ -594,11 +736,11 @@ func Render(agent Agent, name string) (string, error) {
 		return f.Content(), nil
 	}
 	switch agent {
-	case AgentClaude:
+	case AgentAgents, AgentClaude, AgentCodex, AgentGeneric:
 		return f.Content(), nil
 	case AgentCursor:
 		return cursorRule(), nil
-	case AgentCopilot, AgentCodex, AgentGeneric:
+	case AgentCopilot:
 		return blockContent(portableBody()), nil
 	case AgentAll:
 		return "", errors.New("skill print takes one agent, not all")
@@ -614,7 +756,8 @@ func Location(agent Agent, name string) string {
 	if !ok {
 		return ""
 	}
-	if f.Name != "SKILL" || agent == AgentClaude {
+	if f.Name != "SKILL" || agent == AgentClaude || agent == AgentAgents ||
+		agent == AgentCodex || agent == AgentGeneric {
 		return f.Path
 	}
 	switch agent {
@@ -622,8 +765,6 @@ func Location(agent Agent, name string) string {
 		return ".cursor/rules/figctl.mdc"
 	case AgentCopilot:
 		return ".github/copilot-instructions.md"
-	case AgentCodex, AgentGeneric:
-		return "AGENTS.md"
 	}
 	return f.Path
 }

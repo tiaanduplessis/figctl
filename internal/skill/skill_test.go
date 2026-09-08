@@ -39,26 +39,33 @@ func exists(path string) bool {
 // user level claude skill and to the project directory otherwise.
 func expectedPaths(agent Agent, home, project string) []string {
 	switch agent {
-	case AgentClaude:
-		base := filepath.Join(home, ".claude", "skills", "figctl")
+	case AgentAgents, AgentCodex, AgentGeneric:
+		base := filepath.Join(home, ".agents", "skills", "figctl")
 		return []string{
 			filepath.Join(base, "SKILL.md"),
 			filepath.Join(base, "reference", "commands.md"),
 			filepath.Join(base, "reference", "output-schemas.md"),
 			filepath.Join(base, "reference", "workflows.md"),
 		}
+	case AgentClaude:
+		base := filepath.Join(home, ".agents", "skills", "figctl")
+		return []string{
+			filepath.Join(base, "SKILL.md"),
+			filepath.Join(base, "reference", "commands.md"),
+			filepath.Join(base, "reference", "output-schemas.md"),
+			filepath.Join(base, "reference", "workflows.md"),
+			filepath.Join(home, ".claude", "skills", "figctl"),
+		}
 	case AgentCursor:
 		return []string{filepath.Join(project, ".cursor", "rules", "figctl.mdc")}
 	case AgentCopilot:
 		return []string{filepath.Join(project, ".github", "copilot-instructions.md")}
-	case AgentCodex, AgentGeneric:
-		return []string{filepath.Join(project, "AGENTS.md")}
 	}
 	return nil
 }
 
 func TestInstallAndReinstallEveryAgent(t *testing.T) {
-	for _, agent := range []Agent{AgentClaude, AgentCursor, AgentCopilot, AgentCodex, AgentGeneric} {
+	for _, agent := range []Agent{AgentAgents, AgentClaude, AgentCursor, AgentCopilot, AgentCodex, AgentGeneric} {
 		t.Run(string(agent), func(t *testing.T) {
 			home, project := dirs(t)
 			opts := Options{Agent: agent, Home: home, Dir: project}
@@ -78,11 +85,13 @@ func TestInstallAndReinstallEveryAgent(t *testing.T) {
 				if !action.Written() || action.Bytes == 0 {
 					t.Fatalf("action %d should report a write with bytes: %+v", i, action)
 				}
-				info, err := os.Stat(action.Path)
+				info, err := os.Lstat(action.Path)
 				if err != nil {
 					t.Fatalf("stat %s: %v", action.Path, err)
 				}
-				if perm := info.Mode().Perm(); perm|0o644 != 0o644 {
+				// A link carries the mode of the link itself, which the
+				// platform sets; only real files have to stay at 0644.
+				if perm := info.Mode().Perm(); info.Mode()&os.ModeSymlink == 0 && perm|0o644 != 0o644 {
 					t.Fatalf("%s mode = %o, want no bits beyond 0644", action.Path, perm)
 				}
 				if dir, err := os.Stat(filepath.Dir(action.Path)); err != nil {
@@ -96,6 +105,11 @@ func TestInstallAndReinstallEveryAgent(t *testing.T) {
 			// its own output from a hand written file.
 			before := map[string]string{}
 			for _, path := range want {
+				// A link resolves to the canonical directory rather than to a
+				// document, so there is no body to mark.
+				if info, err := os.Stat(path); err == nil && info.IsDir() {
+					continue
+				}
 				before[path] = read(t, path)
 				if !strings.Contains(before[path], Marker) && !strings.Contains(before[path], BlockBegin) {
 					t.Fatalf("%s carries neither the marker nor the block delimiters", path)
@@ -148,21 +162,45 @@ func TestInstallAndReinstallEveryAgent(t *testing.T) {
 	}
 }
 
-func TestInstallProjectScopesTheClaudeSkill(t *testing.T) {
+func TestInstallProjectScopesTheSkill(t *testing.T) {
 	home, project := dirs(t)
 	opts := Options{Agent: AgentClaude, Home: home, Dir: project, Project: true}
 	actions, err := Install(opts)
 	if err != nil {
 		t.Fatalf("install: %v", err)
 	}
-	base := filepath.Join(project, ".claude", "skills", "figctl")
 	for _, action := range actions {
-		if !strings.HasPrefix(action.Path, base) {
-			t.Fatalf("path %s is not under %s", action.Path, base)
+		if !strings.HasPrefix(action.Path, project) {
+			t.Fatalf("path %s is not under %s", action.Path, project)
 		}
 	}
-	if exists(filepath.Join(home, ".claude")) {
+	if exists(filepath.Join(home, ".claude")) || exists(filepath.Join(home, ".agents")) {
 		t.Fatal("--project should not write into the home directory")
+	}
+}
+
+// TestClaudeLinkResolvesToTheCanonicalSkill guards against a dangling link:
+// the Claude target is a symlink into .agents/skills, so that tree has to be
+// written even when only Claude was asked for.
+func TestClaudeLinkResolvesToTheCanonicalSkill(t *testing.T) {
+	home, project := dirs(t)
+	if _, err := Install(Options{Agent: AgentClaude, Home: home, Dir: project}); err != nil {
+		t.Fatalf("install: %v", err)
+	}
+	link := filepath.Join(home, ".claude", "skills", "figctl")
+	target, err := os.Readlink(link)
+	if err != nil {
+		t.Fatalf("%s should be a symlink: %v", link, err)
+	}
+	if filepath.IsAbs(target) {
+		t.Fatalf("the link must be relative so it survives a move, got %s", target)
+	}
+	body, err := os.ReadFile(filepath.Join(link, "SKILL.md"))
+	if err != nil {
+		t.Fatalf("the link does not resolve to the skill: %v", err)
+	}
+	if !strings.Contains(string(body), "name: figctl") {
+		t.Fatal("the linked SKILL.md is not the figctl skill")
 	}
 }
 
@@ -192,12 +230,15 @@ func TestInstallAllCoversEveryTargetOnce(t *testing.T) {
 
 func TestMarkedBlockPreservesSurroundingContent(t *testing.T) {
 	home, project := dirs(t)
-	path := filepath.Join(project, "AGENTS.md")
+	path := filepath.Join(project, ".github", "copilot-instructions.md")
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		t.Fatal(err)
+	}
 	original := "# Project rules\n\nUse tabs.\n\n<!-- BEGIN other-tool -->\nkeep me\n<!-- END other-tool -->\n"
 	if err := os.WriteFile(path, []byte(original), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	opts := Options{Agent: AgentCodex, Home: home, Dir: project}
+	opts := Options{Agent: AgentCopilot, Home: home, Dir: project}
 
 	actions, err := Install(opts)
 	if err != nil {
@@ -438,12 +479,23 @@ func TestRenderAndLocationPerAgent(t *testing.T) {
 		t.Fatal("the cursor rule must not route to files that are not installed")
 	}
 
-	block, err := Render(AgentCodex, "SKILL")
+	// Copilot reads an instructions file rather than a skill directory, so
+	// its document is the marked block.
+	block, err := Render(AgentCopilot, "SKILL")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !strings.HasPrefix(block, BlockBegin) || !strings.Contains(block, BlockEnd) {
-		t.Fatal("the codex document is a marked block")
+		t.Fatal("the copilot document is a marked block")
+	}
+
+	// Codex reads .agents/skills, so it gets the skill itself.
+	codex, err := Render(AgentCodex, "SKILL")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.HasPrefix(codex, BlockBegin) {
+		t.Fatal("the codex document is the skill file, not a marked block")
 	}
 
 	// Reference documents are the same for every agent.
@@ -473,7 +525,7 @@ func TestRenderAndLocationPerAgent(t *testing.T) {
 	if got := Location(AgentCopilot, "SKILL"); got != ".github/copilot-instructions.md" {
 		t.Fatalf("copilot location = %s", got)
 	}
-	if got := Location(AgentGeneric, "SKILL"); got != "AGENTS.md" {
+	if got := Location(AgentGeneric, "SKILL"); got != "SKILL.md" {
 		t.Fatalf("generic location = %s", got)
 	}
 	if got := Location(AgentCodex, "workflows"); got != "reference/workflows.md" {
