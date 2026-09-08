@@ -4,11 +4,21 @@
   "description": "Agent-first Figma CLI: read a Figma design and everything needed to implement it",
   "keywords": [
     "figma",
+    "figma-api",
     "cli",
     "design-tokens",
     "dtcg",
     "design-system",
-    "ai-agent"
+    "design-to-code",
+    "ai-agent",
+    "agent-skills",
+    "claude-code",
+    "codex",
+    "style-dictionary",
+    "tailwind",
+    "storybook",
+    "figma-export",
+    "screenshot"
   ],
   "homepage": "https://github.com/tiaanduplessis/figctl#readme",
   "bugs": {
