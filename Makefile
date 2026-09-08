@@ -10,7 +10,7 @@ LDFLAGS := -s -w \
 
 GOFILES := $(shell find . -name '*.go' -not -path './vendor/*')
 
-.PHONY: build test lint fmt vet vuln docs gen verify-gen check clean
+.PHONY: build test lint fmt vet vuln docs gen verify-gen spec-check check clean
 
 build:
 	go build -trimpath -ldflags '$(LDFLAGS)' -o bin/$(BINARY) ./cmd/$(BINARY)
@@ -49,6 +49,12 @@ gen:
 # The same assertion runs as a unit test, so check does not repeat it.
 verify-gen:
 	go run ./cmd/gen-skill-docs -check
+
+# spec-check compares the Figma OpenAPI version pinned in
+# internal/figma/spec.go with the one Figma publishes today, and fails when
+# they differ. It downloads the spec, so it is not part of check.
+spec-check:
+	go run ./cmd/spec-check
 
 check: fmt vet lint test build
 
