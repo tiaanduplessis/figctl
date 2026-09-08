@@ -244,6 +244,10 @@ Full generated reference: [docs/commands.md](docs/commands.md). Or run
 | `profile add\|list\|use\|show\|remove` | named accounts |
 | `auth login\|logout\|status\|scopes` | tokens and which scopes to request |
 | `skill install\|print\|uninstall` | write the agent skill files for Claude Code, Cursor, Copilot, or Codex |
+
+The skill is also published at `skills/figctl/`, so it can be installed
+without figctl: `npx skills add tiaanduplessis/figctl`. See
+[docs/agents.md](docs/agents.md).
 | `cache status\|clear` | inspect and clear the on-disk cache |
 | `me` | the user the active token belongs to |
 | `init` | write `.figctl.yaml` in the current repository |

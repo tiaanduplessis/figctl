@@ -13,9 +13,31 @@ figctl skill print --file workflows -o md  # stdout instead of a file
 figctl skill uninstall --yes               # remove what was installed
 ```
 
-`--agent` accepts `claude`, `cursor`, `copilot`, `codex`, `generic`, and `all`.
-`--file` on `skill print` accepts `SKILL`, `commands`, `schemas`, and
-`workflows`.
+`--agent` accepts `agents`, `claude`, `cursor`, `copilot`, `codex`, `generic`,
+and `all`. `--file` on `skill print` accepts `SKILL`, `commands`, `schemas`,
+and `workflows`.
+
+## Installing the skill without figctl
+
+The skill is also published in this repository at `skills/figctl/`, so a skill
+installer that walks a repository can pick it up without figctl being on the
+machine yet:
+
+```sh
+npx skills add tiaanduplessis/figctl        # from the repository
+npx skills add ./path/to/figctl             # from a local checkout
+npx skills add tiaanduplessis/figctl -g     # user scope rather than project
+```
+
+That installs the same four documents `figctl skill install` writes, to
+`.agents/skills/figctl/` with a copy for each agent selected. The published
+copy is generated from the same embedded templates the binary carries and a
+test fails if the two drift, so neither can go stale.
+
+Use whichever fits. `figctl skill install` needs figctl already installed and
+knows every target it supports; the installer above works before figctl is on
+the machine and manages skills from many projects in one place. The skill
+still expects `figctl` on `PATH` at the time an agent runs it.
 
 ## Where each agent reads from
 

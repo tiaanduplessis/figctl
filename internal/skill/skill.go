@@ -87,6 +87,12 @@ func (f File) Content() string {
 	return withMarker(f.raw())
 }
 
+// Template returns the document as it is published in the repository,
+// without the ownership marker that Install adds to the files it manages.
+// The published copy is installed by other tools, so claiming figctl owns
+// it would be wrong.
+func (f File) Template() string { return f.raw() }
+
 // raw returns the embedded template unchanged.
 func (f File) raw() string {
 	data, err := templates.ReadFile(f.source)
