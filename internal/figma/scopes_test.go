@@ -82,3 +82,48 @@ func TestDevResourcesNotFoundExplainsAccess(t *testing.T) {
 		t.Errorf("message should scope the failure to dev resources, got %q", e.Message)
 	}
 }
+
+// TestEnterpriseScopeHintNamesThePlan covers a scope a user cannot grant.
+// file_variables:read is offered only to members of an Enterprise
+// organization, so it is absent from the token screen on other plans. Telling
+// someone to create a token with it sends them looking for a checkbox that
+// does not exist; the hint has to name the plan instead.
+func TestEnterpriseScopeHintNamesThePlan(t *testing.T) {
+	s := figmatest.NewServer(t)
+	s.Respond(http.MethodGet, "/v1/files/"+figmatest.FileKey+"/variables/local", figmatest.Response{
+		Status: http.StatusForbidden,
+		Body: map[string]any{"status": 403, "err": "Invalid scope(s): file_content:read. " +
+			"This endpoint requires the file_variables:read scope"},
+	})
+	c, _, _ := newClient(t, s, nil)
+	_, err := c.GetLocalVariables(context.Background(), figmatest.FileKey)
+	e := code(t, err)
+	if e.Code != figctl.CodeAuthScope {
+		t.Fatalf("code = %s, want %s", e.Code, figctl.CodeAuthScope)
+	}
+	if !strings.Contains(e.Hint, "Enterprise") {
+		t.Errorf("the hint should name the plan, got %q", e.Hint)
+	}
+	if strings.Contains(e.Hint, "Create a token with it") {
+		t.Errorf("the hint should not send the user to re-create a token, got %q", e.Hint)
+	}
+}
+
+// TestNonEnterpriseScopeHintStillSaysWhatToDo keeps the ordinary case
+// actionable: those scopes really can be added to a new token.
+func TestNonEnterpriseScopeHintStillSaysWhatToDo(t *testing.T) {
+	s := figmatest.NewServer(t)
+	s.Respond(http.MethodGet, "/v1/files/"+figmatest.FileKey+"/dev_resources", figmatest.Response{
+		Status: http.StatusForbidden,
+		Body:   map[string]any{"status": 403, "err": "Invalid scope(s): missing scope"},
+	})
+	c, _, _ := newClient(t, s, nil)
+	_, err := c.GetDevResources(context.Background(), figmatest.FileKey, nil)
+	e := code(t, err)
+	if !strings.Contains(e.Hint, "Create a token with it") {
+		t.Errorf("an ordinary scope should tell the user to add it, got %q", e.Hint)
+	}
+	if strings.Contains(e.Hint, "Enterprise") {
+		t.Errorf("this scope is not plan gated, got %q", e.Hint)
+	}
+}

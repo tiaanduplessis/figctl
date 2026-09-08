@@ -126,7 +126,7 @@ var scopes = scopeList{
 	{"library_content:read", true, "components list/search, styles list (file)"},
 	{"library_assets:read", false, "components get --key, styles get --key"},
 	{"team_library_content:read", false, "components list/search, styles list (team)"},
-	{"file_variables:read", false, "variables list/get, tokens export/resolve (Enterprise only)"},
+	{"file_variables:read", false, "variables list/get, tokens export/resolve. Enterprise plan only: the scope is not offered on the token screen on other plans"},
 	{"file_dev_resources:read", false, "devresources list, node context"},
 	{"file_dev_resources:write", false, "devresources add/update/remove"},
 	{"file_comments:read", false, "comments list, node context"},

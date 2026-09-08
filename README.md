@@ -380,7 +380,7 @@ Run `figctl auth scopes` for the current list. As of this release:
 | `library_assets:read` | no | `components get --key`, `styles get --key` |
 | `current_user:read` | yes | `me`, `auth status` |
 | `team_library_content:read` | no | `components list`, `styles list` with `--team` |
-| `file_variables:read` | no | `variables`, `tokens export/resolve` (Enterprise only) |
+| `file_variables:read` | no | `variables`, `tokens export/resolve`. Enterprise plan only |
 | `file_dev_resources:read` | no | `devresources list`, `node context` |
 | `file_dev_resources:write` | no | `devresources add/update/remove` |
 | `file_comments:read` | no | `comments list`, `node context` |
@@ -399,9 +399,11 @@ API does not expose it:
 figctl auth login --profile acme --expires 2026-12-01
 ```
 
-Variables need an Enterprise plan and a full seat. On any other plan
-`figctl variables list` fails with `PLAN_REQUIRED`, and `tokens export` still
-exports the styles and says so in `hints`.
+Variables need an Enterprise plan and a full seat. The `file_variables:read`
+scope is not offered on the token screen on other plans, so a token simply
+cannot carry it and `figctl variables list` fails with `AUTH_SCOPE` naming the
+plan rather than the token. `tokens export` still exports the styles and says
+so in `hints`, so a design system without variables is still usable.
 
 ## Installation
 

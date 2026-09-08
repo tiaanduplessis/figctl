@@ -15,7 +15,7 @@ import (
 // Hints shown when variables cannot be read.
 const (
 	hintVariablesPlan  = "Variables need an Enterprise plan with a full seat; showing styles and raw values instead."
-	hintVariablesScope = "The token is missing the " + figma.ScopeFileVariables + " scope, so variables are not resolved; showing styles and raw values instead. Create a token with that scope and run figctl auth login again."
+	hintVariablesScope = "The token is missing the " + figma.ScopeFileVariables + " scope, so variables are not resolved; showing styles and raw values instead. That scope is offered only to members of an Enterprise organization and does not appear on the token screen on other plans, so this is a plan limit rather than a token to re-create."
 )
 
 // Variables fetches the local variables of a file once per version and

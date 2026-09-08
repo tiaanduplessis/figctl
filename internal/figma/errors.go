@@ -75,7 +75,11 @@ func (c *Client) mapError(req request, resp *http.Response, body []byte) *figctl
 		} else {
 			e = figctl.Newf(figctl.CodeAuthScope, "the token is missing a scope: %s", msg)
 		}
-		e = e.WithHint("This endpoint needs the %s scope. Create a token with it (see figctl auth scopes) and run figctl auth login again.", req.scope)
+		if EnterpriseOnlyScope(req.scope) {
+			e = e.WithHint("The %s scope is offered only to members of an Enterprise organization, so it does not appear on the token screen on other plans. This endpoint is unavailable rather than misconfigured.", req.scope)
+		} else {
+			e = e.WithHint("This endpoint needs the %s scope. Create a token with it (see figctl auth scopes) and run figctl auth login again.", req.scope)
+		}
 		e.Details = map[string]any{"scope": req.scope, "figmaMessage": msg}
 	case status == http.StatusForbidden:
 		e = figctl.Newf(figctl.CodeForbidden, "access denied by Figma: %s", firstNonEmpty(msg, "forbidden")).

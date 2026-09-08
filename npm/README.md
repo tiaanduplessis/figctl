@@ -302,7 +302,7 @@ cover the core workflow:
 | `current_user:read` | yes | `me`, `auth status` |
 | `library_assets:read` | no | `components get --key`, `styles get --key` |
 | `team_library_content:read` | no | `components`, `styles` with `--team` |
-| `file_variables:read` | no | `variables`, `tokens export` (Enterprise only) |
+| `file_variables:read` | no | `variables`, `tokens export`. Enterprise plan only |
 | `file_dev_resources:read` | no | `devresources list`, `node context` |
 | `file_dev_resources:write` | no | `devresources add`, `update`, `remove` |
 | `file_comments:read` | no | `comments list`, `node context` |
@@ -312,9 +312,10 @@ cover the core workflow:
 
 The old blanket `files:read` scope is deprecated; request the granular scopes.
 
-Variables need an Enterprise plan and a full seat. On any other plan
-`variables list` fails with `PLAN_REQUIRED`, and `tokens export` still exports
-the styles and says so in `hints` rather than failing.
+Variables need an Enterprise plan and a full seat. The `file_variables:read`
+scope is not offered on the token screen on other plans, so a token cannot
+carry it at all. `tokens export` still exports the styles and says so in
+`hints` rather than failing.
 
 In CI, set `FIGMA_TOKEN` and figctl uses it as an implicit profile:
 

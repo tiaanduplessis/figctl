@@ -18,6 +18,7 @@ const (
 	ScopeLibraryAssets      = "library_assets:read"
 	ScopeTeamLibraryContent = "team_library_content:read"
 	ScopeFileVariables      = "file_variables:read"
+	ScopeFileVariablesWrite = "file_variables:write"
 	ScopeFileDevResources   = "file_dev_resources:read"
 	// ScopeFileDevResourcesWrite covers creating, updating, and deleting the
 	// Dev Mode links attached to nodes.
@@ -742,3 +743,15 @@ func cloneValues(v url.Values) url.Values {
 	}
 	return out
 }
+
+// enterpriseScopes are the scopes Figma offers only to members of an
+// Enterprise organization. They are absent from the token screen entirely on
+// other plans, so telling someone to tick a box they cannot see sends them
+// looking for something that is not there.
+var enterpriseScopes = map[string]bool{
+	ScopeFileVariables:      true,
+	ScopeFileVariablesWrite: true,
+}
+
+// EnterpriseOnlyScope reports whether a scope requires an Enterprise plan.
+func EnterpriseOnlyScope(scope string) bool { return enterpriseScopes[scope] }
