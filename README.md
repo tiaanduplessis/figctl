@@ -399,15 +399,34 @@ exports the styles and says so in `hints`.
 
 | Channel | Command |
 | --- | --- |
+| Install script | `curl -fsSL https://raw.githubusercontent.com/tiaanduplessis/figctl/main/install.sh \| sh` |
+| npm | `npm i -D figctl` then `npx figctl`, or `npm i -g figctl` |
 | Homebrew (macOS) | `brew install tiaanduplessis/tap/figctl` |
 | Go | `go install github.com/tiaanduplessis/figctl/cmd/figctl@latest` |
-| npm | `npx figctl --help`, or `npm i -g figctl` |
-| Scoop | `scoop bucket add tiaanduplessis https://github.com/tiaanduplessis/scoop-bucket` then `scoop install figctl` |
-| Docker | `docker run --rm -e FIGMA_TOKEN ghcr.io/tiaanduplessis/figctl file tree KEY` |
-| Binary | download from [releases](https://github.com/tiaanduplessis/figctl/releases) and verify against `checksums.txt` |
 
-Each release signs `checksums.txt` with [cosign](https://docs.sigstore.dev/) keylessly,
-so a download can be traced back to the workflow that built it:
+The install script covers macOS and Linux on amd64 and arm64, needs no
+toolchain, and always verifies the download against the release checksums. It
+installs into `/usr/local/bin` when that is writable and `~/.local/bin`
+otherwise. It never asks for a password by itself. Pin a version in CI so a
+build cannot change under you:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/tiaanduplessis/figctl/main/install.sh | FIGCTL_VERSION=v0.1.0 sh
+```
+
+`FIGCTL_INSTALL_DIR` overrides the destination. When [cosign](https://docs.sigstore.dev/)
+is on `PATH` the script also verifies the signature on the checksum file.
+
+npm is worth preferring inside a project. `npm i -D figctl` pins the version in
+`package.json`, so a repository gets a known figctl rather than whatever the
+machine happens to have, which matters when an agent depends on the output
+contract. Windows is served by npm or a release archive.
+
+Homebrew ships figctl as a cask, which is macOS only. On Linux use the install
+script, npm, or `go install`.
+
+Every release signs `checksums.txt` with cosign keylessly, so a download can be
+traced back to the workflow that built it:
 
 ```sh
 cosign verify-blob checksums.txt \
@@ -416,9 +435,6 @@ cosign verify-blob checksums.txt \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 sha256sum -c checksums.txt --ignore-missing
 ```
-
-figctl is published as a Homebrew cask, so `brew install` covers macOS only.
-On Linux use `go install`, npm, Docker, or the release binary.
 
 Shell completion:
 

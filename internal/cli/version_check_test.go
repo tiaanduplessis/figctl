@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"runtime/debug"
 	"strings"
 	"testing"
 )
@@ -108,5 +109,67 @@ func TestVersionWithoutCheckMakesNoRequest(t *testing.T) {
 	}
 	if d := data(t, r, "version"); d["updateAvailable"] != nil || d["latest"] != nil {
 		t.Fatalf("no check was asked for: %v", d)
+	}
+}
+
+// TestFillFromBuildInfo covers the go install path, where no linker flags are
+// passed and the version has to come from the module Go recorded. Without it
+// such a build reports itself as dev, which also makes --check claim an
+// update is always available.
+func TestFillFromBuildInfo(t *testing.T) {
+	tests := []struct {
+		name                             string
+		info                             *debug.BuildInfo
+		ok                               bool
+		startVersion                     string
+		wantVersion, wantCommit, wantAge string
+	}{
+		{
+			name: "a module version fills in the placeholders",
+			info: &debug.BuildInfo{
+				Main: debug.Module{Version: "v1.2.3"},
+				Settings: []debug.BuildSetting{
+					{Key: "vcs.revision", Value: "abc123"},
+					{Key: "vcs.time", Value: "2026-01-02T03:04:05Z"},
+				},
+			},
+			ok:           true,
+			startVersion: "dev",
+			wantVersion:  "v1.2.3", wantCommit: "abc123", wantAge: "2026-01-02T03:04:05Z",
+		},
+		{
+			name:         "a build from source is left as dev",
+			info:         &debug.BuildInfo{Main: debug.Module{Version: "(devel)"}},
+			ok:           true,
+			startVersion: "dev",
+			wantVersion:  "dev", wantCommit: "none", wantAge: "unknown",
+		},
+		{
+			name:         "linker flags win over the module version",
+			info:         &debug.BuildInfo{Main: debug.Module{Version: "v1.2.3"}},
+			ok:           true,
+			startVersion: "v9.9.9",
+			wantVersion:  "v9.9.9", wantCommit: "none", wantAge: "unknown",
+		},
+		{
+			name:         "no build info changes nothing",
+			ok:           false,
+			startVersion: "dev",
+			wantVersion:  "dev", wantCommit: "none", wantAge: "unknown",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			oldV, oldC, oldD := version, commit, date
+			defer func() { version, commit, date = oldV, oldC, oldD }()
+			version, commit, date = tt.startVersion, "none", "unknown"
+
+			fillFromBuildInfo(func() (*debug.BuildInfo, bool) { return tt.info, tt.ok })
+
+			if version != tt.wantVersion || commit != tt.wantCommit || date != tt.wantAge {
+				t.Fatalf("got %s/%s/%s, want %s/%s/%s",
+					version, commit, date, tt.wantVersion, tt.wantCommit, tt.wantAge)
+			}
+		})
 	}
 }

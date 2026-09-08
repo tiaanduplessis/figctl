@@ -51,9 +51,9 @@ npx figctl tokens export KEY --format css --out ./src/styles
 ## Alternatives
 
 ```sh
+curl -fsSL https://raw.githubusercontent.com/tiaanduplessis/figctl/main/install.sh | sh
 brew install tiaanduplessis/tap/figctl
 go install github.com/tiaanduplessis/figctl/cmd/figctl@latest
-docker run --rm -e FIGMA_TOKEN ghcr.io/tiaanduplessis/figctl file tree KEY
 ```
 
 ## License

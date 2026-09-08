@@ -164,17 +164,3 @@ homebrew_casks:
             system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/figctl"]
           end
 
-scoops:
-  - name: figctl
-    ids:
-      - figctl
-    repository:
-      owner: tiaanduplessis
-      name: scoop-bucket
-      token: "{{ .Env.SCOOP_BUCKET_TOKEN }}"
-    homepage: https://github.com/tiaanduplessis/figctl
-    description: Agent-first Figma CLI - read a design and everything needed to implement it
-    license: MIT
-    commit_author:
-      name: goreleaser
-      email: noreply@github.com

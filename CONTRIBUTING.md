@@ -379,10 +379,12 @@ Maintainers only.
 4. Tag `vX.Y.Z` on `main` and push the tag.
 
 The release workflow runs the gate, then GoReleaser, which publishes the
-archives, the source archive, `checksums.txt`, the Homebrew cask in
-`tiaanduplessis/homebrew-tap`, and the Scoop manifest in
-`tiaanduplessis/scoop-bucket`. Cross-repository publishing needs the
-`HOMEBREW_TAP_TOKEN` and `SCOOP_BUCKET_TOKEN` repository secrets. A parallel job
-builds and pushes the multi-architecture image to `ghcr.io`. The npm wrapper is
-published separately from `npm/` once the release assets exist, because its
-`postinstall` downloads them.
+archives, the source archive, `checksums.txt` and its cosign signature, and the
+Homebrew cask in `tiaanduplessis/homebrew-tap`. Publishing to the tap needs the
+`HOMEBREW_TAP_TOKEN` repository secret, because the default token cannot push
+across repositories. The npm wrapper is published separately from `npm/` once
+the release assets exist, because its `postinstall` downloads them.
+
+`install.sh` needs nothing at release time: it reads the release feed and the
+published assets. It is served from `main`, so a change to it takes effect for
+everyone immediately and is worth treating with the same care as a release.

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"runtime"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
@@ -23,12 +24,43 @@ var ReleasesURL = "https://api.github.com/repos/tiaanduplessis/figctl/releases/l
 // ReleasesPage is shown to a user who wants to download a new version.
 const ReleasesPage = "https://github.com/tiaanduplessis/figctl/releases"
 
-// Set at build time through -ldflags (see the Makefile).
+// Set at build time through -ldflags (see the Makefile). A binary produced by
+// "go install" carries no linker flags, so these fall back to the module
+// version Go records instead, and buildInfo fills them in at startup.
 var (
 	version = "dev"
 	commit  = "none"
 	date    = "unknown"
 )
+
+func init() { fillFromBuildInfo(debug.ReadBuildInfo) }
+
+// fillFromBuildInfo recovers the version of a binary installed with
+// "go install", where no linker flags were passed. Without it such a build
+// reports itself as a development build, which also makes --check claim an
+// update is always available.
+func fillFromBuildInfo(read func() (*debug.BuildInfo, bool)) {
+	info, ok := read()
+	if !ok || info == nil {
+		return
+	}
+	if version == "dev" && info.Main.Version != "" &&
+		info.Main.Version != "(devel)" && info.Main.Version != "unknown" {
+		version = info.Main.Version
+	}
+	for _, setting := range info.Settings {
+		switch setting.Key {
+		case "vcs.revision":
+			if commit == "none" && setting.Value != "" {
+				commit = setting.Value
+			}
+		case "vcs.time":
+			if date == "unknown" && setting.Value != "" {
+				date = setting.Value
+			}
+		}
+	}
+}
 
 type versionInfo struct {
 	Version   string `json:"version"`

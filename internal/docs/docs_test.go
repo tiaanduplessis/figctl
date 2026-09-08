@@ -152,3 +152,84 @@ func TestNPMWrapperCoversEveryReleaseTarget(t *testing.T) {
 		t.Logf("GoReleaser targets, as Node platform keys: %s", strings.Join(keys, ", "))
 	}
 }
+
+// unameToGo maps what uname reports onto GOOS and GOARCH, mirroring the case
+// arms of install.sh.
+var unameToGoos = map[string]string{"Darwin": "darwin", "Linux": "linux"}
+
+var unameToGoarch = map[string]string{
+	"x86_64": "amd64", "amd64": "amd64",
+	"arm64": "arm64", "aarch64": "arm64",
+}
+
+// TestInstallScriptCoversItsPlatforms keeps install.sh in step with the
+// release matrix. The script serves macOS and Linux only, so Windows is
+// expected to be absent and must be named in the refusal rather than silently
+// unsupported.
+func TestInstallScriptCoversItsPlatforms(t *testing.T) {
+	raw, err := os.ReadFile(filepath.Join(repoRoot, "install.sh"))
+	if err != nil {
+		t.Fatalf("reading install.sh: %v", err)
+	}
+	script := string(raw)
+
+	var config struct {
+		Builds []struct {
+			Goos   []string `yaml:"goos"`
+			Goarch []string `yaml:"goarch"`
+		} `yaml:"builds"`
+	}
+	cfg, err := os.ReadFile(filepath.Join(repoRoot, ".goreleaser.yml"))
+	if err != nil {
+		t.Fatalf("reading .goreleaser.yml: %v", err)
+	}
+	if err := yaml.Unmarshal(cfg, &config); err != nil {
+		t.Fatalf("parsing .goreleaser.yml: %v", err)
+	}
+
+	built := map[string]bool{}
+	for _, build := range config.Builds {
+		for _, goos := range build.Goos {
+			for _, goarch := range build.Goarch {
+				built[goos+"/"+goarch] = true
+			}
+		}
+	}
+
+	// Every platform the script claims to handle must actually be built.
+	for uname, goos := range unameToGoos {
+		if !strings.Contains(script, uname+")") {
+			t.Errorf("install.sh does not handle uname -s %q", uname)
+		}
+		for _, goarch := range unameToGoarch {
+			if !built[goos+"/"+goarch] {
+				t.Errorf("install.sh offers %s/%s but no release is built for it", goos, goarch)
+			}
+		}
+	}
+	for uname := range unameToGoarch {
+		if !strings.Contains(script, uname) {
+			t.Errorf("install.sh does not handle uname -m %q", uname)
+		}
+	}
+
+	// Windows is built and shipped, so the script must say where to get it
+	// rather than leaving the user at a bare refusal.
+	if !built["windows/amd64"] {
+		t.Fatal("expected a windows build; adjust this test if that changed")
+	}
+	if !strings.Contains(script, "Windows is served by npm") {
+		t.Error("install.sh should name the supported route for Windows in its refusal")
+	}
+
+	// The asset name must match the archive template in .goreleaser.yml.
+	if !strings.Contains(script, `${BINARY}_${version#v}_${plat}.tar.gz`) {
+		t.Error("install.sh builds an asset name that no longer matches the archive template")
+	}
+	// The download must always be checked.
+	for _, want := range []string{"checksums.txt", "verify_checksum", "sha256sum", "shasum"} {
+		if !strings.Contains(script, want) {
+			t.Errorf("install.sh should verify downloads; missing %q", want)
+		}
+	}
+}

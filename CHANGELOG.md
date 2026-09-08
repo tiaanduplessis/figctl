@@ -115,8 +115,9 @@ First release. Output contract `schemaVersion` 1.
   ownership markers so re-installing is idempotent and hand-written files are
   never clobbered. Reference files are generated from the command tree.
 - **Distribution.** GoReleaser builds static binaries for macOS, Linux, and
-  Windows on amd64 and arm64, with a Homebrew tap, a Scoop manifest, an npm
-  wrapper (`npx figctl`), a distroless Docker image, and checksums.
+  Windows on amd64 and arm64. Four install channels: an install script that
+  verifies checksums, an npm wrapper (`npx figctl`) that pins a version per
+  project, a Homebrew cask, and `go install`. Checksums are signed with cosign.
 - **Documentation.** README, generated `docs/commands.md`, and guides for
   agents, design tokens, caching, and profiles.
 - `completion` for bash, zsh, fish, and powershell.
