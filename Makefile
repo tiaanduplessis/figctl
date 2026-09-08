@@ -10,7 +10,7 @@ LDFLAGS := -s -w \
 
 GOFILES := $(shell find . -name '*.go' -not -path './vendor/*')
 
-.PHONY: build test lint fmt vet vuln docs gen verify-gen spec-check check clean
+.PHONY: build test lint lint-cross fmt vet vuln docs gen verify-gen spec-check check clean
 
 build:
 	go build -trimpath -ldflags '$(LDFLAGS)' -o bin/$(BINARY) ./cmd/$(BINARY)
@@ -49,6 +49,13 @@ gen:
 # The same assertion runs as a unit test, so check does not repeat it.
 verify-gen:
 	go run ./cmd/gen-skill-docs -check
+
+# lint-cross runs the linter as the other platforms see it. Analysis loads the
+# standard library for the target platform, so a lint failure can be real on
+# Linux and absent on macOS. CI covers both, and this catches it first.
+lint-cross:
+	GOOS=linux golangci-lint run
+	GOOS=windows golangci-lint run
 
 # spec-check compares the Figma OpenAPI version pinned in
 # internal/figma/spec.go with the one Figma publishes today, and fails when

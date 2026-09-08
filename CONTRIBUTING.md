@@ -9,7 +9,7 @@ figctl needs Go 1.27 and these tools on `PATH`:
 
 ```sh
 go install golang.org/x/tools/cmd/goimports@latest
-go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
+go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.13.2
 go install golang.org/x/vuln/cmd/govulncheck@latest    # for make vuln
 export PATH="$HOME/go/bin:$PATH"
 ```
@@ -41,8 +41,10 @@ runs, in order:
 | `build` | `go build` into `bin/figctl` |
 
 `make check` must be green before a pull request is opened, and CI runs the same
-target on Linux and macOS plus `make vuln` (`govulncheck`) and a documentation
-drift check.
+target on Linux and macOS. Linting is platform-sensitive because the analyser
+loads the target platform's standard library, so `make lint-cross` is worth a
+run before pushing from macOS. CI also runs `make vuln` (`govulncheck`) and a
+documentation drift check.
 
 Other targets:
 
@@ -52,6 +54,7 @@ Other targets:
 | `make gen` | regenerate the skill reference files embedded in the binary |
 | `make verify-gen` | fail when those generated files are stale |
 | `make vuln` | `govulncheck ./...` |
+| `make lint-cross` | the linter as Linux and Windows see it. Analysis loads the standard library of the target platform, so a lint result can differ per platform even when the code does not |
 | `make spec-check` | fail when Figma publishes a different OpenAPI spec version than the one pinned in `internal/figma/spec.go` (needs network) |
 | `make clean` | remove `bin`, `dist`, `coverage.out` |
 
