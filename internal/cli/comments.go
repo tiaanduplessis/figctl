@@ -77,7 +77,7 @@ var commentsListCmd = &cobra.Command{
 	Short: "List comments, optionally only those pinned on a node",
 	Example: `  figctl comments list KEY
   figctl comments list KEY --node 1:2 --md`,
-	Args: cobra.ExactArgs(1),
+	Args: cobra.MaximumNArgs(1),
 }
 
 var commentsAddCmd = &cobra.Command{
@@ -103,7 +103,7 @@ func init() {
 		if err != nil {
 			return err
 		}
-		r, err := session.Ref(args[0])
+		r, err := session.Ref(refArg(args))
 		if err != nil {
 			return err
 		}
@@ -155,7 +155,7 @@ func init() {
 		if err != nil {
 			return err
 		}
-		r, err := session.Ref(args[0])
+		r, err := session.Ref(refArg(args))
 		if err != nil {
 			return err
 		}

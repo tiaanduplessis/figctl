@@ -286,19 +286,20 @@ func TestProfileLifecycle(t *testing.T) {
 		t.Fatalf("--profile should win: %v", d)
 	}
 
-	r = execute(t, "", "init", "--profile", "other", "--file", "https://www.figma.com/design/AbC123def456GHI789jkl0/Web-App?node-id=1-2")
+	r = execute(t, "", "init", "--profile", "other", "--file", "web=https://www.figma.com/design/AbC123def456GHI789jkl0/Web-App?node-id=1-2")
 	if r.code != figctl.ExitOK {
 		t.Fatalf("init: exit = %d, stdout = %s", r.code, r.stdout)
 	}
 	d = data(t, r, "init")
-	if d["profile"] != "other" || d["file"] != "AbC123def456GHI789jkl0" {
+	files, _ := d["files"].(map[string]any)
+	if d["profile"] != "other" || files["web"] != "AbC123def456GHI789jkl0" {
 		t.Fatalf("unexpected init data: %v", d)
 	}
 	raw, err := os.ReadFile(filepath.Join(root, "work", config.ProjectFileName))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if string(raw) != "profile: other\nfile: AbC123def456GHI789jkl0\n" {
+	if string(raw) != "profile: other\nfiles:\n    web: AbC123def456GHI789jkl0\n" {
 		t.Fatalf("unexpected project file:\n%s", raw)
 	}
 	r = execute(t, "", "init", "--profile", "other")

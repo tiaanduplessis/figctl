@@ -138,7 +138,7 @@ pattern, or a frame made only of vector shapes), and raster image fills.
 Nothing is rendered or downloaded.`,
 	Example: `  figctl assets list KEY
   figctl assets list KEY --node 2:2 --icon-pattern "ic/*" -o table`,
-	Args: cobra.ExactArgs(1),
+	Args: cobra.MaximumNArgs(1),
 }
 
 var assetsExportCmd = &cobra.Command{
@@ -157,7 +157,7 @@ prints the plan without any image request.`,
 	Example: `  figctl assets export KEY --node 2:2 --out ./src/assets
   figctl assets export KEY --icons-only --svg-current-color --svg-strip-dimensions
   figctl assets export KEY --dry-run`,
-	Args: cobra.ExactArgs(1),
+	Args: cobra.MaximumNArgs(1),
 }
 
 type discoverFlags struct {
@@ -193,7 +193,7 @@ func init() {
 		if err != nil {
 			return err
 		}
-		r, err := session.Ref(args[0])
+		r, err := session.Ref(refArg(args))
 		if err != nil {
 			return err
 		}
@@ -264,7 +264,7 @@ func init() {
 		if err != nil {
 			return err
 		}
-		r, err := session.Ref(args[0])
+		r, err := session.Ref(refArg(args))
 		if err != nil {
 			return err
 		}

@@ -134,7 +134,7 @@ says so in hints.`,
   figctl tokens export KEY --mode Dark --format css
   figctl tokens export KEY --mode-strategy separate --out ./tokens
   figctl tokens export KEY --format tailwind --tailwind-vars --tailwind-format cjs`,
-	Args: cobra.ExactArgs(1),
+	Args: cobra.MaximumNArgs(1),
 }
 
 func init() {
@@ -159,7 +159,7 @@ func init() {
 		if err != nil {
 			return err
 		}
-		r, err := session.Ref(args[0])
+		r, err := session.Ref(refArg(args))
 		if err != nil {
 			return err
 		}

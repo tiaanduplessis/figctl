@@ -57,7 +57,7 @@ is given.`,
   figctl node context "https://www.figma.com/design/KEY/App?node-id=2-2" -o md
   figctl node context KEY --node 2:6 --depth 2 --no-assets
   figctl node context KEY --node 2:2 --out ./design/login --screenshot-scale 1`,
-	Args: cobra.ExactArgs(1),
+	Args: cobra.MaximumNArgs(1),
 }
 
 // contextScreenshotInfo is the rendered PNG of one requested node.
@@ -483,7 +483,7 @@ func init() {
 	f.BoolVar(&opts.noComments, "no-comments", false, "skip comments and dev resources")
 	f.BoolVar(&opts.noCSS, "no-css", false, "omit the CSS declaration map from the inspected nodes")
 	nodeContextCmd.RunE = run(func(ctx *Context, _ *cobra.Command, args []string) error {
-		return runNodeContext(ctx, args[0], &opts)
+		return runNodeContext(ctx, refArg(args), &opts)
 	})
 	nodeCmd.AddCommand(nodeContextCmd)
 }

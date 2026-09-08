@@ -26,7 +26,7 @@ access (non Enterprise plans) only styles resolve, with a hint.`,
   figctl tokens resolve KEY --name text/primary --mode Dark
   figctl tokens resolve KEY --id 5:2
   figctl tokens resolve KEY --name shadow/md`,
-	Args: cobra.ExactArgs(1),
+	Args: cobra.MaximumNArgs(1),
 }
 
 // tokenResolution is the data of tokens resolve.
@@ -59,7 +59,7 @@ func init() {
 		if err != nil {
 			return err
 		}
-		r, err := session.Ref(args[0])
+		r, err := session.Ref(refArg(args))
 		if err != nil {
 			return err
 		}

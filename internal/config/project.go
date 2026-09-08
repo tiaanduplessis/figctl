@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 
@@ -18,10 +20,70 @@ const ProjectFileName = ".figctl.yaml"
 type Project struct {
 	// Profile names the profile to use in this repository.
 	Profile string `yaml:"profile,omitempty" json:"profile,omitempty"`
-	// File is the default file key for commands that take a ref.
-	File string `yaml:"file,omitempty" json:"file,omitempty"`
+	// Files maps a short name to a Figma file key. A design system usually
+	// lives in its own file, so one repository routinely refers to several,
+	// and naming them keeps keys out of every command.
+	Files map[string]string `yaml:"files,omitempty" json:"files,omitempty"`
+	// Default names the entry of Files used when a command is given no ref.
+	Default string `yaml:"default,omitempty" json:"default,omitempty"`
 	// Path is where the file was found. It is not serialized.
 	Path string `yaml:"-" json:"path,omitempty"`
+}
+
+// Lookup resolves a configured name to its file key.
+func (p *Project) Lookup(name string) (string, bool) {
+	if p == nil {
+		return "", false
+	}
+	key, ok := p.Files[name]
+	return key, ok
+}
+
+// DefaultKey returns the file key a command should use when given no ref.
+// A single configured file is the default whether or not it was named as
+// one, because there is nothing else it could mean.
+func (p *Project) DefaultKey() (string, bool) {
+	if p == nil || len(p.Files) == 0 {
+		return "", false
+	}
+	if p.Default != "" {
+		key, ok := p.Files[p.Default]
+		return key, ok
+	}
+	if len(p.Files) == 1 {
+		for _, key := range p.Files {
+			return key, true
+		}
+	}
+	return "", false
+}
+
+// Names lists the configured file names in a stable order, for error
+// messages that have to say what the alternatives are.
+func (p *Project) Names() []string {
+	if p == nil {
+		return nil
+	}
+	names := make([]string, 0, len(p.Files))
+	for name := range p.Files {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	return names
+}
+
+// Validate rejects a config that names a default which does not exist, so
+// the mistake surfaces where it was made rather than at the first command
+// that relies on it.
+func (p *Project) Validate() error {
+	if p == nil || p.Default == "" {
+		return nil
+	}
+	if _, ok := p.Files[p.Default]; !ok {
+		return figctl.Newf(figctl.CodeUsage, "%s names %q as the default file, but no such file is configured", p.Path, p.Default).
+			WithHint("Configured files: %s.", strings.Join(p.Names(), ", "))
+	}
+	return nil
 }
 
 // FindProject walks up from start looking for ProjectFileName. It returns

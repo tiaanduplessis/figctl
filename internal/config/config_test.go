@@ -117,7 +117,7 @@ func TestFindProjectWalksUp(t *testing.T) {
 	if err := os.MkdirAll(nested, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	p := &Project{Profile: "acme", File: "AbC123def456GHI789jkl0"}
+	p := &Project{Profile: "acme", Files: map[string]string{"web": "AbC123def456GHI789jkl0"}, Default: "web"}
 	path, err := p.Save(repo)
 	if err != nil {
 		t.Fatal(err)
@@ -130,7 +130,7 @@ func TestFindProjectWalksUp(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if found == nil || found.Profile != "acme" || found.File != p.File || found.Path != path {
+	if found == nil || found.Profile != "acme" || found.Files["web"] != p.Files["web"] || found.Path != path {
 		t.Fatalf("unexpected project: %+v", found)
 	}
 

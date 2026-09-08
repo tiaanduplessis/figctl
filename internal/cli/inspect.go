@@ -40,7 +40,7 @@ hint. A node-id in the ref URL is used when no --node is given.`,
   figctl node inspect "https://www.figma.com/design/KEY/App?node-id=2-2" --depth 1
   figctl node inspect KEY --node 2:3 --css --web
   figctl node inspect KEY --node 2:6 --interactions -o md`,
-	Args: cobra.ExactArgs(1),
+	Args: cobra.MaximumNArgs(1),
 }
 
 // inspectResult is the data of node inspect: one entry per requested node.
@@ -475,7 +475,7 @@ func init() {
 		if err != nil {
 			return err
 		}
-		r, err := session.Ref(args[0])
+		r, err := session.Ref(refArg(args))
 		if err != nil {
 			return err
 		}

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/tiaanduplessis/figctl/internal/cache"
@@ -113,14 +114,75 @@ func (c *Context) newClient(token, baseURL string, profileNames func() []string)
 // Ref parses a file reference. A version-id in the URL pins the file
 // version unless --file-version was given.
 func (s *Session) Ref(arg string) (ref.Ref, error) {
+	project := s.project()
+	arg = strings.TrimSpace(arg)
+
+	// With no ref at all, fall back to the file the repository nominates.
+	if arg == "" {
+		key, ok := project.DefaultKey()
+		if !ok {
+			return ref.Ref{}, s.noRefError(project)
+		}
+		return s.trackVersion(ref.Ref{FileKey: key, Kind: ref.KindKey}), nil
+	}
+
+	// A configured name stands in for its key, so commands read as
+	// "tokens export design-system" rather than carrying a key around.
+	if key, ok := project.Lookup(arg); ok {
+		return s.trackVersion(ref.Ref{FileKey: key, Kind: ref.KindKey}), nil
+	}
+
 	r, err := ref.Parse(arg)
 	if err != nil {
+		// A word that is neither a key nor a URL was probably meant as a
+		// name, so say which names exist rather than explaining ref syntax.
+		if names := project.Names(); len(names) > 0 && !strings.Contains(arg, "/") {
+			return ref.Ref{}, figctl.Newf(figctl.CodeUsage, "%q is not a file key, a Figma URL, or a file configured in %s", arg, project.Path).
+				WithHint("Configured files: %s.", strings.Join(names, ", "))
+		}
 		return ref.Ref{}, err
 	}
+	return s.trackVersion(r), nil
+}
+
+// refArg returns the ref a command was given, or empty when it was omitted so
+// the repository's default applies.
+func refArg(args []string) string {
+	if len(args) == 0 {
+		return ""
+	}
+	return args[0]
+}
+
+// noRefError explains what to pass when a command was given no ref and the
+// repository nominates no default.
+func (s *Session) noRefError(project *config.Project) error {
+	e := figctl.New(figctl.CodeUsage, "no Figma file given")
+	switch names := project.Names(); {
+	case len(names) > 1:
+		return e.WithHint("Name one of the files configured in %s (%s), or pass a file key or Figma URL. Set a default with figctl init --default <name>.",
+			project.Path, strings.Join(names, ", "))
+	case len(names) == 1:
+		return e.WithHint("Pass %s, a file key, or a Figma URL.", names[0])
+	default:
+		return e.WithHint("Pass a file key or a Figma URL, or configure this repository with figctl init --file <name>=<key>.")
+	}
+}
+
+// project returns the repository config backing the active profile, which is
+// nil when the command runs outside a configured repository.
+func (s *Session) project() *config.Project {
+	if s.Active == nil {
+		return nil
+	}
+	return s.Active.Project
+}
+
+func (s *Session) trackVersion(r ref.Ref) ref.Ref {
 	if s.version == "" && r.VersionID != "" {
 		s.version = r.VersionID
 	}
-	return r, nil
+	return r
 }
 
 // Version returns the pinned file version, or empty.

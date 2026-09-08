@@ -333,10 +333,20 @@ file holds no secrets.
 
 ```sh
 npx figctl profile add acme --team 555000111 --default
-npx figctl init --profile acme --file https://www.figma.com/design/KEY/Web-App
+npx figctl init --profile acme --file app=KEY1 --file design-system=KEY2 --default app
 ```
 
-That writes a `.figctl.yaml` naming the profile, with no secret in it. Commands
+That writes a `.figctl.yaml` naming the profile and the Figma files this
+repository uses, with no secret in it. A repository usually refers to more than
+one, because a design system lives in its own file, and a configured name then
+stands in for a key wherever a command takes a ref:
+
+```sh
+npx figctl tokens export design-system --format css --out ./src/styles
+npx figctl node context --node 2:2   # the default file
+```
+
+Commands
 walk up from the working directory to find it, so an agent working in the Acme
 repository uses the Acme token without being told, and an agent in another
 repository cannot reach Acme's files. Every envelope carries the profile it ran

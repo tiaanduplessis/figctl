@@ -203,14 +203,33 @@ In each client repository, commit a `.figctl.yaml` naming the profile:
 
 ```sh
 cd ~/work/acme-web
-figctl init --profile acme --file https://www.figma.com/design/KEY/Web-App
+figctl init --profile acme \
+  --file app=https://www.figma.com/design/KEY1/Web-App \
+  --file design-system=https://www.figma.com/design/KEY2/Design-System \
+  --default app
 ```
 
 ```yaml
 # .figctl.yaml
 profile: acme
-file: KEY
+default: app
+files:
+  app: KEY1
+  design-system: KEY2
 ```
+
+A repository usually refers to more than one Figma file, because a design
+system lives in its own. A configured name can be used wherever a command
+takes a ref, and the ref can be dropped entirely for the default:
+
+```sh
+figctl file tree design-system
+figctl tokens export design-system --format css --out ./src/styles
+figctl node context --node 2:2
+```
+
+With a single configured file that file is the default, so naming one is only
+needed once there are several. An unknown name lists the configured ones.
 
 Commands walk up from the working directory to find it, so an agent working in
 `~/work/acme-web` uses the Acme token without being told, and an agent in

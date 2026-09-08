@@ -87,7 +87,7 @@ version and cached, so searching is free after the first call.`,
   figctl file find KEY --type COMPONENT,COMPONENT_SET --page "Design System"
   figctl file find KEY --text "sign in"
   figctl file find KEY --name "icon/*" --type VECTOR --node 2:2`,
-	Args: cobra.ExactArgs(1),
+	Args: cobra.MaximumNArgs(1),
 }
 
 func init() {
@@ -107,7 +107,7 @@ func init() {
 		if err != nil {
 			return err
 		}
-		r, err := session.Ref(args[0])
+		r, err := session.Ref(refArg(args))
 		if err != nil {
 			return err
 		}

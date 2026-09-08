@@ -73,7 +73,7 @@ the command exits 6 (PARTIAL).`,
 	Example: `  figctl render KEY --node 2:2
   figctl render "https://www.figma.com/design/KEY/App?node-id=2-2" --scale 1 --out ./design
   figctl render KEY --node 2:9 -f svg --svg-outline-text --name-by id`,
-	Args: cobra.ExactArgs(1),
+	Args: cobra.MaximumNArgs(1),
 }
 
 func init() {
@@ -100,7 +100,7 @@ func init() {
 		if err != nil {
 			return err
 		}
-		r, err := session.Ref(args[0])
+		r, err := session.Ref(refArg(args))
 		if err != nil {
 			return err
 		}

@@ -43,7 +43,7 @@ var versionsListCmd = &cobra.Command{
 version. Pass --cursor from nextCursor to page further back.`,
 	Example: `  figctl versions list KEY
   figctl versions list KEY --limit 5 --cursor 2100120000`,
-	Args: cobra.ExactArgs(1),
+	Args: cobra.MaximumNArgs(1),
 }
 
 func init() {
@@ -52,7 +52,7 @@ func init() {
 		if err != nil {
 			return err
 		}
-		r, err := session.Ref(args[0])
+		r, err := session.Ref(refArg(args))
 		if err != nil {
 			return err
 		}

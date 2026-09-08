@@ -163,7 +163,7 @@ fetched once per file version and cached.`,
   figctl file tree KEY --type FRAME,SECTION --page Screens
   figctl file tree KEY --name "icon/*" --depth 0 --limit 50
   figctl file tree "https://www.figma.com/design/KEY/App?node-id=2-2" --visible-only`,
-	Args: cobra.ExactArgs(1),
+	Args: cobra.MaximumNArgs(1),
 }
 
 func init() {
@@ -184,7 +184,7 @@ func init() {
 		if err != nil {
 			return err
 		}
-		r, err := session.Ref(args[0])
+		r, err := session.Ref(refArg(args))
 		if err != nil {
 			return err
 		}

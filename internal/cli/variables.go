@@ -262,7 +262,7 @@ PLAN_REQUIRED and figctl styles list is the fallback.`,
   figctl variables list KEY --collection Semantic --mode Dark
   figctl variables list KEY --type COLOR -o table
   figctl variables list KEY --published`,
-	Args: cobra.ExactArgs(1),
+	Args: cobra.MaximumNArgs(1),
 }
 
 var variablesGetCmd = &cobra.Command{
@@ -270,7 +270,7 @@ var variablesGetCmd = &cobra.Command{
 	Short: "Show one variable with its alias chain per mode",
 	Example: `  figctl variables get KEY --id VariableID:1:201
   figctl variables get KEY --name bg/surface`,
-	Args: cobra.ExactArgs(1),
+	Args: cobra.MaximumNArgs(1),
 }
 
 func init() {
@@ -286,7 +286,7 @@ func init() {
 		if err != nil {
 			return err
 		}
-		r, err := session.Ref(args[0])
+		r, err := session.Ref(refArg(args))
 		if err != nil {
 			return err
 		}
@@ -360,7 +360,7 @@ func init() {
 		if err != nil {
 			return err
 		}
-		r, err := session.Ref(args[0])
+		r, err := session.Ref(refArg(args))
 		if err != nil {
 			return err
 		}

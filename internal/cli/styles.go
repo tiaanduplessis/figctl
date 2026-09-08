@@ -123,7 +123,7 @@ var stylesGetCmd = &cobra.Command{
 	Short: "Show one style with its full resolved value",
 	Example: `  figctl styles get KEY --node 5:2
   figctl styles get KEY --key 5f4e3d2c1b0a9f8e7d6c5b4a39281706f5e4d502`,
-	Args: cobra.ExactArgs(1),
+	Args: cobra.MaximumNArgs(1),
 }
 
 func validStyleType(t string) (string, error) {
@@ -183,7 +183,7 @@ func init() {
 			env.AddHint("Team styles carry metadata only; resolve values with figctl styles get <fileKey> --key <key> against the owning file.")
 			return ctx.Printer.Print(env)
 		}
-		r, err := session.Ref(args[0])
+		r, err := session.Ref(refArg(args))
 		if err != nil {
 			return err
 		}
@@ -275,7 +275,7 @@ func init() {
 			return figctl.New(figctl.CodeUsage, "--node or --key is required").
 				WithHint("Find style ids with figctl styles list <ref>.")
 		}
-		r, err := session.Ref(args[0])
+		r, err := session.Ref(refArg(args))
 		if err != nil {
 			return err
 		}

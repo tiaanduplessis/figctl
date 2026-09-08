@@ -548,18 +548,28 @@ figctl init [flags]
 ```
 
 Write .figctl.yaml in the current directory. The file names the profile
-(and optionally the default Figma file) for this repository and contains no
-secrets, so it can be committed. Commands walk up from the working directory
-to find it.
+and the Figma files this repository works with, and contains no secrets, so it
+can be committed. Commands walk up from the working directory to find it.
+
+Name each file with --file <name>=<key or URL>. A repository usually refers to
+more than one, because a design system lives in its own file, and a name can
+then be used wherever a command takes a ref:
+
+  figctl file tree design-system
+  figctl tokens export design-system --format css
+
+--default picks the file used when a command is given no ref at all. With a
+single configured file that is implied.
 
 | Flag | Default | Description |
 | --- | --- | --- |
-| `--file string` |  | default file key or Figma URL for this repository |
+| `--default string` |  | name of the file used when a command is given no ref |
+| `--file stringArray` |  | a named Figma file as <name>=<key or URL>; repeatable |
 
 Example:
 
 ```
-figctl init --profile acme
+figctl init --profile acme --file web=https://www.figma.com/design/KEY/Web-App
 ```
 
 ### figctl me

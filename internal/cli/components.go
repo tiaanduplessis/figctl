@@ -281,7 +281,7 @@ shows its set, its size, and its own definitions when it has any.`,
 	Example: `  figctl components get KEY --node 3:10
   figctl components get KEY --key a1b2c3d4e5f60718293a4b5c6d7e8f9012345311
   figctl components get "https://www.figma.com/design/KEY/App?node-id=3-20" -o md`,
-	Args: cobra.ExactArgs(1),
+	Args: cobra.MaximumNArgs(1),
 }
 
 func init() {
@@ -302,7 +302,7 @@ func init() {
 		if team != "" {
 			return listTeamComponents(rctx, ctx, session, team, query)
 		}
-		r, err := session.Ref(args[0])
+		r, err := session.Ref(refArg(args))
 		if err != nil {
 			return err
 		}
@@ -339,7 +339,7 @@ func init() {
 		if err != nil {
 			return err
 		}
-		r, err := session.Ref(args[0])
+		r, err := session.Ref(refArg(args))
 		if err != nil {
 			return err
 		}

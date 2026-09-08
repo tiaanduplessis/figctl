@@ -92,7 +92,7 @@ var fileInfoCmd = &cobra.Command{
 	Short: "Show file name, pages, version, editor type, role, and branches",
 	Example: `  figctl file info https://www.figma.com/design/KEY/Web-App
   figctl file info KEY --json --fields name,pages`,
-	Args: cobra.ExactArgs(1),
+	Args: cobra.MaximumNArgs(1),
 }
 
 var fileGetCmd = &cobra.Command{
@@ -109,7 +109,7 @@ passed to the API; --fields keeps only the named top level keys.`,
   figctl file get "https://www.figma.com/design/KEY/App?node-id=1-2" --fields document
   figctl file get KEY --node 1:2 --geometry paths
   figctl file get KEY --depth 1 --fields document`,
-	Args: cobra.ExactArgs(1),
+	Args: cobra.MaximumNArgs(1),
 }
 
 func init() {
@@ -118,7 +118,7 @@ func init() {
 		if err != nil {
 			return err
 		}
-		r, err := session.Ref(args[0])
+		r, err := session.Ref(refArg(args))
 		if err != nil {
 			return err
 		}
@@ -168,7 +168,7 @@ func init() {
 		if err != nil {
 			return err
 		}
-		r, err := session.Ref(args[0])
+		r, err := session.Ref(refArg(args))
 		if err != nil {
 			return err
 		}

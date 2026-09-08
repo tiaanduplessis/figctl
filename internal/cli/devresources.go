@@ -43,7 +43,7 @@ var devresourcesListCmd = &cobra.Command{
 	Short: "List dev resources, optionally for specific nodes",
 	Example: `  figctl devresources list KEY
   figctl devresources list KEY --node 3:11 --node 3:20`,
-	Args: cobra.ExactArgs(1),
+	Args: cobra.MaximumNArgs(1),
 }
 
 func init() {
@@ -54,7 +54,7 @@ func init() {
 		if err != nil {
 			return err
 		}
-		r, err := session.Ref(args[0])
+		r, err := session.Ref(refArg(args))
 		if err != nil {
 			return err
 		}
@@ -180,21 +180,21 @@ URL a node already carries.`,
 	Example: `  figctl devresources add KEY --node 3:11 --url https://storybook.example.com/?path=/story/button --name Storybook
   figctl devresources add KEY --from-file stories.json
   storybook-index --json | figctl devresources add KEY --from-file - --yes`,
-	Args: cobra.ExactArgs(1),
+	Args: cobra.MaximumNArgs(1),
 }
 
 var devresourcesUpdateCmd = &cobra.Command{
 	Use:     "update <ref>",
 	Short:   "Change the name or URL of existing links",
 	Example: `  figctl devresources update KEY --id abc123 --url https://storybook.example.com/?path=/story/button--primary`,
-	Args:    cobra.ExactArgs(1),
+	Args:    cobra.MaximumNArgs(1),
 }
 
 var devresourcesRemoveCmd = &cobra.Command{
 	Use:     "remove <ref>",
 	Short:   "Delete links from a file",
 	Example: "  figctl devresources remove KEY --id abc123 --id def456",
-	Args:    cobra.ExactArgs(1),
+	Args:    cobra.MaximumNArgs(1),
 }
 
 func init() {
@@ -212,7 +212,7 @@ func init() {
 		if err != nil {
 			return err
 		}
-		r, err := session.Ref(args[0])
+		r, err := session.Ref(refArg(args))
 		if err != nil {
 			return err
 		}
@@ -263,7 +263,7 @@ func init() {
 		if err != nil {
 			return err
 		}
-		r, err := session.Ref(args[0])
+		r, err := session.Ref(refArg(args))
 		if err != nil {
 			return err
 		}
@@ -317,7 +317,7 @@ func init() {
 		if err != nil {
 			return err
 		}
-		r, err := session.Ref(args[0])
+		r, err := session.Ref(refArg(args))
 		if err != nil {
 			return err
 		}
