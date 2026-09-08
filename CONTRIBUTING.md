@@ -72,6 +72,7 @@ Other targets:
 | `internal/model` | the normalized node model |
 | `internal/resolve` | variables, styles, alias chains, colour maths |
 | `internal/inspect` | raw node to model conversion, CSS formatting |
+| `internal/imagediff` | local PNG comparison and visual diff output |
 | `internal/assets` | asset discovery, rendering, downloading, SVG cleanup |
 | `internal/tokens` | DTCG, CSS, and Tailwind exporters |
 | `internal/output` | envelope, renderers, JSON Schema |

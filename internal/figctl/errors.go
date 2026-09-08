@@ -12,29 +12,32 @@ type Code string
 
 // Error codes emitted in the error envelope.
 const (
-	CodeUsage        Code = "USAGE"
-	CodeAuthMissing  Code = "AUTH_MISSING"
-	CodeAuthInvalid  Code = "AUTH_INVALID"
-	CodeAuthScope    Code = "AUTH_SCOPE"
-	CodeNotFound     Code = "NOT_FOUND"
-	CodeForbidden    Code = "FORBIDDEN"
-	CodeRateLimited  Code = "RATE_LIMITED"
-	CodePlanRequired Code = "PLAN_REQUIRED"
-	CodeRenderFailed Code = "RENDER_FAILED"
-	CodePartial      Code = "PARTIAL"
-	CodeNetwork      Code = "NETWORK"
-	CodeInternal     Code = "INTERNAL"
+	CodeImageMismatch Code = "IMAGE_MISMATCH"
+	CodeImageIO       Code = "IMAGE_IO"
+	CodeUsage         Code = "USAGE"
+	CodeAuthMissing   Code = "AUTH_MISSING"
+	CodeAuthInvalid   Code = "AUTH_INVALID"
+	CodeAuthScope     Code = "AUTH_SCOPE"
+	CodeNotFound      Code = "NOT_FOUND"
+	CodeForbidden     Code = "FORBIDDEN"
+	CodeRateLimited   Code = "RATE_LIMITED"
+	CodePlanRequired  Code = "PLAN_REQUIRED"
+	CodeRenderFailed  Code = "RENDER_FAILED"
+	CodePartial       Code = "PARTIAL"
+	CodeNetwork       Code = "NETWORK"
+	CodeInternal      Code = "INTERNAL"
 )
 
 // Process exit codes.
 const (
-	ExitOK          = 0
-	ExitError       = 1
-	ExitUsage       = 2
-	ExitAuth        = 3
-	ExitNotFound    = 4
-	ExitRateLimited = 5
-	ExitPartial     = 6
+	ExitOK            = 0
+	ExitError         = 1
+	ExitUsage         = 2
+	ExitAuth          = 3
+	ExitNotFound      = 4
+	ExitRateLimited   = 5
+	ExitPartial       = 6
+	ExitImageMismatch = 7
 )
 
 // Error is the typed error every command returns. It carries everything the
@@ -114,6 +117,8 @@ func ExitCode(err error) int {
 		return ExitNotFound
 	case CodeRateLimited:
 		return ExitRateLimited
+	case CodeImageMismatch:
+		return ExitImageMismatch
 	case CodePartial:
 		return ExitPartial
 	default:

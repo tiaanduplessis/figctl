@@ -38,6 +38,7 @@ codes, and error codes.
 | [`figctl devresources list`](#figctl-devresources-list) | List dev resources, optionally for specific nodes |
 | [`figctl devresources remove`](#figctl-devresources-remove) | Delete links from a file |
 | [`figctl devresources update`](#figctl-devresources-update) | Change the name or URL of existing links |
+| [`figctl diff`](#figctl-diff) | Compare local PNG screenshots and optionally write a visual diff |
 | [`figctl file`](#figctl-file) | Read a Figma file: info, tree, find, and raw JSON |
 | [`figctl file find`](#figctl-file-find) | Search nodes by name glob, type, or text content |
 | [`figctl file get`](#figctl-file-get) | Print raw Figma API JSON for the document or specific nodes (escape hatch) |
@@ -784,6 +785,50 @@ Flags:
 | `--id` | `string` | - | dev resource id to update |
 | `--name` | `string` | - | new name |
 | `--url` | `string` | - | new URL |
+
+Plus the [global flags](#global-flags).
+
+## figctl diff
+
+Compare local PNG screenshots and optionally write a visual diff
+
+```
+figctl diff <expected.png> <actual.png> [flags]
+```
+
+Compare two local PNGs without credentials or network requests.
+Images must have equal pixel dimensions; no resizing or cropping is applied.
+Each input is limited to 16 million pixels. Match viewport, crop, fonts, content,
+and capture scale. Render defaults to 2x; use --scale 1 for a 1x screenshot.
+
+--threshold controls per-pixel color tolerance (0 is most sensitive).
+--max-diff-ratio is the accepted fraction of mismatched pixels (0.01 = 1%).
+Detected anti-aliasing differences are ignored unless --include-aa is set.
+Transparency is compared over a checkerboard. The ratio measures pixel
+mismatch, not design quality.
+
+Exit 0 when mismatchRatio <= maxDiffRatio; exit 7 otherwise. Both return the
+same data envelope, including passed. Invalid inputs exit 2, missing paths
+exit 4, and other file I/O failures exit 1. --out writes a PNG on pass or fail,
+replacing an existing output but never an input. Its parent directory must exist.
+Red marks mismatches, yellow marks ignored anti-aliasing, and unchanged areas
+are faded. Without --out, only the comparison result is produced.
+
+Examples:
+
+```sh
+figctl diff design.png implementation.png --out diff.png --max-diff-ratio 0.01 --json
+figctl diff before.png after.png --threshold 0 --include-aa
+```
+
+Flags:
+
+| Flag | Type | Default | Description |
+| --- | --- | --- | --- |
+| `--include-aa` | `bool` | `false` | count detected anti-aliasing differences |
+| `--max-diff-ratio` | `float` | `0` | allowed mismatch fraction between 0 and 1 (0.01 = 1%) |
+| `--out` | `string` | - | destination PNG path (optional) |
+| `--threshold` | `float` | `0.1` | per-pixel color tolerance between 0 and 1 |
 
 Plus the [global flags](#global-flags).
 

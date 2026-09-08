@@ -22,6 +22,8 @@ func TestExitCode(t *testing.T) {
 		{"rate limited", New(CodeRateLimited, "x"), ExitRateLimited},
 		{"plan required", New(CodePlanRequired, "x"), ExitError},
 		{"render failed", New(CodeRenderFailed, "x"), ExitError},
+		{"image mismatch", New(CodeImageMismatch, "x"), ExitImageMismatch},
+		{"image IO", New(CodeImageIO, "x"), ExitError},
 		{"partial", New(CodePartial, "x"), ExitPartial},
 		{"network", New(CodeNetwork, "x"), ExitError},
 		{"internal", New(CodeInternal, "x"), ExitError},

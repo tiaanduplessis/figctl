@@ -152,12 +152,35 @@ the agent knows the repository's conventions and figctl does not.
 ### 4. Compare the result
 
 ```sh
-figctl render KEY --node 2:2 --scale 2 --out ./design
+figctl render KEY --node 2:2 --scale 1 --out ./design
+figctl diff design.png implementation.png --out diff.png --max-diff-ratio 0.01 --json
 ```
 
 Renders to PNG, JPG, SVG, or PDF. The manifest lists absolute paths, so the
 screenshot can go straight into a vision tool next to a screenshot of the built
-component.
+component. Use the PNG path from that manifest as the first `diff` input.
+Capture the implementation with browser tools at the same viewport, crop, and
+scale; `render` defaults to 2x, so the example explicitly requests 1x.
+
+`diff` compares local PNGs without credentials or network requests. It returns
+`passed`, `mismatchedPixels`, `totalPixels`, `mismatchRatio`, `width`, `height`,
+the comparison settings, absolute input paths, and an optional `diffPath`.
+
+- `--threshold 0.1` controls per-pixel color tolerance (0 is most sensitive).
+- `--max-diff-ratio 0.01` accepts up to 1% mismatched pixels; the default is 0.
+- Detected anti-aliasing is ignored unless `--include-aa` is set. Transparency
+  is compared over a checkerboard.
+- `--out` writes a PNG on pass or fail: red for mismatches, yellow for ignored
+  anti-aliasing, and faded unchanged regions. Its parent directory must exist.
+  Existing output is replaced; neither input can be the output. Omit the flag
+  to return metrics without writing an image.
+- Inputs must have equal dimensions and at most 16 million pixels each.
+  No resizing is applied. Match fonts, content, and animation state as well.
+
+Exit 0 means the mismatch ratio is within the limit; exit 7 means it exceeds
+it. Both print the same data envelope, with `passed` true or false. Handle exit
+7 explicitly in scripts using `set -e`. The ratio measures pixel differences,
+not design quality; inspect the diff image before deciding what to fix.
 
 ### 5. Wire up the design tokens
 
@@ -260,6 +283,7 @@ Full generated reference: [docs/commands.md](docs/commands.md). Or run
 | --- | --- |
 | `file info\|tree\|find\|get` | file metadata, sparse outline, search, raw Figma JSON |
 | `node inspect\|context` | normalized model of nodes; everything needed to implement one node |
+| `diff` | compare two local PNGs, report mismatch metrics, and write a visual diff |
 | `render` | nodes to PNG, JPG, SVG, or PDF files |
 | `assets list\|export` | icons, export-marked layers, and raster image fills |
 | `tokens resolve\|export` | one variable or style across modes; DTCG, CSS, Tailwind, JSON |
@@ -340,6 +364,7 @@ command's `data`, so field names never have to be guessed.
 | 4 | not found |
 | 5 | rate limited |
 | 6 | partial success: `data` is usable, `failures` lists what did not work |
+| 7 | image mismatch: comparison data is usable, `data.passed` is false |
 
 ### Error codes
 
@@ -356,6 +381,8 @@ command's `data`, so field names never have to be guessed.
 | `RENDER_FAILED` | 1 | Figma could not render any requested node |
 | `PARTIAL` | 6 | some items succeeded, some failed |
 | `NETWORK` | 1 | connection or timeout |
+| `IMAGE_MISMATCH` | 7 | comparison exceeds the allowed ratio; data envelope retained |
+| `IMAGE_IO` | 1 | image file read or write failed |
 | `INTERNAL` | 1 | a bug in figctl |
 
 ## Caching and rate limits
