@@ -46,7 +46,8 @@ Switch on `error.code` and follow `error.hint`.
 
 Exit codes: 0 success, 1 runtime or API error, 2 usage, 3 auth, 4 not found,
 5 rate limited, 6 partial success (the data is still on stdout, and the
-items that failed are in `data.failures`).
+items that failed are in `data.failures`), 7 image mismatch (comparison data
+remains on stdout with `data.passed: false`).
 
 ## Data payloads
 
@@ -852,6 +853,23 @@ items that failed are in `data.failures`).
 | `names[].name` | string | yes |  |
 | `names[].type` | string | yes |  |
 
+### diff
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `expected` | string | yes |  |
+| `actual` | string | yes |  |
+| `width` | integer | yes |  |
+| `height` | integer | yes |  |
+| `totalPixels` | integer | yes |  |
+| `mismatchedPixels` | integer | yes |  |
+| `mismatchRatio` | number | yes |  |
+| `threshold` | number | yes |  |
+| `maxDiffRatio` | number | yes |  |
+| `includeAA` | boolean | yes |  |
+| `passed` | boolean | yes |  |
+| `diffPath` | string |  |  |
+
 ### render
 
 | Field | Type | Required | Description |
@@ -937,6 +955,7 @@ items that failed are in `data.failures`).
 - `devresources.list`
 - `devresources.remove`
 - `devresources.update`
+- `diff`
 - `file.find`
 - `file.get` (no static schema: file get returns the raw Figma file or nodes JSON, whose shape is Figma's own file schema, not a figctl type)
 - `file.info`

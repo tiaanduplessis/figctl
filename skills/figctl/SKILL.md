@@ -1,6 +1,6 @@
 ---
 name: figctl
-description: Read Figma designs from the shell with figctl - outline a file, get one node's layout, styles and design tokens, render screenshots, export icons, and export the design system. Use when a task mentions Figma, a figma.com URL, a design file, design tokens, or implementing a screen from a design.
+description: Read Figma designs from the shell with figctl - outline a file, get one node's layout, styles and design tokens, render screenshots, compare local PNGs, export icons, and export the design system. Use when a task mentions Figma, a figma.com URL, a design file, design tokens, or implementing a screen from a design.
 allowed-tools: Bash(figctl:*)
 ---
 
@@ -10,7 +10,7 @@ figctl reads a Figma file and returns what is needed to implement the design in
 code. It is a single binary run from the shell: no server to start, no tool
 schemas in every turn.
 
-Confirm it is installed and pointed at the right account before doing work:
+For Figma API commands, confirm it is installed and pointed at the right account:
 
 ```
 figctl auth status
@@ -51,10 +51,13 @@ needed. `--node` accepts `1:2`, `1-2`, or a URL.
    tool to see the design.
 3. Implement in the codebase, using the token names from step 2 rather than the
    raw values.
-4. Compare. Render the design again and look at it next to the result.
+4. Compare. Render at the browser screenshot scale (1x in this example).
    ```
-   figctl render "<url>" --node 2:2 --out ./design
+   figctl render "<url>" --node 2:2 --scale 1 --out ./design
+   figctl diff design.png implementation.png --out diff.png --max-diff-ratio 0.01
    ```
+   Use the render manifest path and a browser capture at the same viewport and crop.
+   Read the diff PNG, fix the highlighted differences, and repeat.
 5. Wire up the design system once per project.
    ```
    figctl tokens export "<url>" --format css --out ./src/styles
@@ -93,6 +96,7 @@ rows exist.
 | 4 | file or node not found |
 | 5 | rate limited |
 | 6 | partial success: `data` is on stdout, check `data.failures` |
+| 7 | image mismatch: comparison completed, `data.passed` is false |
 
 Exit 6 is not a failure to retry. The good results are already on stdout; the
 items that failed are listed in `data.failures`.

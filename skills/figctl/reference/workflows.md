@@ -89,6 +89,38 @@ Notes:
   figctl tokens resolve "<url>" --name color/text/primary --mode Dark
   ```
 
+## Compare an implementation with a design
+
+```sh
+figctl render "<url>" --scale 1 --out ./design
+figctl diff design.png implementation.png --out diff.png \
+  --threshold 0.1 --max-diff-ratio 0.01 --json
+```
+
+Use the PNG path from the render manifest. Capture `implementation.png` with
+browser tools at the same viewport, crop, and device scale. Wait for fonts and
+images to load; keep content and animation state consistent. `render` defaults
+to 2x, so explicitly use 1x when the browser screenshot is 1x.
+
+`diff` runs offline and accepts equal-sized PNGs up to 16 million pixels each.
+It never resizes inputs. `--threshold` is color tolerance per pixel;
+`--max-diff-ratio 0.01` accepts up to 1% mismatched pixels. The default accepted
+ratio is zero. Detected anti-aliasing is ignored; use `--include-aa` to count it.
+Transparency is compared over a checkerboard.
+
+Exit 0 means the ratio is within the limit; exit 7 means it exceeds the limit.
+Both print comparison data (`passed`, `mismatchedPixels`, `totalPixels`,
+`mismatchRatio`, dimensions, settings, and optional `diffPath`). Under `set -e`,
+handle exit 7 explicitly so the agent can inspect the result and continue.
+Other nonzero exits are input or I/O errors, not completed comparisons.
+
+`--out` writes the diff on pass or fail, replacing an existing output file.
+Its parent directory must exist. Input paths, including links to inputs, are
+rejected as output destinations. Omit it when only the metrics are needed.
+Read the diff with a vision tool: red marks mismatches, yellow marks ignored
+anti-aliasing, and unchanged regions are faded. Fix the highlighted differences
+and repeat; the mismatch ratio alone is not a design-quality score.
+
 ## Export the icons of a page
 
 ```sh

@@ -12,6 +12,14 @@ breaking change.
 
 ## [Unreleased]
 
+### Added
+
+- `figctl diff` compares two local PNG screenshots without credentials, reports
+  mismatch counts and ratios, and optionally writes a visual diff. Color
+  tolerance, allowed mismatch ratio, and anti-aliasing inclusion are configurable.
+  Completed comparisons above the limit exit 7 and retain the result envelope
+  with `data.passed: false`. Includes a command schema and agent workflow guidance.
+
 ### Fixed
 
 - `figctl schema` now declares the fields that are printed as `null` as

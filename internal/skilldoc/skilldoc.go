@@ -171,6 +171,7 @@ var schemaSections = []string{
 	"node.inspect",
 	"file.tree",
 	"tokens.export",
+	"diff",
 	"render",
 	"assets.export",
 }
@@ -207,8 +208,8 @@ func OutputSchemas() string {
 	writeFields(&b, cli.ErrorEnvelopeEntry())
 	b.WriteString("\nExit codes: 0 success, 1 runtime or API error, 2 usage, 3 auth, 4 not found,\n")
 	b.WriteString("5 rate limited, 6 partial success (the data is still on stdout, and the\n")
-	b.WriteString("items that failed are in `data.failures`).\n\n")
-
+	b.WriteString("items that failed are in `data.failures`), 7 image mismatch (comparison data\n")
+	b.WriteString("remains on stdout with `data.passed: false`).\n\n")
 	b.WriteString("## Data payloads\n\n")
 	for _, name := range schemaSections {
 		entry, ok := entries[name]

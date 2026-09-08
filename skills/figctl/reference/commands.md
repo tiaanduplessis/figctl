@@ -387,6 +387,45 @@ Example:
 figctl devresources update KEY --id abc123 --url https://storybook.example.com/?path=/story/button--primary
 ```
 
+### figctl diff
+
+Compare local PNG screenshots and optionally write a visual diff.
+
+```
+figctl diff <expected.png> <actual.png> [flags]
+```
+
+Compare two local PNGs without credentials or network requests.
+Images must have equal pixel dimensions; no resizing or cropping is applied.
+Each input is limited to 16 million pixels. Match viewport, crop, fonts, content,
+and capture scale. Render defaults to 2x; use --scale 1 for a 1x screenshot.
+
+--threshold controls per-pixel color tolerance (0 is most sensitive).
+--max-diff-ratio is the accepted fraction of mismatched pixels (0.01 = 1%).
+Detected anti-aliasing differences are ignored unless --include-aa is set.
+Transparency is compared over a checkerboard. The ratio measures pixel
+mismatch, not design quality.
+
+Exit 0 when mismatchRatio <= maxDiffRatio; exit 7 otherwise. Both return the
+same data envelope, including passed. Invalid inputs exit 2, missing paths
+exit 4, and other file I/O failures exit 1. --out writes a PNG on pass or fail,
+replacing an existing output but never an input. Its parent directory must exist.
+Red marks mismatches, yellow marks ignored anti-aliasing, and unchanged areas
+are faded. Without --out, only the comparison result is produced.
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--include-aa` |  | count detected anti-aliasing differences |
+| `--max-diff-ratio float64` |  | allowed mismatch fraction between 0 and 1 (0.01 = 1%) |
+| `--out string` |  | destination PNG path (optional) |
+| `--threshold float64` | `0.1` | per-pixel color tolerance between 0 and 1 |
+
+Example:
+
+```
+figctl diff design.png implementation.png --out diff.png --max-diff-ratio 0.01 --json
+```
+
 ### figctl file find
 
 Search nodes by name glob, type, or text content.

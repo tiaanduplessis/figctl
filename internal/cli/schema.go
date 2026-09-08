@@ -89,6 +89,7 @@ var schemaTargets = []schemaTarget{
 	{name: "profile.use", value: profileView{}},
 	{name: "projects.files", value: fileList{}},
 	{name: "projects.list", value: projectList{}},
+	{name: "diff", value: diffData{}},
 	{name: "render", value: renderData{}},
 	{name: "schema", value: schemaList{}},
 	{name: "skill.install", value: skillResult{}},

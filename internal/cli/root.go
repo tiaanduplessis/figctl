@@ -26,6 +26,7 @@ Recommended workflow:
   2. figctl node context <ref> --node ID   layout, styles, tokens, and a screenshot for one node
   3. Implement the node in the codebase
   4. figctl render <ref> --node ID         render the design to compare with the result
+     figctl diff design.png actual.png --out diff.png
   5. figctl tokens export <ref>            variables and styles as DTCG, CSS, or Tailwind
 
 <ref> is a file key or any Figma URL; a node-id in the URL is used automatically.
