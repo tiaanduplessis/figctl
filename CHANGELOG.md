@@ -12,6 +12,24 @@ breaking change.
 
 ## [Unreleased]
 
+### Fixed
+
+- `figctl schema` now declares the fields that are printed as `null` as
+  nullable. Reflection mapped a pointer to its element type alone, so the
+  published schema promised an object or a string where the CLI prints `null`:
+  `profile`, `file`, and `nextCursor` on every envelope, and the `token` of a
+  fill, stroke, gradient stop, effect, and radius, and the entries of the
+  layout and text `tokens` maps, all of which are documented as null when the
+  value is not tokenized. The payloads are unchanged; only the schema was
+  wrong.
+
+### Added
+
+- `make spec-check` compares the Figma OpenAPI version pinned in
+  `internal/figma/spec.go` with the one Figma publishes, and fails when they
+  differ. The response types are hand-written, so the pin records which spec
+  version they were reviewed against.
+
 ## [0.1.0] - 2026-09-08
 
 First release. Output contract `schemaVersion` 1.

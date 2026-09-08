@@ -52,6 +52,7 @@ Other targets:
 | `make gen` | regenerate the skill reference files embedded in the binary |
 | `make verify-gen` | fail when those generated files are stale |
 | `make vuln` | `govulncheck ./...` |
+| `make spec-check` | fail when Figma publishes a different OpenAPI spec version than the one pinned in `internal/figma/spec.go` (needs network) |
 | `make clean` | remove `bin`, `dist`, `coverage.out` |
 
 ## Layout
@@ -156,6 +157,76 @@ The skill reference files embedded in the binary are generated the same way and
 guarded by their own test. Run `make gen` after the same kinds of change, and
 `make verify-gen` to check without writing.
 
+### The schema contract
+
+`figctl schema <command>` is how an agent learns the field names of a payload,
+so a payload that drifts from its schema is a defect. `internal/cli/contract_test.go`
+runs each command against the fake server, takes the `data` payload out of the
+envelope, and validates it against the schema `figctl schema` prints for that
+command, plus the envelope against `figctl schema envelope` and a real error
+against the error schema. Adding a command to the contract is one line:
+
+```go
+{command: "styles.list", args: []string{"styles", "list", figmatest.FileKey}},
+```
+
+Use `outDirToken` where the command needs a writable directory. A failure names
+the command, the JSON path, and what the schema expected. When it fires, decide
+which side is wrong: a payload that grew a field the schema does not declare is
+usually a missing schema type, and a schema that promises a field the payload
+omits is usually a wrong struct tag.
+
+Because the schema is reflected from Go types, `omitempty` is what separates
+"absent" from "present and null". A pointer field without `omitempty` is
+published as nullable, which is what the CLI actually prints.
+
+### The live integration test
+
+`integration/` holds one opt-in test that runs the built binary against the real
+Figma API. It exists because the defects that only show up live are invisible to
+the fake server: a file Figma refuses to return whole, an optional request that
+is slow enough to fail the command around it, an endpoint that needs a different
+scope than expected, a 404 that does not mean the file is missing.
+
+Run it with:
+
+```sh
+make build
+FIGCTL_INTEGRATION=1 FIGMA_TOKEN=... go test -tags integration ./integration/...
+```
+
+It drives `bin/figctl` rather than the package APIs, so it tests the shipped
+artefact. Run `make build` first, or point `FIGCTL_INTEGRATION_BIN` at another
+binary.
+
+It is guarded twice. The `//go:build integration` tag keeps it out of
+`go test ./...`, so `make check` cannot compile it, and the test skips with an
+explanatory message unless `FIGCTL_INTEGRATION=1` and `FIGMA_TOKEN` are both
+set. Add `-v` to see the skip reason and, on a real run, the request accounting.
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `FIGCTL_INTEGRATION` | unset | must be `1` for the test to run |
+| `FIGMA_TOKEN` | unset | the personal access token to run as |
+| `FIGCTL_INTEGRATION_FILE` | `fzYhvQpqwhZDUImRz431Qo` | target file key: the public figma-export demo file, readable by any token, with components, styles with real values, and vector icons |
+| `FIGCTL_INTEGRATION_NODE` | `54:22` | target node: a component with export settings in that file |
+| `FIGCTL_INTEGRATION_BIN` | `bin/figctl` | binary under test |
+
+A run costs about eight Tier 1 requests (get file, get nodes, render images) and
+never more than ten, which the test asserts on itself. Tier 1 allows as few as
+10 requests per minute, and only 20 per month on view seats, so this is the whole
+reason the test is not in `make check` and not on pull requests: running it on
+every push would exhaust the rate limit of the token behind the shared file. The
+test stays inside the budget by sharing one cache directory across every step
+and never passing `--refresh` or `--no-cache`. Keep it that way when you add an
+assertion, and put an expensive call before the ones that reuse its result.
+
+CI runs it from `.github/workflows/nightly.yml`, scheduled nightly and available
+through `workflow_dispatch`. The workflow needs a `FIGMA_TOKEN` repository
+secret; without one it says so and passes, so a fork is never permanently red.
+The same job round trips a DTCG export through Style Dictionary v4, which is the
+only place Node is used in this repository.
+
 ## Adding a command
 
 1. Put it in `internal/cli/<noun>.go`. One file per noun; subcommands of the
@@ -186,10 +257,12 @@ guarded by their own test. Run `make gen` after the same kinds of change, and
    `docs/commands.md` and in the agent skill, so write them for an agent.
 5. Register the data type in the schema registry so `figctl schema <name>`
    works. Look at how a neighbouring command does it.
-6. Add tests: at minimum one success path, one error path with the expected
+6. Add a line to `contractCases` in `internal/cli/contract_test.go` so the
+   payload is checked against that schema.
+7. Add tests: at minimum one success path, one error path with the expected
    code and exit code, and a request-count assertion if the command should be
    cached.
-7. Run `make docs` and `make check`.
+8. Run `make docs` and `make check`.
 
 ## The output contract a new command must follow
 
@@ -218,6 +291,55 @@ These are not style preferences; agents depend on them.
   Include the id as well, never only the id.
 - **Be cheap.** Use `Session.File` and the cache rather than a fresh API call.
   If your command has to make a Tier 1 request, say so in the help text.
+
+## Tracking the Figma API
+
+The response types, endpoints, and node properties in `internal/figma` are
+written by hand. The plan called for generating them from Figma's OpenAPI
+document, but the Go generators handle that 3.1 spec poorly and produce a model
+that is harder to work with than the subset figctl needs. The cost of writing
+them by hand is that nothing notices when Figma changes the API, so the spec
+version is pinned instead:
+
+```go
+// internal/figma/spec.go
+const SpecVersion = "0.42.0"
+```
+
+`figma.SpecVersion` is the `info.version` of the spec the types were written
+against. It is a record of what was reviewed, not something the code reads at
+runtime.
+
+```sh
+make spec-check
+```
+
+downloads `openapi.yaml` from [figma/rest-api-spec][spec] and exits non-zero
+when `info.version` differs from the pin, naming both versions. It needs
+network access, so it is not part of `make check` and no test calls it. Run it
+when a Figma response looks wrong, before a release, or on a schedule.
+
+When it reports a new version:
+
+1. Read the [API changelog][changelog] and the [spec releases][releases] for
+   everything between the pinned version and the new one.
+2. Check each change against `internal/figma`: new or renamed fields on the
+   node model in `node.go`, new response fields in `types.go`, changed query
+   parameters or paths in `endpoints.go`, and changed scopes or rate limit
+   tiers.
+3. Apply what figctl needs by hand. Nothing is generated, so a field Figma adds
+   stays invisible to figctl until someone adds it, and a field Figma removes
+   keeps decoding as a zero value rather than failing.
+4. Bump `figma.SpecVersion` in the same change as the code, and add a
+   `CHANGELOG.md` entry when the update changes output.
+
+A version bump with no code change is fine when nothing figctl uses moved; say
+so in the commit message so the next reader knows the spec was reviewed rather
+than skipped.
+
+[spec]: https://github.com/figma/rest-api-spec
+[changelog]: https://www.figma.com/developers/api#changelog
+[releases]: https://github.com/figma/rest-api-spec/releases
 
 ## Commit messages
 
