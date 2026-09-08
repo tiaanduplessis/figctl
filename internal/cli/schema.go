@@ -167,6 +167,7 @@ func (d schemaDoc) Fields() []schemaField {
 // resolveSchemaRef follows a $ref into $defs and returns the resolved
 // schema together with the definition name it came from.
 func resolveSchemaRef(root, s *jsonschema.Schema) (*jsonschema.Schema, string) {
+	s = unwrapNullable(s)
 	name := ""
 	for i := 0; s != nil && s.Ref != "" && i < maxSchemaDepth; i++ {
 		name = strings.TrimPrefix(s.Ref, "#/$defs/")
@@ -182,6 +183,9 @@ func resolveSchemaRef(root, s *jsonschema.Schema) (*jsonschema.Schema, string) {
 // schemaTypeName describes a property's type: the definition name for a
 // referenced object, "array of X" for a list, or the JSON type.
 func schemaTypeName(root, s *jsonschema.Schema) string {
+	if inner := unwrapNullable(s); inner != s {
+		return schemaTypeName(root, inner) + " or null"
+	}
 	resolved, name := resolveSchemaRef(root, s)
 	if resolved == nil {
 		return ""
@@ -255,7 +259,135 @@ func reflectSchema(value any) *jsonschema.Schema {
 		Anonymous:      true,
 		ExpandedStruct: true,
 	}
-	return r.ReflectFromType(reflect.TypeOf(value))
+	t := reflect.TypeOf(value)
+	schema := r.ReflectFromType(t)
+	applyNullability(schema, schema, t, map[string]bool{})
+	return schema
+}
+
+// nullableSchema wraps s so it also accepts JSON null, keeping the
+// description on the wrapper so field listings still read well.
+func nullableSchema(s *jsonschema.Schema) *jsonschema.Schema {
+	if s == nil || unwrapNullable(s) != s {
+		return s
+	}
+	return &jsonschema.Schema{
+		OneOf:       []*jsonschema.Schema{s, {Type: "null"}},
+		Description: s.Description,
+	}
+}
+
+// unwrapNullable returns the value branch of a schema widened by
+// applyNullability, and s itself for every other schema.
+func unwrapNullable(s *jsonschema.Schema) *jsonschema.Schema {
+	if s == nil || len(s.OneOf) != 2 || s.OneOf[1] == nil || s.OneOf[1].Type != "null" {
+		return s
+	}
+	return s.OneOf[0]
+}
+
+// applyNullability widens every part of the reflected schema that the
+// CLI really prints as null. Reflection maps a pointer to its element
+// type alone, but a nil pointer without an omitempty tag is emitted as
+// null rather than omitted, so without this pass figctl schema would
+// advertise a shape the CLI never produces. seen keys the definitions
+// already walked so recursive types terminate.
+func applyNullability(root, s *jsonschema.Schema, t reflect.Type, seen map[string]bool) {
+	target, name := resolveSchemaRef(root, s)
+	if target == nil {
+		return
+	}
+	if name != "" {
+		if seen[name] {
+			return
+		}
+		seen[name] = true
+	}
+	for t.Kind() == reflect.Pointer {
+		t = t.Elem()
+	}
+	switch t.Kind() {
+	case reflect.Slice, reflect.Array:
+		if items := target.Items; items != nil {
+			if t.Elem().Kind() == reflect.Pointer {
+				target.Items = nullableSchema(items)
+			}
+			applyNullability(root, items, t.Elem(), seen)
+		}
+	case reflect.Map:
+		if values := target.AdditionalProperties; values != nil {
+			if t.Elem().Kind() == reflect.Pointer {
+				target.AdditionalProperties = nullableSchema(values)
+			}
+			applyNullability(root, values, t.Elem(), seen)
+		}
+	case reflect.Struct:
+		applyStructNullability(root, target, t, seen)
+	}
+}
+
+// applyStructNullability widens the properties of one struct, following
+// embedded structs whose fields JSON inlines into the same object.
+func applyStructNullability(root, s *jsonschema.Schema, t reflect.Type, seen map[string]bool) {
+	if s.Properties == nil {
+		return
+	}
+	for i := range t.NumField() {
+		field := t.Field(i)
+		name, omitempty, encoded := jsonFieldName(field)
+		if !encoded {
+			continue
+		}
+		if name == "" {
+			embedded := field.Type
+			for embedded.Kind() == reflect.Pointer {
+				embedded = embedded.Elem()
+			}
+			applyStructNullability(root, s, embedded, seen)
+			continue
+		}
+		property, present := s.Properties.Get(name)
+		if !present {
+			continue
+		}
+		if field.Type.Kind() == reflect.Pointer && !omitempty {
+			s.Properties.Set(name, nullableSchema(property))
+		}
+		applyNullability(root, property, field.Type, seen)
+	}
+}
+
+// jsonFieldName reports the JSON name of a struct field, whether it has
+// the omitempty option, and whether encoding/json emits it at all. An
+// embedded struct whose fields are inlined reports an empty name.
+func jsonFieldName(field reflect.StructField) (name string, omitempty, encoded bool) {
+	if field.PkgPath != "" && !field.Anonymous {
+		return "", false, false
+	}
+	tag := field.Tag.Get("json")
+	parts := strings.Split(tag, ",")
+	if parts[0] == "-" && len(parts) == 1 {
+		return "", false, false
+	}
+	for _, opt := range parts[1:] {
+		if opt == "omitempty" {
+			omitempty = true
+		}
+	}
+	name = parts[0]
+	if field.Anonymous && name == "" {
+		kind := field.Type.Kind()
+		if kind == reflect.Pointer {
+			kind = field.Type.Elem().Kind()
+		}
+		if kind == reflect.Struct {
+			return "", omitempty, true
+		}
+	}
+	if name == "" {
+		name = field.Name
+	}
+	return name, omitempty, true
 }
 
 // schemaTargetNames lists the registered command names.

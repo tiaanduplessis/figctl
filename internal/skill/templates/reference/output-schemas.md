@@ -12,17 +12,17 @@ machine readable JSON Schema of any payload.
 | --- | --- | --- | --- |
 | `schemaVersion` | integer | yes |  |
 | `command` | string | yes |  |
-| `profile` | ProfileInfo | yes |  |
+| `profile` | ProfileInfo or null | yes |  |
 | `profile.name` | string | yes |  |
 | `profile.handle` | string |  |  |
-| `file` | FileInfo | yes |  |
+| `file` | FileInfo or null | yes |  |
 | `file.key` | string | yes |  |
 | `file.name` | string |  |  |
 | `file.version` | string |  |  |
 | `file.lastModified` | string |  |  |
 | `data` | object | yes |  |
 | `truncated` | boolean | yes |  |
-| `nextCursor` | string | yes |  |
+| `nextCursor` | string or null | yes |  |
 | `hints` | array of string | yes |  |
 
 Read `hints` on every call: they say what was degraded, truncated, or what
@@ -67,7 +67,7 @@ items that failed are in `data.failures`).
 | `nodes[].screenshot.scale` | number | yes |  |
 | `nodes[].screenshot.bytes` | integer | yes |  |
 | `nodes[].screenshot.cached` | boolean | yes |  |
-| `nodes[].inspect` | Node | yes |  |
+| `nodes[].inspect` | Node or null | yes |  |
 | `nodes[].inspect.id` | string | yes |  |
 | `nodes[].inspect.name` | string | yes |  |
 | `nodes[].inspect.type` | string | yes |  |
@@ -150,7 +150,7 @@ items that failed are in `data.failures`).
 | `nodes[].inspect.visual.fills[].gradient.approximate` | boolean |  |  |
 | `nodes[].inspect.visual.fills[].imageRef` | string |  |  |
 | `nodes[].inspect.visual.fills[].scaleMode` | string |  |  |
-| `nodes[].inspect.visual.fills[].token` | TokenRef | yes |  |
+| `nodes[].inspect.visual.fills[].token` | TokenRef or null | yes |  |
 | `nodes[].inspect.visual.fills[].token.variableId` | string | yes |  |
 | `nodes[].inspect.visual.fills[].token.name` | string |  |  |
 | `nodes[].inspect.visual.fills[].token.collection` | string |  |  |
@@ -180,7 +180,7 @@ items that failed are in `data.failures`).
 | `nodes[].inspect.visual.strokes[].gradient.approximate` | boolean |  |  |
 | `nodes[].inspect.visual.strokes[].imageRef` | string |  |  |
 | `nodes[].inspect.visual.strokes[].scaleMode` | string |  |  |
-| `nodes[].inspect.visual.strokes[].token` | TokenRef | yes |  |
+| `nodes[].inspect.visual.strokes[].token` | TokenRef or null | yes |  |
 | `nodes[].inspect.visual.strokes[].token.variableId` | string | yes |  |
 | `nodes[].inspect.visual.strokes[].token.name` | string |  |  |
 | `nodes[].inspect.visual.strokes[].token.collection` | string |  |  |
@@ -206,7 +206,7 @@ items that failed are in `data.failures`).
 | `nodes[].inspect.visual.radius.uniform` | number |  |  |
 | `nodes[].inspect.visual.radius.corners` | array of number |  |  |
 | `nodes[].inspect.visual.radius.smoothing` | number |  |  |
-| `nodes[].inspect.visual.radius.token` | TokenRef | yes |  |
+| `nodes[].inspect.visual.radius.token` | TokenRef or null | yes |  |
 | `nodes[].inspect.visual.radius.token.variableId` | string | yes |  |
 | `nodes[].inspect.visual.radius.token.name` | string |  |  |
 | `nodes[].inspect.visual.radius.token.collection` | string |  |  |
@@ -227,7 +227,7 @@ items that failed are in `data.failures`).
 | `nodes[].inspect.visual.effects[].offset.y` | number | yes |  |
 | `nodes[].inspect.visual.effects[].radius` | number | yes |  |
 | `nodes[].inspect.visual.effects[].spread` | number |  |  |
-| `nodes[].inspect.visual.effects[].token` | TokenRef | yes |  |
+| `nodes[].inspect.visual.effects[].token` | TokenRef or null | yes |  |
 | `nodes[].inspect.visual.effects[].token.variableId` | string | yes |  |
 | `nodes[].inspect.visual.effects[].token.name` | string |  |  |
 | `nodes[].inspect.visual.effects[].token.collection` | string |  |  |
@@ -303,7 +303,7 @@ items that failed are in `data.failures`).
 | `nodes[].inspect.text.runs[].fill.gradient.approximate` | boolean |  |  |
 | `nodes[].inspect.text.runs[].fill.imageRef` | string |  |  |
 | `nodes[].inspect.text.runs[].fill.scaleMode` | string |  |  |
-| `nodes[].inspect.text.runs[].fill.token` | TokenRef | yes |  |
+| `nodes[].inspect.text.runs[].fill.token` | TokenRef or null | yes |  |
 | `nodes[].inspect.text.runs[].fill.token.variableId` | string | yes |  |
 | `nodes[].inspect.text.runs[].fill.token.name` | string |  |  |
 | `nodes[].inspect.text.runs[].fill.token.collection` | string |  |  |
@@ -360,7 +360,7 @@ items that failed are in `data.failures`).
 | `nodes[].inspect.tokens.styles` | object |  |  |
 | `nodes[].inspect.css` | object |  |  |
 | `nodes[].inspect.childCount` | integer |  |  |
-| `nodes[].inspect.children` | array of Node |  |  |
+| `nodes[].inspect.children` | array of Node or null |  |  |
 | `nodes[].inspect.truncated` | boolean |  |  |
 | `nodes[].inspect.omitted` | integer |  |  |
 | `tokens` | array of TokenRef | yes |  |
@@ -537,7 +537,7 @@ items that failed are in `data.failures`).
 | `[].visual.fills[].gradient.stops[].hex` | string | yes |  |
 | `[].visual.fills[].gradient.stops[].rgba` | string | yes |  |
 | `[].visual.fills[].gradient.stops[].css` | string | yes |  |
-| `[].visual.fills[].gradient.stops[].token` | TokenRef | yes |  |
+| `[].visual.fills[].gradient.stops[].token` | TokenRef or null | yes |  |
 | `[].visual.fills[].gradient.stops[].token.variableId` | string | yes |  |
 | `[].visual.fills[].gradient.stops[].token.name` | string |  |  |
 | `[].visual.fills[].gradient.stops[].token.collection` | string |  |  |
@@ -550,7 +550,7 @@ items that failed are in `data.failures`).
 | `[].visual.fills[].gradient.approximate` | boolean |  |  |
 | `[].visual.fills[].imageRef` | string |  |  |
 | `[].visual.fills[].scaleMode` | string |  |  |
-| `[].visual.fills[].token` | TokenRef | yes |  |
+| `[].visual.fills[].token` | TokenRef or null | yes |  |
 | `[].visual.fills[].token.variableId` | string | yes |  |
 | `[].visual.fills[].token.name` | string |  |  |
 | `[].visual.fills[].token.collection` | string |  |  |
@@ -581,7 +581,7 @@ items that failed are in `data.failures`).
 | `[].visual.strokes[].gradient.stops[].hex` | string | yes |  |
 | `[].visual.strokes[].gradient.stops[].rgba` | string | yes |  |
 | `[].visual.strokes[].gradient.stops[].css` | string | yes |  |
-| `[].visual.strokes[].gradient.stops[].token` | TokenRef | yes |  |
+| `[].visual.strokes[].gradient.stops[].token` | TokenRef or null | yes |  |
 | `[].visual.strokes[].gradient.stops[].token.variableId` | string | yes |  |
 | `[].visual.strokes[].gradient.stops[].token.name` | string |  |  |
 | `[].visual.strokes[].gradient.stops[].token.collection` | string |  |  |
@@ -594,7 +594,7 @@ items that failed are in `data.failures`).
 | `[].visual.strokes[].gradient.approximate` | boolean |  |  |
 | `[].visual.strokes[].imageRef` | string |  |  |
 | `[].visual.strokes[].scaleMode` | string |  |  |
-| `[].visual.strokes[].token` | TokenRef | yes |  |
+| `[].visual.strokes[].token` | TokenRef or null | yes |  |
 | `[].visual.strokes[].token.variableId` | string | yes |  |
 | `[].visual.strokes[].token.name` | string |  |  |
 | `[].visual.strokes[].token.collection` | string |  |  |
@@ -620,7 +620,7 @@ items that failed are in `data.failures`).
 | `[].visual.radius.uniform` | number |  |  |
 | `[].visual.radius.corners` | array of number |  |  |
 | `[].visual.radius.smoothing` | number |  |  |
-| `[].visual.radius.token` | TokenRef | yes |  |
+| `[].visual.radius.token` | TokenRef or null | yes |  |
 | `[].visual.radius.token.variableId` | string | yes |  |
 | `[].visual.radius.token.name` | string |  |  |
 | `[].visual.radius.token.collection` | string |  |  |
@@ -641,7 +641,7 @@ items that failed are in `data.failures`).
 | `[].visual.effects[].offset.y` | number | yes |  |
 | `[].visual.effects[].radius` | number | yes |  |
 | `[].visual.effects[].spread` | number |  |  |
-| `[].visual.effects[].token` | TokenRef | yes |  |
+| `[].visual.effects[].token` | TokenRef or null | yes |  |
 | `[].visual.effects[].token.variableId` | string | yes |  |
 | `[].visual.effects[].token.name` | string |  |  |
 | `[].visual.effects[].token.collection` | string |  |  |
@@ -718,11 +718,11 @@ items that failed are in `data.failures`).
 | `[].text.runs[].fill.gradient.stops[].hex` | string | yes |  |
 | `[].text.runs[].fill.gradient.stops[].rgba` | string | yes |  |
 | `[].text.runs[].fill.gradient.stops[].css` | string | yes |  |
-| `[].text.runs[].fill.gradient.stops[].token` | TokenRef | yes |  |
+| `[].text.runs[].fill.gradient.stops[].token` | TokenRef or null | yes |  |
 | `[].text.runs[].fill.gradient.approximate` | boolean |  |  |
 | `[].text.runs[].fill.imageRef` | string |  |  |
 | `[].text.runs[].fill.scaleMode` | string |  |  |
-| `[].text.runs[].fill.token` | TokenRef | yes |  |
+| `[].text.runs[].fill.token` | TokenRef or null | yes |  |
 | `[].text.runs[].fill.token.variableId` | string | yes |  |
 | `[].text.runs[].fill.token.name` | string |  |  |
 | `[].text.runs[].fill.token.collection` | string |  |  |
@@ -779,7 +779,7 @@ items that failed are in `data.failures`).
 | `[].tokens.styles` | object |  |  |
 | `[].css` | object |  |  |
 | `[].childCount` | integer |  |  |
-| `[].children` | array of Node |  |  |
+| `[].children` | array of Node or null |  |  |
 | `[].truncated` | boolean |  |  |
 | `[].omitted` | integer |  |  |
 
