@@ -6,7 +6,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/tiaanduplessis/figctl/internal/figctl"
 	"github.com/tiaanduplessis/figctl/internal/figma"
 	"github.com/tiaanduplessis/figctl/internal/figma/figmatest"
 	"github.com/tiaanduplessis/figctl/internal/resolve"
@@ -105,30 +104,57 @@ func TestValidNameCase(t *testing.T) {
 	}
 }
 
-func TestCollisionDetection(t *testing.T) {
+// TestCollidingNamesWithDifferentValues covers two distinct sources that
+// normalize onto one token path. Only one value can be exported, so the other
+// has to be reported rather than dropped in silence.
+func TestCollidingNamesWithDifferentValues(t *testing.T) {
 	r := syntheticVariables(t, []synthetic{
 		{id: "VariableID:9:1", name: "Brand Color", typ: "COLOR", value: figma.VariableValue{Color: &figma.Color{R: 1, A: 1}}},
 		{id: "VariableID:9:2", name: "brand-color", typ: "COLOR", value: figma.VariableValue{Color: &figma.Color{B: 1, A: 1}}},
 	})
-	_, err := Build(r, BuildOptions{Variables: true})
-	if err == nil {
-		t.Fatal("expected a collision error")
+	doc, err := Build(r, BuildOptions{Variables: true})
+	if err != nil {
+		t.Fatalf("a collision must not fail the export: %v", err)
 	}
-	e := figctl.From(err)
-	if e.Code != figctl.CodeUsage {
-		t.Fatalf("code = %s", e.Code)
+	// One token survives, and it is the first.
+	tok := tokenNamed(t, doc, "brand-color")
+	if tok.Value != "#ff0000" {
+		t.Fatalf("the first definition should win, got %v", tok.Value)
 	}
-	for _, want := range []string{"brand-color", "Brand Color"} {
-		if !strings.Contains(e.Message, want) {
-			t.Fatalf("message %q should name %q", e.Message, want)
+	warning := strings.Join(doc.Warnings, " | ")
+	for _, want := range []string{"Brand Color", "brand-color"} {
+		if !strings.Contains(warning, want) {
+			t.Errorf("the warning should name %q, got %q", want, warning)
 		}
 	}
-	if !strings.Contains(e.Hint, "--name-case none") {
-		t.Fatalf("hint should suggest --name-case none: %s", e.Hint)
+	// The two names stop colliding when nothing is normalized.
+	if doc, err := Build(r, BuildOptions{Variables: true, NameCase: CaseNone}); err != nil {
+		t.Fatalf("--name-case none should separate them: %v", err)
+	} else if len(doc.Warnings) != 0 {
+		t.Errorf("no warning is due once they do not collide: %v", doc.Warnings)
 	}
-	// The same two names do not collide when nothing is normalized.
-	if _, err := Build(r, BuildOptions{Variables: true, NameCase: CaseNone}); err != nil {
-		t.Fatalf("--name-case none should resolve the collision: %v", err)
+}
+
+// TestIdenticalDuplicatesMerge covers what a real design system looks like: a
+// style copied between pages, or pulled from a second library, appears twice
+// under one name with one value. Nothing is lost by keeping a single token,
+// and failing the export would make the command useless on the files that
+// need it most.
+func TestIdenticalDuplicatesMerge(t *testing.T) {
+	r := syntheticVariables(t, []synthetic{
+		{id: "VariableID:9:1", name: "Card shadow", typ: "COLOR", value: figma.VariableValue{Color: &figma.Color{R: 1, A: 1}}},
+		{id: "VariableID:9:2", name: "Card shadow", typ: "COLOR", value: figma.VariableValue{Color: &figma.Color{R: 1, A: 1}}},
+	})
+	doc, err := Build(r, BuildOptions{Variables: true})
+	if err != nil {
+		t.Fatalf("identical duplicates must not fail the export: %v", err)
+	}
+	if tok := tokenNamed(t, doc, "card-shadow"); tok.Value != "#ff0000" {
+		t.Fatalf("the merged token should keep the shared value, got %v", tok.Value)
+	}
+	// Nothing was lost, so there is nothing to warn about.
+	if len(doc.Warnings) != 0 {
+		t.Errorf("merging identical duplicates needs no warning, got %v", doc.Warnings)
 	}
 }
 

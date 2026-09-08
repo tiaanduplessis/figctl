@@ -169,6 +169,24 @@ func (s *Session) noRefError(project *config.Project) error {
 	}
 }
 
+// speculativeTimeout caps the whole-document fetch. A third of the budget is
+// enough for the small files where it succeeds, and leaves the rest for the
+// narrower requests that follow when it does not.
+func (s *Session) speculativeTimeout() time.Duration {
+	budget := s.ctx.Flags.Timeout
+	if budget <= 0 {
+		return 20 * time.Second
+	}
+	capped := budget / 3
+	if capped < 10*time.Second {
+		capped = 10 * time.Second
+	}
+	if capped > budget {
+		capped = budget
+	}
+	return capped
+}
+
 // project returns the repository config backing the active profile, which is
 // nil when the command runs outside a configured repository.
 func (s *Session) project() *config.Project {
@@ -311,7 +329,13 @@ func (s *Session) FileRaw(ctx context.Context, key string) (json.RawMessage, err
 		return nil, err
 	}
 	if !hit {
-		raw, err = s.Client.GetFileRaw(ctx, key, opts)
+		// Fetching the whole document is speculative: it pays off on a small
+		// file and is refused outright on a large one. Give it only part of
+		// the budget so a file that will never return whole does not spend
+		// the caller's entire timeout before the targeted requests start.
+		fetchCtx, cancelFetch := context.WithTimeout(ctx, s.speculativeTimeout())
+		raw, err = s.Client.GetFileRaw(fetchCtx, key, opts)
+		cancelFetch()
 		if err != nil {
 			// Fetching the whole document is an optimisation, not a
 			// requirement. Figma refuses it outright on large files, and the

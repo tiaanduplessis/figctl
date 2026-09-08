@@ -11,11 +11,11 @@
 package tokens
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
 
-	"github.com/tiaanduplessis/figctl/internal/figctl"
 	"github.com/tiaanduplessis/figctl/internal/model"
 	"github.com/tiaanduplessis/figctl/internal/resolve"
 )
@@ -479,7 +479,8 @@ func (b *builder) build(p plan) (Set, error) {
 		}
 		set.Tokens = append(set.Tokens, *t)
 	}
-	if err := checkCollisions(set.Tokens, b.opts.NameCase); err != nil {
+	var err error
+	if set.Tokens, err = b.resolveCollisions(set.Tokens); err != nil {
 		return Set{}, err
 	}
 	b.link(set.Tokens)
@@ -687,21 +688,55 @@ func summarize(sets []Set, modes map[string][]string) Summary {
 	return s
 }
 
-// checkCollisions fails the build when two Figma names normalize to the
-// same token path, which would silently drop one of them.
-func checkCollisions(tokens []Token, nameCase string) error {
-	seen := map[string]string{}
+// resolveCollisions handles two sources landing on the same token path.
+//
+// Real design systems carry duplicates: a style copied between pages or
+// pulled in from a second library shows up twice under one name. Refusing to
+// export because of that makes the command unusable on the files that need it
+// most, so a duplicate is only fatal when it would change a value.
+//
+// Identical duplicates collapse into one token. Duplicates that disagree keep
+// the first and report the rest, because picking silently would hide a real
+// inconsistency in the design system.
+func (b *builder) resolveCollisions(tokens []Token) ([]Token, error) {
+	seen := map[string]int{}
+	out := make([]Token, 0, len(tokens))
 	for _, t := range tokens {
-		if other, exists := seen[t.Name]; exists {
-			e := figctl.Newf(figctl.CodeUsage, "token name %q comes from both %q and %q", t.Name, other, t.Source)
-			if nameCase == CaseNone {
-				return e.WithHint("Two sources share a name after splitting on \"/\". Export one collection at a time with --collection, or rename one of them in Figma.")
-			}
-			return e.WithHint("Normalizing with --name-case %s merged them. Use --name-case none to keep the Figma names, or --collection to export one collection at a time.", nameCase)
+		at, exists := seen[t.Name]
+		if !exists {
+			seen[t.Name] = len(out)
+			out = append(out, t)
+			continue
 		}
-		seen[t.Name] = t.Source
+		kept := out[at]
+		if sameValue(kept, t) {
+			// The same token declared twice. Nothing is lost by keeping one.
+			continue
+		}
+		if kept.Source == t.Source {
+			// Identical Figma names, so no renaming or case option can
+			// separate them; only the design system can.
+			b.warn("%q is defined more than once with different values; keeping the first. Rename one of them in Figma so both can be exported", t.Source)
+			continue
+		}
+		b.warn("%q and %q both become the token %q and their values differ; keeping %q. Use --name-case none to keep the Figma names, or --collection to export one collection at a time",
+			kept.Source, t.Source, t.Name, kept.Source)
 	}
-	return nil
+	return out, nil
+}
+
+// sameValue reports whether two tokens carry the same value and type, which
+// is what makes a duplicate safe to drop.
+func sameValue(a, b Token) bool {
+	if a.Type != b.Type {
+		return false
+	}
+	x, err1 := json.Marshal(a.Value)
+	y, err2 := json.Marshal(b.Value)
+	if err1 != nil || err2 != nil {
+		return false
+	}
+	return string(x) == string(y)
 }
 
 // Preview is one entry of the short token listing table and markdown
