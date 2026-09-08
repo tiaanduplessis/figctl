@@ -402,6 +402,17 @@ exports the styles and says so in `hints`.
 | Docker | `docker run --rm -e FIGMA_TOKEN ghcr.io/tiaanduplessis/figctl file tree KEY` |
 | Binary | download from [releases](https://github.com/tiaanduplessis/figctl/releases) and verify against `checksums.txt` |
 
+Each release signs `checksums.txt` with [cosign](https://docs.sigstore.dev/) keylessly,
+so a download can be traced back to the workflow that built it:
+
+```sh
+cosign verify-blob checksums.txt \
+  --signature checksums.txt.sig --certificate checksums.txt.pem \
+  --certificate-identity-regexp 'https://github.com/tiaanduplessis/figctl/.*' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+sha256sum -c checksums.txt --ignore-missing
+```
+
 figctl is published as a Homebrew cask, so `brew install` covers macOS only.
 On Linux use `go install`, npm, Docker, or the release binary.
 

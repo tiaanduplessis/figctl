@@ -121,16 +121,9 @@ func TestVersion(t *testing.T) {
 		t.Fatalf("unexpected envelope: %v", env)
 	}
 
-	r = execute(t, "", "version", "--check")
-	if r.code != figctl.ExitOK {
-		t.Fatalf("--check exit = %d", r.code)
-	}
-	if d := data(t, r, "version"); d["updateCheck"] != "not implemented" {
-		t.Fatalf("updateCheck = %v", d["updateCheck"])
-	}
-	if !strings.Contains(r.stdout, "not implemented yet") {
-		t.Fatalf("expected a hint about --check, got %s", r.stdout)
-	}
+	// The behaviour of --check against a release feed is covered in
+	// version_check_test.go; here it only has to not fail when the feed is
+	// unreachable from the test environment.
 
 	r = execute(t, "", "version", "-o", "table")
 	if r.code != figctl.ExitOK || !strings.HasPrefix(r.stdout, "field      value\nversion    dev\n") {

@@ -58,6 +58,27 @@ checksum:
   name_template: checksums.txt
   algorithm: sha256
 
+# Sign the checksum file, so a downloaded archive can be traced back to the
+# workflow that built it. Keyless signing binds the signature to the GitHub
+# Actions identity, which means there is no private key to store or rotate.
+# Verify with:
+#   cosign verify-blob checksums.txt \
+#     --signature checksums.txt.sig --certificate checksums.txt.pem \
+#     --certificate-identity-regexp 'https://github.com/tiaanduplessis/figctl/.*' \
+#     --certificate-oidc-issuer https://token.actions.githubusercontent.com
+signs:
+  - cmd: cosign
+    certificate: "${artifact}.pem"
+    signature: "${artifact}.sig"
+    args:
+      - sign-blob
+      - "--output-certificate=${certificate}"
+      - "--output-signature=${signature}"
+      - "${artifact}"
+      - --yes
+    artifacts: checksum
+    output: true
+
 snapshot:
   version_template: "{{ incpatch .Version }}-snapshot"
 

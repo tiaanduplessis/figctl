@@ -32,6 +32,9 @@ jobs:
     permissions:
       contents: write
       packages: write
+      # Required for keyless signing: cosign exchanges this token for a
+      # short lived certificate bound to this workflow.
+      id-token: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -40,6 +43,8 @@ jobs:
         with:
           go-version: "1.27"
           check-latest: true
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
       - name: Release
         uses: goreleaser/goreleaser-action@v6
         with:
