@@ -16,18 +16,24 @@ Confirm it is installed and pointed at the right account before doing work:
 figctl auth status
 ```
 
-## Refs: paste the URL, never hand-convert ids
+## Refs: a name, a URL, or nothing at all
 
-Every command that reads a file takes a `<ref>`. A `<ref>` is a file key or any
-Figma URL (design, file, board, proto). When the URL has `node-id=1-2`, figctl
-converts it to `1:2` and uses it as the default `--node`.
+Every command that reads a file takes a `<ref>`, and there are three forms.
+
+Read `.figctl.yaml` first. A project usually names its files, because a design
+system lives in a file of its own, and a name is a ref:
 
 ```
-figctl node context "https://www.figma.com/design/KEY/App?node-id=2-2"
+figctl file tree design-system          # a configured name
+figctl node context --node 2:2          # nothing: the repository's default
+figctl file tree "https://www.figma.com/design/KEY/App?node-id=2-2"
 ```
 
-Paste the URL as given. Converting the hyphen to a colon by hand is the most
-common mistake and is never needed. `--node` accepts `1:2`, `1-2`, or a URL.
+An unknown name fails and lists the configured ones. A key or URL always works
+whether or not the repository is configured. When a URL carries `node-id=1-2`,
+figctl converts it to `1:2` and uses it as the default `--node`, so paste the
+URL as given: converting it by hand is the most common mistake and is never
+needed. `--node` accepts `1:2`, `1-2`, or a URL.
 
 ## Workflow
 
@@ -128,20 +134,13 @@ file cost no requests.
 
 ## Design tokens
 
-Bound values carry the design system name; unbound values do not:
+Every value reports a `token`, and its three states mean different things:
 
-```json
-{"property":"fill","value":"#2563EB","token":{"name":"color/brand/500"}}
-{"property":"fill","value":"#F3F4F6","token":null}
-```
-
-The `token` field has three states, and they mean different things:
-
-- a token with a `name`: use that design token in code.
-- a token with only a `variableId` and `"unresolved": true`: a variable governs
-  this value, but reading its name needs an Enterprise plan. Do not hardcode it
-  as if it were ad hoc; use the nearest equivalent token in the codebase, and
-  say which value it came from.
+- `{"name": "color/brand/500"}`: use that design token in code.
+- `{"variableId": "...", "unresolved": true}`: a variable governs this value,
+  but reading its name needs an Enterprise plan. Do not hardcode it as if it
+  were ad hoc; use the nearest token in the codebase and say where it came
+  from. `figctl variables infer` recovers what these govern.
 - `null`: the designer typed the value by hand. Hardcode it, and say so.
 
 ## Variables without an Enterprise plan

@@ -62,9 +62,24 @@ figctl tokens export "<url>" --mode-strategy separate --out ./tokens
 
 Notes:
 
-- Without an Enterprise plan or the `file_variables:read` scope the export
-  contains styles only and says so in `hints`. Ship that; it is still the real
-  design system.
+- Without an Enterprise plan the export contains styles only and says so in
+  `hints`. That is a plan limit, not a broken token: the `file_variables:read`
+  scope is offered only inside an Enterprise organization and does not appear
+  on the token screen otherwise. Ship the styles; they are still real.
+- On that plan, recover the variables from how they are used:
+
+  ```sh
+  figctl variables infer "<ref>" --min-usages 20
+  ```
+
+  The bindings are readable even when the names are not, so this reports which
+  values a variable governs, how widely, and what each resolves to. The names
+  it prints are derived from the values; use them to map onto the tokens
+  already in the codebase, and never present them as the design system's own
+  names.
+- A style defined twice with the same value is merged. Defined twice with
+  different values, the first wins and `hints` names the conflict, which is
+  worth passing on to the designer rather than silently picking one.
 - `--name-case kebab` (the default) makes `Color/Brand/500` into
   `--color-brand-500`. Use `--name-case none` to keep the Figma names.
 - Filter noise with `--collection Semantic --exclude-remote --exclude-hidden`.
