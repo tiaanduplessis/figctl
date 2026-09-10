@@ -1,0 +1,38 @@
+name: Support request
+description: Ask a usage question or get help with a configuration problem
+title: "[support]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not include Figma tokens, private file data, or other secrets. Use the private security form for vulnerabilities.
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What are you trying to do, and where are you stuck?
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: figctl version
+      description: Run `figctl version --json` and paste the version and commit.
+      placeholder: v0.1.0
+    validations:
+      required: true
+  - type: input
+    id: operating_system
+    attributes:
+      label: Operating system
+      placeholder: macOS 15.6 arm64
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command and output
+      description: Include the command and relevant output with tokens and private file data removed.
+      render: shell
+    validations:
+      required: true

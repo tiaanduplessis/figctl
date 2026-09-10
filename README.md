@@ -531,12 +531,15 @@ figctl completion zsh > "${fpath[1]}/_figctl"
 
 ## Documentation
 
+- [docs/index.md](docs/index.md) documentation index
 - [docs/commands.md](docs/commands.md) generated reference for every command and flag
 - [docs/agents.md](docs/agents.md) wiring figctl into Claude Code, Cursor, Copilot, and Codex
 - [docs/design-tokens.md](docs/design-tokens.md) the DTCG mapping, modes, CSS and Tailwind output
 - [docs/caching.md](docs/caching.md) how the cache works and why it matters
 - [docs/profiles.md](docs/profiles.md) profiles, the keychain, and the client-repo pattern
 - [CONTRIBUTING.md](CONTRIBUTING.md) development setup and how to add a command
+- [SUPPORT.md](SUPPORT.md) where to ask questions and report product issues
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) participation expectations
 - [SECURITY.md](SECURITY.md) token handling and how to report a vulnerability
 - [CHANGELOG.md](CHANGELOG.md)
 

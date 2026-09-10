@@ -8,9 +8,9 @@ gate, and the conventions a new command has to follow.
 figctl needs Go 1.27 and these tools on `PATH`:
 
 ```sh
-go install golang.org/x/tools/cmd/goimports@latest
+go install golang.org/x/tools/cmd/goimports@v0.50.0
 go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.13.2
-go install golang.org/x/vuln/cmd/govulncheck@latest    # for make vuln
+go install golang.org/x/vuln/cmd/govulncheck@v1.8.0    # for make vuln
 export PATH="$HOME/go/bin:$PATH"
 ```
 
