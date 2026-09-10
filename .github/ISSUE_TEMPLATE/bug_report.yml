@@ -1,0 +1,56 @@
+name: Bug report
+description: Report a reproducible problem with figctl
+title: "[bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not include Figma tokens, private file data, or other secrets. Use the private security form for vulnerabilities.
+  - type: input
+    id: version
+    attributes:
+      label: figctl version
+      description: Run `figctl version --json` and paste the version and commit.
+      placeholder: v0.1.0
+    validations:
+      required: true
+  - type: input
+    id: operating_system
+    attributes:
+      label: Operating system
+      placeholder: macOS 15.6 arm64
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command
+      description: Include the command with tokens and private file keys removed.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction details
+      description: Include a minimal example or a public Figma file when possible.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant output
+      description: Redact tokens, private file data, and other sensitive values.
+      render: text
