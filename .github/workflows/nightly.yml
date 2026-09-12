@@ -14,6 +14,7 @@ permissions:
 
 jobs:
   integration:
+    if: github.ref == 'refs/heads/main'
     name: live integration test
     runs-on: ubuntu-latest
     steps:
@@ -53,9 +54,13 @@ jobs:
         env:
           FIGCTL_INTEGRATION: "1"
           FIGMA_TOKEN: ${{ secrets.FIGMA_TOKEN }}
-          FIGCTL_INTEGRATION_FILE: ${{ vars.FIGCTL_INTEGRATION_FILE }}
-          FIGCTL_INTEGRATION_NODE: ${{ vars.FIGCTL_INTEGRATION_NODE }}
-        run: go test -tags integration -v -count=1 -timeout 15m ./integration/...
+          FIGCTL_INTEGRATION_FILE: fzYhvQpqwhZDUImRz431Qo
+          FIGCTL_INTEGRATION_NODE: 54:22
+        run: |
+          go test -tags integration -count=1 -timeout 15m ./integration/... > "$RUNNER_TEMP/figctl-live.log" 2>&1 || {
+            echo "Live integration failed. Reproduce locally; design data is kept out of public logs." >&2
+            exit 1
+          }
 
       - name: Set up Node for Style Dictionary
         if: steps.guard.outputs.run == 'true'
@@ -70,17 +75,16 @@ jobs:
         if: steps.guard.outputs.run == 'true'
         env:
           FIGMA_TOKEN: ${{ secrets.FIGMA_TOKEN }}
-          FIGCTL_INTEGRATION_FILE: ${{ vars.FIGCTL_INTEGRATION_FILE }}
+          FIGCTL_INTEGRATION_FILE: fzYhvQpqwhZDUImRz431Qo
         run: |
           set -euo pipefail
-          file_key="${FIGCTL_INTEGRATION_FILE:-fzYhvQpqwhZDUImRz431Qo}"
+          file_key="$FIGCTL_INTEGRATION_FILE"
           mkdir -p style-dictionary/tokens
           ./bin/figctl tokens export "$file_key" \
             --format dtcg \
             --out style-dictionary/tokens \
             --json > style-dictionary/export.json
           jq -e '.data.files | length > 0' style-dictionary/export.json > /dev/null
-          jq -r '.hints[]?' style-dictionary/export.json
 
       - name: Round trip the tokens through Style Dictionary v4
         if: steps.guard.outputs.run == 'true'
@@ -112,12 +116,3 @@ jobs:
             fi
           done
           echo "Style Dictionary v4 accepted the DTCG export." >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Upload the artefacts of a failed run
-        if: failure() && steps.guard.outputs.run == 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: nightly-style-dictionary
-          path: style-dictionary/
-          retention-days: 7
-          if-no-files-found: ignore

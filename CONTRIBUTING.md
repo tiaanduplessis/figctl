@@ -26,6 +26,10 @@ a fake API server.
 
 ## The gate
 
+CI also runs Gitleaks against Git history. Run `gitleaks git --log-opts=--all
+--redact --no-banner .` before pushing credential-related changes. Review
+`.gitleaks.toml` exceptions narrowly; never exempt an entire test directory.
+
 Packaging changes also require Node 24: run `npm test --prefix npm` and
 `node --test scripts/check-release.test.mjs`. CI runs npm tests on Linux,
 macOS, and Windows and checks an unsigned six-platform release snapshot.
@@ -233,6 +237,9 @@ assertion, and put an expensive call before the ones that reuse its result.
 CI runs it from `.github/workflows/nightly.yml`, scheduled nightly and available
 through `workflow_dispatch`. The workflow needs a `FIGMA_TOKEN` repository
 secret; without one it says so and passes, so a fork is never permanently red.
+The public workflow pins the public demo file and node; use local environment
+overrides for private-file debugging. Raw live logs and exported designs are
+never uploaded by this workflow.
 The same job round trips a DTCG export through Style Dictionary v4, which is the
 live compatibility check for token consumers. Node also runs the npm wrapper
 and release validation tests.

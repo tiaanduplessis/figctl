@@ -37,6 +37,7 @@ jobs:
         run: make vuln
 
   release:
+    environment: release
     needs: check
     runs-on: ubuntu-latest
     permissions:

@@ -34,6 +34,9 @@ because flags land in shell history, in `ps` output, and in CI logs. It is read
 from `--token-file`, from stdin when stdin is not a terminal, or from a hidden
 terminal prompt.
 
+**Redirects.** Authenticated API requests only follow redirects within the
+same origin. Image downloads never carry the Figma token.
+
 **Never in a URL.** The token goes in a request header only. It is never a query
 parameter, so it cannot end up in a proxy log or a `Referer`.
 
@@ -86,3 +89,20 @@ configuration, caches, exports, or agent instructions.
 ## Supported versions
 
 figctl is pre-1.0. Security fixes go onto the latest minor release only.
+
+## Repository and release controls
+
+CI scans Git history with Gitleaks and redacts detected values. Its exceptions
+cover only documented synthetic Figma identifiers and the public integration
+demo key; test directories are still scanned. Keep credentials in a secret
+manager, and keep local environment files and exported design data out of Git.
+
+Public CI must not upload designs, tokens, screenshots, or raw live-test logs.
+Reproduce live integration failures locally. Use a dedicated public fixture
+and a least-privilege token when enabling the nightly job.
+
+The repository owner reviews changes. Release jobs use the protected `release`
+environment, restricted to `main` and release tags, and require owner approval.
+Only admins may create release tags; existing release tags cannot be changed
+or deleted. Actions require full commit pins. Fork workflows from external
+contributors require approval and receive no repository secrets.

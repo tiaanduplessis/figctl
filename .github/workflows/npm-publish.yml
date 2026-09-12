@@ -17,6 +17,7 @@ concurrency:
 
 jobs:
   publish:
+    environment: release
     if: github.event.repository.private == false && vars.PUBLIC_RELEASE_ENABLED == 'true' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:

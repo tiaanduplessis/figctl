@@ -46,7 +46,8 @@ publication. Completing local checks does not grant that approval.
 4. Set the repository variable `PUBLIC_RELEASE_ENABLED` to `true`. Both
    publication workflows require this opt-in and a public repository. Tag the
    validated `main` commit as `v0.1.0` and push that tag. Watch the release
-   workflow through completion; do not infer publication from a successful
+   workflow through completion; approve the protected `release` environment
+   as the repository owner when prompted; do not infer publication from a successful
    build.
 5. Download the release assets without authentication. Verify the signature on
    `checksums.txt` against the exact release workflow and tag identity shown in
@@ -55,7 +56,7 @@ publication. Completing local checks does not grant that approval.
 6. For the first npm publication, follow npm's current account setup and
    bootstrap requirements, and publish only the matching `0.1.0` package after
    release assets exist. Configure the trusted publisher for this repository's
-   `npm-publish.yml` workflow. For subsequent publication, dispatch that workflow
+   `npm-publish.yml` workflow and its protected `release` environment. For subsequent publication, dispatch that workflow
    with the matching tag. It checks the package version and release assets
    before publishing. Never put an npm token in source or command arguments.
 7. In clean environments without GitHub credentials, verify the macOS/Linux
