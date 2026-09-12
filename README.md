@@ -7,11 +7,6 @@ One static Go binary that reads a Figma file and hands a coding agent everything
 
 ## Quickstart
 
-The first public release, `0.1.0`, is being prepared. The repository remains
-private until the maintainer approves publication. Public downloads and npm
-installation below become available after that release; collaborators can
-[build from source](CONTRIBUTING.md#setup) now.
-
 1. Choose an [installation option](#installation): the shell installer for
    macOS/Linux, npm for macOS/Linux/Windows, a release archive, or Go.
 2. Create a Figma personal access token with `current_user:read`,

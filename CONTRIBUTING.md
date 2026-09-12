@@ -376,10 +376,8 @@ docs: describe the DTCG gradient fallback
 
 ## Releasing
 
-Maintainers only. Follow the [release checklist](docs/releasing.md). The first
-planned version is `0.1.0`; it has not been released. Repository visibility,
-release publication, and npm publication require the maintainer's approval.
+Maintainers only. Follow the [release checklist](docs/releasing.md). Release
+publication and npm publication require the maintainer's approval.
 
-`install.sh` is served from `main`, so changes take effect for users immediately
-once the repository is public. Treat installer changes with the same care as a
+`install.sh` is served from `main`, so changes take effect for users immediately. Treat installer changes with the same care as a
 release.
