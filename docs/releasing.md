@@ -1,10 +1,10 @@
-# Public launch and release checklist
+# Release checklist
 
-The first planned release is `0.1.0`. Keep the repository private and do not
-publish a tag, GitHub release, or npm package until the maintainer approves
-publication. Completing local checks does not grant that approval.
+The repository and `0.1.0` release are public. Obtain maintainer approval before
+publishing each new tag, GitHub release, or npm package. Completing local checks
+does not grant that approval. The examples below use `0.1.1`.
 
-## Prepare while private
+## Prepare the release
 
 1. Run `make check`, `make vuln`, and `make verify-gen` on the exact commit to
    release. Review all platform CI jobs. Resolve runner billing or scheduling
@@ -30,22 +30,21 @@ publication. Completing local checks does not grant that approval.
    setting up the publisher. Keep public registry publication for the approved
    launch stage.
 
-## Activate after approval
+## Publish after approval
 
-1. Obtain explicit maintainer approval to make the repository public and
-   publish the first release. Change visibility only after that approval.
+1. Obtain explicit maintainer approval to publish the target version.
 2. Verify private vulnerability reporting using the link in `SECURITY.md`,
    secret scanning, push protection, and branch protection in GitHub. Record
    unavailable settings as unverified, and resolve the reporting path before
    announcing the project. Test external access with a separate account.
-3. Move `Unreleased` entries into a dated `## [0.1.0] - YYYY-MM-DD` heading,
-   start a new `Unreleased` section, and keep `npm/package.json` at `0.1.0`.
+3. Move `Unreleased` entries into a dated `## [0.1.1] - YYYY-MM-DD` heading,
+   start a new `Unreleased` section, and keep `npm/package.json` at `0.1.1`.
    Remove the pending-release notices from the README and contributing guide.
    Commit and validate the release state with
-   `node scripts/check-release.mjs v0.1.0`.
+   `node scripts/check-release.mjs v0.1.1`.
 4. Set the repository variable `PUBLIC_RELEASE_ENABLED` to `true`. Both
    publication workflows require this opt-in and a public repository. Tag the
-   validated `main` commit as `v0.1.0` and push that tag. Watch the release
+   validated `main` commit as `v0.1.1` and push that tag. Watch the release
    workflow through completion; approve the protected `release` environment
    as the repository owner when prompted; do not infer publication from a successful
    build.
@@ -54,16 +53,16 @@ publication. Completing local checks does not grant that approval.
    the [installation instructions](../README.md#installation), then verify the
    archive checksums. Confirm every supported OS/CPU archive exists.
 6. For the first npm publication, follow npm's current account setup and
-   bootstrap requirements, and publish only the matching `0.1.0` package after
+   bootstrap requirements, and publish only the matching `0.1.1` package after
    release assets exist. Configure the trusted publisher for this repository's
    `npm-publish.yml` workflow and its protected `release` environment. For subsequent publication, dispatch that workflow
    with the matching tag. It checks the package version and release assets
    before publishing. Never put an npm token in source or command arguments.
 7. In clean environments without GitHub credentials, verify the macOS/Linux
-   installer with both latest and `FIGCTL_VERSION=v0.1.0`; verify npm global,
-   project-local, and `npx figctl@0.1.0 version` on macOS/Linux/Windows; run
-   `go install github.com/tiaanduplessis/figctl/cmd/figctl@v0.1.0`; and run the
-   downloaded archives on supported targets. Every route must report `0.1.0`.
+   installer with both latest and `FIGCTL_VERSION=v0.1.1`; verify npm global,
+   project-local, and `npx figctl@0.1.1 version` on macOS/Linux/Windows; run
+   `go install github.com/tiaanduplessis/figctl/cmd/figctl@v0.1.1`; and run the
+   downloaded archives on supported targets. Every route must report `0.1.1`.
 8. Re-run the walkthrough using an installed release, then announce the release
    with links to the quickstart, walkthrough, and support page.
 

@@ -125,7 +125,7 @@ test("download installation verifies archives before writing an executable", (t)
     const archive = windows ? zip(entryName, Buffer.from("binary")) : tar(entryName, Buffer.from("binary"));
     const releaseOS = windows ? "windows" : process.platform;
     const arch = process.arch === "x64" ? "amd64" : process.arch;
-    const asset = `figctl_0.1.0_${releaseOS}_${arch}.${windows ? "zip" : "tar.gz"}`;
+    const asset = `figctl_${require("./package.json").version}_${releaseOS}_${arch}.${windows ? "zip" : "tar.gz"}`;
     const digest = scenario === "corrupt" ? "0".repeat(64) : crypto.createHash("sha256").update(archive).digest("hex");
     fs.writeFileSync(path.join(dir, "archive"), archive);
     fs.writeFileSync(path.join(dir, "checksums.txt"), `${digest}  ${asset}\n`);

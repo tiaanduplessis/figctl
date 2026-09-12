@@ -1,6 +1,6 @@
 {
   "name": "figctl",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Agent-first Figma CLI: read a Figma design and everything needed to implement it",
   "keywords": [
     "figma",
