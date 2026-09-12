@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 )
@@ -35,6 +36,7 @@ func TestDir(t *testing.T) {
 	}
 	t.Setenv("XDG_CACHE_HOME", "")
 	t.Setenv("HOME", "/home/me")
+	t.Setenv("USERPROFILE", "/home/me")
 	if d, _ := Dir(); d != filepath.Join("/home/me", ".cache", "figctl") {
 		t.Fatalf("dir = %s", d)
 	}
@@ -82,15 +84,22 @@ func TestHitMissRefreshNoCache(t *testing.T) {
 	}
 
 	info, err := os.Stat(filepath.Join(root, "acme", "FILE"))
-	if err != nil || info.Mode().Perm() != 0o700 {
-		t.Fatalf("file dir perms: %v %v", info.Mode(), err)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if runtime.GOOS != "windows" && info.Mode().Perm() != 0o700 {
+		t.Fatalf("file dir perms: %v", info.Mode())
 	}
 	entries, _ := os.ReadDir(filepath.Join(root, "acme", "FILE", entriesDir))
 	if len(entries) != 1 {
 		t.Fatalf("entries = %d", len(entries))
 	}
-	if einfo, _ := entries[0].Info(); einfo.Mode().Perm() != 0o600 {
-		t.Fatalf("entry perms: %v", einfo.Mode())
+	if runtime.GOOS != "windows" {
+		if einfo, err := entries[0].Info(); err != nil {
+			t.Fatal(err)
+		} else if einfo.Mode().Perm() != 0o600 {
+			t.Fatalf("entry perms: %v", einfo.Mode())
+		}
 	}
 
 	refresh, _ := open(t, root, func(o *Options) { o.Refresh = true; o.Now = ck.Now })

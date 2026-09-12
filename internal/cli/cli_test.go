@@ -35,6 +35,7 @@ func isolate(t *testing.T) string {
 	t.Setenv("XDG_CONFIG_HOME", filepath.Join(root, "xdg"))
 	t.Setenv("XDG_CACHE_HOME", filepath.Join(root, "cache"))
 	t.Setenv("HOME", filepath.Join(root, "home"))
+	t.Setenv("USERPROFILE", filepath.Join(root, "home"))
 	t.Setenv(figma.BaseURLEnv, "")
 	t.Setenv(config.StoreEnv, "file")
 	t.Setenv(config.ProfileEnv, "")

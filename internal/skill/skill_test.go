@@ -3,6 +3,7 @@ package skill
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -89,15 +90,17 @@ func TestInstallAndReinstallEveryAgent(t *testing.T) {
 				if err != nil {
 					t.Fatalf("stat %s: %v", action.Path, err)
 				}
-				// A link carries the mode of the link itself, which the
-				// platform sets; only real files have to stay at 0644.
-				if perm := info.Mode().Perm(); info.Mode()&os.ModeSymlink == 0 && perm|0o644 != 0o644 {
-					t.Fatalf("%s mode = %o, want no bits beyond 0644", action.Path, perm)
-				}
-				if dir, err := os.Stat(filepath.Dir(action.Path)); err != nil {
-					t.Fatal(err)
-				} else if perm := dir.Mode().Perm(); perm|0o755 != 0o755 {
-					t.Fatalf("%s mode = %o, want no bits beyond 0755", filepath.Dir(action.Path), perm)
+				if runtime.GOOS != "windows" {
+					// A link carries the mode of the link itself, which the
+					// platform sets; only real files have to stay at 0644.
+					if perm := info.Mode().Perm(); info.Mode()&os.ModeSymlink == 0 && perm|0o644 != 0o644 {
+						t.Fatalf("%s mode = %o, want no bits beyond 0644", action.Path, perm)
+					}
+					if dir, err := os.Stat(filepath.Dir(action.Path)); err != nil {
+						t.Fatal(err)
+					} else if perm := dir.Mode().Perm(); perm|0o755 != 0o755 {
+						t.Fatalf("%s mode = %o, want no bits beyond 0755", filepath.Dir(action.Path), perm)
+					}
 				}
 			}
 

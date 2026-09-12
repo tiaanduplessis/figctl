@@ -34,6 +34,7 @@ func TestEndToEndAgentWorkflow(t *testing.T) {
 		cmd.Dir = work
 		cmd.Env = append(os.Environ(),
 			"HOME="+home,
+			"USERPROFILE="+home,
 			"XDG_CONFIG_HOME="+filepath.Join(home, "cfg"),
 			"XDG_CACHE_HOME="+filepath.Join(home, "cache"),
 			"FIGMA_TOKEN="+figmatest.Token,

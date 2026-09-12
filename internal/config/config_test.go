@@ -16,6 +16,7 @@ func setupEnv(t *testing.T) string {
 	root := t.TempDir()
 	t.Setenv("XDG_CONFIG_HOME", filepath.Join(root, "xdg"))
 	t.Setenv("HOME", filepath.Join(root, "home"))
+	t.Setenv("USERPROFILE", filepath.Join(root, "home"))
 	t.Setenv(StoreEnv, "file")
 	t.Setenv(ProfileEnv, "")
 	t.Setenv(TokenEnv, "")
