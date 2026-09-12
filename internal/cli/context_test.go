@@ -266,7 +266,7 @@ func TestNodeContextMarkdownGolden(t *testing.T) {
 	r := execute(t, "", "node", "context", figmatest.FileKey, "--node", "2:2", "--out", out, "--depth", "2", "-o", "md")
 	ok(t, r)
 	// Output directories differ per run, so the golden holds a placeholder.
-	got := strings.ReplaceAll(r.stdout, out, "<OUT>")
+	got := filepath.ToSlash(strings.ReplaceAll(r.stdout, out, "<OUT>"))
 	checkGolden(t, "node_context_2-2.md", got)
 }
 
