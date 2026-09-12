@@ -3,7 +3,6 @@
 One static Go binary that reads a Figma file and hands a coding agent everything it needs to implement the design.
 
 [![ci](https://github.com/tiaanduplessis/figctl/actions/workflows/ci.yml/badge.svg)](https://github.com/tiaanduplessis/figctl/actions/workflows/ci.yml)
-[![go report card](https://goreportcard.com/badge/github.com/tiaanduplessis/figctl)](https://goreportcard.com/report/github.com/tiaanduplessis/figctl)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ## Quickstart
