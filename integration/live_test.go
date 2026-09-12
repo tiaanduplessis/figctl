@@ -621,7 +621,11 @@ func (rt *runtime) envelopeOf(t *testing.T, res result, command string) envelope
 	if env.Command != command {
 		t.Fatalf("command is %q, want %q", env.Command, command)
 	}
-	if env.Profile == nil || env.Profile.Name == "" {
+	if command == "cache.status" {
+		if env.Profile != nil {
+			t.Fatalf("global cache status should not select a profile: %s", head(res.stdout))
+		}
+	} else if env.Profile == nil || env.Profile.Name == "" {
 		t.Fatalf("envelope carries no profile: %s", head(res.stdout))
 	}
 	if env.Hints == nil {

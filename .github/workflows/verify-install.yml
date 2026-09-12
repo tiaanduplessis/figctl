@@ -1,0 +1,76 @@
+name: verify public installation
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Published release tag (vX.Y.Z)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  install:
+    if: github.event.repository.private == false
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    env:
+      RELEASE_TAG: ${{ inputs.tag }}
+    steps:
+      - name: Validate tag
+        run: '[[ "$RELEASE_TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]'
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: "1.27"
+          cache: false
+      - name: Install through npm and npx
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/figctl-project"
+          cd "$RUNNER_TEMP/figctl-project"
+          npm install --save-exact "figctl@${RELEASE_TAG#v}"
+          npx --no-install figctl version > local-version.json
+          npm install --global --prefix "$RUNNER_TEMP/figctl-global" "figctl@${RELEASE_TAG#v}"
+          if [ "$RUNNER_OS" = Windows ]; then
+            "$RUNNER_TEMP/figctl-global/figctl" version > global-version.json
+          else
+            "$RUNNER_TEMP/figctl-global/bin/figctl" version > global-version.json
+          fi
+          cd "$RUNNER_TEMP"
+          npx --yes --package "figctl@${RELEASE_TAG#v}" figctl version > npx-version.json
+          node -e 'const fs=require("fs"); for (const f of process.argv.slice(1)) { const v=JSON.parse(fs.readFileSync(f)).data.version; if (v !== process.env.RELEASE_TAG.slice(1)) throw Error(f+": "+v); }' \
+            figctl-project/local-version.json figctl-project/global-version.json npx-version.json
+      - name: Install through public Go module proxy
+        env:
+          GOPRIVATE: ""
+          GONOPROXY: ""
+          GONOSUMDB: ""
+          GOPROXY: https://proxy.golang.org
+        run: |
+          set -euo pipefail
+          export GOBIN="$RUNNER_TEMP/figctl-go"
+          go install "github.com/tiaanduplessis/figctl/cmd/figctl@${RELEASE_TAG}"
+          "$GOBIN/figctl" version > "$RUNNER_TEMP/go-version.json"
+          node -e 'const v=require(process.argv[1]).data.version; if (v.replace(/^v/, "") !== process.env.RELEASE_TAG.slice(1)) throw Error(v)' "$RUNNER_TEMP/go-version.json"
+      - name: Install pinned and latest binaries through the public script
+        if: runner.os != 'Windows'
+        run: |
+          set -euo pipefail
+          curl -fsSL https://raw.githubusercontent.com/tiaanduplessis/figctl/main/install.sh -o "$RUNNER_TEMP/install.sh"
+          FIGCTL_VERSION="$RELEASE_TAG" FIGCTL_INSTALL_DIR="$RUNNER_TEMP/figctl-pinned" sh "$RUNNER_TEMP/install.sh"
+          FIGCTL_INSTALL_DIR="$RUNNER_TEMP/figctl-latest" sh "$RUNNER_TEMP/install.sh"
+          "$RUNNER_TEMP/figctl-pinned/figctl" version > "$RUNNER_TEMP/pinned-version.json"
+          "$RUNNER_TEMP/figctl-latest/figctl" version > "$RUNNER_TEMP/latest-version.json"
+          node -e 'const v=require(process.argv[1]).data.version; if (v !== process.env.RELEASE_TAG.slice(1)) throw Error(v)' "$RUNNER_TEMP/pinned-version.json"
+          node -e 'const v=require(process.argv[1]).data.version; if (!v) throw Error("Missing latest version")' "$RUNNER_TEMP/latest-version.json"
