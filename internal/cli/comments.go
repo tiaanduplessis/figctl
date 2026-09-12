@@ -86,7 +86,7 @@ var commentsAddCmd = &cobra.Command{
 	Long: `Add a comment to a file. Pass - as the message to read it from stdin. With
 --node the comment is pinned on that node at the offset given by --x and
 --y; without --node, --x and --y are absolute canvas coordinates. This is
-the only write figctl performs, so it asks for confirmation on a terminal
+a write to Figma, so it asks for confirmation on a terminal
 and requires --yes otherwise.`,
 	Example: `  figctl comments add KEY "Implemented in src/Login.tsx" --node 1:2 --yes
   echo "Note" | figctl comments add KEY - --x 120 --y 320 --yes`,

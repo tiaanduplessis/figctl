@@ -26,6 +26,10 @@ a fake API server.
 
 ## The gate
 
+Packaging changes also require Node 24: run `npm test --prefix npm` and
+`node --test scripts/check-release.test.mjs`. CI runs npm tests on Linux,
+macOS, and Windows and checks an unsigned six-platform release snapshot.
+
 ```sh
 make check
 ```
@@ -196,7 +200,8 @@ Run it with:
 
 ```sh
 make build
-FIGCTL_INTEGRATION=1 FIGMA_TOKEN=... go test -tags integration ./integration/...
+# Supply FIGMA_TOKEN through your secret manager first; never put it in the command.
+FIGCTL_INTEGRATION=1 go test -tags integration ./integration/...
 ```
 
 It drives `bin/figctl` rather than the package APIs, so it tests the shipped
@@ -229,7 +234,8 @@ CI runs it from `.github/workflows/nightly.yml`, scheduled nightly and available
 through `workflow_dispatch`. The workflow needs a `FIGMA_TOKEN` repository
 secret; without one it says so and passes, so a fork is never permanently red.
 The same job round trips a DTCG export through Style Dictionary v4, which is the
-only place Node is used in this repository.
+live compatibility check for token consumers. Node also runs the npm wrapper
+and release validation tests.
 
 ## Adding a command
 
@@ -370,22 +376,10 @@ docs: describe the DTCG gradient fallback
 
 ## Releasing
 
-Maintainers only.
+Maintainers only. Follow the [release checklist](docs/releasing.md). The first
+planned version is `0.1.0`; it has not been released. Repository visibility,
+release publication, and npm publication require the maintainer's approval.
 
-1. Move the `Unreleased` entries in `CHANGELOG.md` under the new version.
-2. Bump `version` in `npm/package.json` to match; the wrapper downloads the
-   release matching its own version.
-3. Validate the release config: `goreleaser check`, and
-   `goreleaser release --snapshot --clean` for a full dry run into `dist/`.
-4. Tag `vX.Y.Z` on `main` and push the tag.
-
-The release workflow runs the gate, then GoReleaser, which publishes the
-archives, the source archive, `checksums.txt` and its cosign signature, and the
-Homebrew cask in `tiaanduplessis/homebrew-tap`. Publishing to the tap needs the
-`HOMEBREW_TAP_TOKEN` repository secret, because the default token cannot push
-across repositories. The npm wrapper is published separately from `npm/` once
-the release assets exist, because its `postinstall` downloads them.
-
-`install.sh` needs nothing at release time: it reads the release feed and the
-published assets. It is served from `main`, so a change to it takes effect for
-everyone immediately and is worth treating with the same care as a release.
+`install.sh` is served from `main`, so changes take effect for users immediately
+once the repository is public. Treat installer changes with the same care as a
+release.

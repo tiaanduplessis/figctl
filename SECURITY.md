@@ -52,27 +52,31 @@ and an optional file key and is meant to be committed.
 files, keyed by profile so one account's design data is not interleaved with
 another's. No token is stored in the cache. Clear it with `figctl cache clear`.
 
-**No telemetry.** figctl makes no network request other than to the Figma API
-host for the active profile (`https://api.figma.com` by default) and to the
-image CDN hosts Figma returns for renders and image fills. Nothing is reported
-anywhere. There is no update check that phones home.
+**Network access.** Normal design commands contact the active profile's Figma
+API host (`https://api.figma.com` by default) and the image hosts returned by
+Figma. `version --check` explicitly contacts GitHub's release API. Installation
+also downloads release assets from GitHub. figctl sends no telemetry and does
+not check for updates automatically.
 
-**One write.** The only command that writes to Figma is `comments add`, which
-needs the `file_comments:write` scope. It asks for confirmation on a terminal
-and requires `--yes` otherwise. Every other command is read-only.
+**Writes to Figma.** `comments add` needs `file_comments:write`.
+`devresources add`, `devresources update`, and `devresources remove` need
+`file_dev_resources:write`. These commands ask for confirmation on a terminal
+and require `--yes` otherwise. Other commands read Figma data; some write local
+configuration, caches, exports, or agent instructions.
 
 ## Reducing your exposure
 
 - Request only the scopes you need. `figctl auth scopes` lists them and says
-  which command needs each. Leave out `file_comments:write` if you never post
-  comments.
+  which command needs each. Leave out `file_comments:write` and
+  `file_dev_resources:write` unless you need those mutations.
 - Figma tokens expire after at most 90 days. Record the date at login
   (`figctl auth login acme --expires 2026-12-01`) so figctl warns you within a
   week of expiry, and rotate rather than extending indefinitely.
 - Use one profile per client. The cache and the token are both scoped to the
   profile, and `.figctl.yaml` in the client's repository selects it
-  automatically, so a mistake in one repository cannot read another client's
-  files.
+  automatically. Profiles organize credentials and cached data; they are not
+  access controls. Environment variables and flags can override the selection.
+  Check `auth status` before working, and restrict access in Figma itself.
 - In CI, pass the token through `FIGMA_TOKEN` from the secret store and set
   `FIGCTL_CREDENTIAL_STORE=file` or nothing at all; do not run `auth login` in a
   pipeline.

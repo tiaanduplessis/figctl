@@ -12,6 +12,9 @@ breaking change.
 
 ## [Unreleased]
 
+First public release planned as `0.1.0`; not yet published. Output contract
+`schemaVersion` 1.
+
 ### Added
 
 - `figctl diff` compares two local PNG screenshots without credentials, reports
@@ -20,29 +23,10 @@ breaking change.
   Completed comparisons above the limit exit 7 and retain the result envelope
   with `data.passed: false`. Includes a command schema and agent workflow guidance.
 
-### Fixed
-
-- `figctl schema` now declares the fields that are printed as `null` as
-  nullable. Reflection mapped a pointer to its element type alone, so the
-  published schema promised an object or a string where the CLI prints `null`:
-  `profile`, `file`, and `nextCursor` on every envelope, and the `token` of a
-  fill, stroke, gradient stop, effect, and radius, and the entries of the
-  layout and text `tokens` maps, all of which are documented as null when the
-  value is not tokenized. The payloads are unchanged; only the schema was
-  wrong.
-
-### Added
-
 - `make spec-check` compares the Figma OpenAPI version pinned in
   `internal/figma/spec.go` with the one Figma publishes, and fails when they
   differ. The response types are hand-written, so the pin records which spec
   version they were reviewed against.
-
-## [0.1.0] - 2026-09-08
-
-First release. Output contract `schemaVersion` 1.
-
-### Added
 
 - **Discovery.** `file info` (name, pages, version, editor type, role,
   branches), `file tree` (sparse outline with ids, types, positions, sizes,
@@ -84,8 +68,8 @@ First release. Output contract `schemaVersion` 1.
 - **Library data.** `variables list|get` (Enterprise), `styles list|get` for
   files and team libraries with values joined from the style nodes,
   `components list|get` with `componentPropertyDefinitions` and variants,
-  `comments list|add`, `versions list`, `devresources list`, `projects
-  list|files`, `folders list|files`.
+  `comments list|add`, `versions list`, `devresources list|add|update|remove`,
+  `projects list|files`, `folders list|files`.
 - **Profiles.** One named account per client, with the token in the OS keychain
   and a 0600 file fallback. `profile add|list|use|show|remove`,
   `auth login|logout|status|scopes`, and `init` to write a committable
@@ -123,12 +107,30 @@ First release. Output contract `schemaVersion` 1.
   ownership markers so re-installing is idempotent and hand-written files are
   never clobbered. Reference files are generated from the command tree.
 - **Distribution.** GoReleaser builds static binaries for macOS, Linux, and
-  Windows on amd64 and arm64. Four install channels: an install script that
-  verifies checksums, an npm wrapper (`npx figctl`) that pins a version per
-  project, a Homebrew cask, and `go install`. Checksums are signed with cosign.
+  Windows on amd64 and arm64. Planned install channels: release archives, an
+  install script that verifies checksums, an npm wrapper (`npx figctl`) that
+  pins a version per project, and `go install`. The release workflow signs
+  checksums with cosign.
 - **Documentation.** README, generated `docs/commands.md`, and guides for
   agents, design tokens, caching, and profiles.
 - `completion` for bash, zsh, fish, and powershell.
+
+### Fixed
+
+- Installation fails when checksums cannot be verified or available signature
+  verification cannot complete, and preserves the existing binary if its
+  replacement cannot run.
+- The npm package includes the MIT license and supports an explicit
+  `FIGCTL_BINARY` override after skipping the download.
+
+- `figctl schema` now declares the fields that are printed as `null` as
+  nullable. Reflection mapped a pointer to its element type alone, so the
+  published schema promised an object or a string where the CLI prints `null`:
+  `profile`, `file`, and `nextCursor` on every envelope, and the `token` of a
+  fill, stroke, gradient stop, effect, and radius, and the entries of the
+  layout and text `tokens` maps, all of which are documented as null when the
+  value is not tokenized. The payloads are unchanged; only the schema was
+  wrong.
 
 ### Known limitations
 
@@ -136,16 +138,16 @@ First release. Output contract `schemaVersion` 1.
   `file_variables:read` scope. Elsewhere `variables list` fails with
   `PLAN_REQUIRED` and `tokens export` exports styles only, reporting it in
   `hints`.
-- `version --check` is a placeholder: it reports that release checking is not
-  implemented and links to the releases page. figctl never checks for updates on
-  its own.
+- `version --check` queries GitHub for the latest release and reports a
+  `checkError` when none is published or the feed is unavailable. figctl never
+  checks for updates on its own.
 - Code Connect mappings are not exposed by the Figma REST API, so `node inspect`
   cannot name the code component of an instance. Dev resources and component
   documentation links are the available substitute.
-- Writing to Figma is limited to `comments add`. FigJam and Slides content,
-  webhooks, and admin endpoints are out of scope.
+- Writing to Figma is limited to `comments add` and
+  `devresources add|update|remove`. FigJam and Slides content, webhooks, and
+  admin endpoints are out of scope.
 - Files whose document exceeds `--max-file-mb` are not cached whole; those
   commands fall back to `depth=2` or per-node requests and say so in `hints`.
 
-[Unreleased]: https://github.com/tiaanduplessis/figctl/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/tiaanduplessis/figctl/releases/tag/v0.1.0
+[Unreleased]: https://github.com/tiaanduplessis/figctl/commits/main

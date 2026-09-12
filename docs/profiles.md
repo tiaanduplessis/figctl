@@ -5,6 +5,10 @@ different seats. An agent running in a client's repository must use that
 client's token and no other. figctl treats that as a first-class concept rather
 than an environment-variable problem.
 
+Profiles organize credentials and caches; they do not enforce access control.
+Flags and environment variables can override the project selection. Restrict
+file access in Figma and check `figctl auth status` before working.
+
 A profile is a name plus:
 
 - a token, stored in the OS keychain

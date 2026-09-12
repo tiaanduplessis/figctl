@@ -5,16 +5,35 @@ One static binary that reads a Figma file and hands a coding agent everything it
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/tiaanduplessis/figctl/blob/main/LICENSE)
 [![repository](https://img.shields.io/badge/source-github-181717.svg)](https://github.com/tiaanduplessis/figctl)
 
+The first public release, `0.1.0`, is being prepared. The repository remains
+private until the maintainer approves publication. These npm commands become
+available after the package and matching release are published.
+
+Create a Figma personal access token with `current_user:read`,
+`file_content:read`, `file_metadata:read`, and `library_content:read`.
+See [Tokens and scopes](#tokens-and-scopes) for optional features.
+
 ```sh
 npm install --save-dev figctl
-npx figctl auth login personal                 # paste a Figma personal access token
+npx figctl version
+npx figctl auth login personal --default
 npx figctl file tree "https://www.figma.com/design/KEY/Web-App"
+```
+
+Paste the token into the hidden login prompt. Replace the URL with a file your
+account can access. `KEY` is the segment after `/design/` or `/file/`.
+The tree prints node ids and names; choose a frame id and replace `2:2`:
+
+```sh
 npx figctl node context KEY --node 2:2
 ```
 
-figctl is a Go binary. This package downloads the signed release build for your
+The result includes layout and style data and downloaded asset paths.
+Read any `hints` for optional data unavailable with your token or plan.
+
+figctl is a Go binary. This package downloads the release build for your
 platform and runs it through a shim, so there is no toolchain to install, no
-native module to compile, and no runtime dependency.
+native module to compile, and no native runtime dependency. The npm shim requires Node.js 18 or later.
 
 Installing it as a dev dependency pins the version in `package.json`, so every
 machine and CI job in a repository gets the same figctl. That matters more than
@@ -45,21 +64,21 @@ value come from, where are the assets, and what did the designer say about it.
 figctl answers all six from the public Figma REST API and prints JSON an agent
 can parse.
 
-Figma ships a Dev Mode MCP server, and it is the closest comparison. The
-trade-off is real in both directions.
+### CLI or MCP
 
-| | figctl | Dev Mode MCP server |
-| --- | --- | --- |
-| Transport | a binary the agent runs in a shell | a server process the agent connects to |
-| Per-turn cost | none; the agent reads `--help` or the skill when it needs to | tool schemas occupy the context window every turn |
-| Selection awareness | node ids passed explicitly | reads the current selection in the Figma desktop app |
-| Code generation | none; the agent writes the code with full repository context | generates React and Tailwind from the design |
-| Setup | one binary, one token | Figma desktop app, Dev Mode, a running server |
-| Works in CI | yes | no |
+figctl exposes explicit shell commands and JSON output for scripts and coding
+agents. It uses a personal access token and can run without the Figma desktop
+app, including in CI when credentials and network access are available.
 
-figctl gives up bidirectional communication with the Figma app. In exchange
-there is no server process, no per-turn schema tax, and the same commands run
-in CI and over SSH.
+[Figma's MCP server](https://developers.figma.com/docs/figma-mcp-server/) connects
+supported agents to design context, Code Connect, and canvas-writing tools.
+Figma recommends its hosted remote server, which also needs no desktop app;
+a desktop server is available for local workflows.
+
+Choose figctl when you want commands you can inspect, pipe, cache, and pin to a
+version. Choose Figma MCP when you want its native agent integration and Figma
+features. Authentication, available tools, and client support differ; consult
+Figma's documentation for current MCP requirements.
 
 ## The workflow
 
@@ -396,21 +415,22 @@ times honouring `Retry-After`.
 
 | Variable | Effect |
 | --- | --- |
-| `FIGCTL_SKIP_DOWNLOAD=1` | skip the download; the shim then needs `figctl` on `PATH` |
-| `FIGCTL_BINARY=/path/to/figctl` | install a binary you already have instead of downloading |
+| `FIGCTL_SKIP_DOWNLOAD=1` | skip the download; set `FIGCTL_BINARY` to an existing executable when running figctl |
+| `FIGCTL_BINARY=/path/to/figctl` | copy an existing binary during install; also select an executable at runtime |
 | `FIGCTL_DOWNLOAD_BASE=URL` | download the assets from somewhere other than GitHub releases |
 
 Behind a proxy or on an air-gapped network, download the release archive
 yourself and point `FIGCTL_BINARY` at the extracted binary.
 
-Every release signs `checksums.txt` with [cosign](https://docs.sigstore.dev/)
-keylessly, so a download can be traced back to the workflow that built it.
+The release workflow signs `checksums.txt` with [cosign](https://docs.sigstore.dev/).
+This wrapper checks SHA-256 checksums; it does not verify the cosign signature.
+For signature verification, follow the repository release instructions before
+installing a downloaded binary with `FIGCTL_BINARY`.
 
 ## Other ways to install
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/tiaanduplessis/figctl/main/install.sh | sh
-brew install tiaanduplessis/tap/figctl
 go install github.com/tiaanduplessis/figctl/cmd/figctl@latest
 ```
 

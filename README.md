@@ -7,20 +7,37 @@ One static Go binary that reads a Figma file and hands a coding agent everything
 
 ## Quickstart
 
-```sh
-brew install tiaanduplessis/tap/figctl     # or: go install github.com/tiaanduplessis/figctl/cmd/figctl@latest
-figctl auth login personal                 # paste a Figma personal access token
-figctl file tree "https://www.figma.com/design/KEY/Web-App"
-```
+The first public release, `0.1.0`, is being prepared. The repository remains
+private until the maintainer approves publication. Public downloads and npm
+installation below become available after that release; collaborators can
+[build from source](CONTRIBUTING.md#setup) now.
 
-`file tree` prints the outline of the file. Pick a node id from it and ask for
-everything needed to build that node:
+1. Choose an [installation option](#installation): the shell installer for
+   macOS/Linux, npm for macOS/Linux/Windows, a release archive, or Go.
+2. Create a Figma personal access token with `current_user:read`,
+   `file_content:read`, `file_metadata:read`, and `library_content:read`.
+   See [Tokens and scopes](#tokens-and-scopes) for optional features.
+3. Log in and read a file your Figma account can access:
+
+   ```sh
+   figctl version
+   figctl auth login personal --default
+   figctl file tree "https://www.figma.com/design/KEY/Web-App" --depth 2
+   ```
+
+Paste the token only into the hidden login prompt. Replace the example URL
+with your file URL: `KEY` is the segment after `/design/` or `/file/`.
+`file tree` prints the file outline with node ids and names. Pick a frame id
+from that output, replace `2:2` below, and request its implementation context:
 
 ```sh
 figctl node context KEY --node 2:2
 ```
 
-Then teach your agent to do the same:
+The result includes layout and style data and paths to downloaded screenshots
+and assets. Optional data can depend on token scopes and the Figma plan; read
+any `hints` in the output. Follow the [design-to-code walkthrough](docs/walkthrough.md)
+for a complete flow, or install the agent instructions:
 
 ```sh
 figctl skill install --agent claude
@@ -37,21 +54,19 @@ can parse.
 
 ### CLI or MCP
 
-Figma ships a Dev Mode MCP server, and it is the closest comparison. The
-trade-off is real in both directions.
+figctl exposes explicit shell commands and JSON output for scripts and coding
+agents. It uses a personal access token and can run without the Figma desktop
+app, including in CI when credentials and network access are available.
 
-| | figctl | Dev Mode MCP server |
-| --- | --- | --- |
-| Transport | a binary the agent runs in a shell | a server process the agent connects to |
-| Per-turn cost | none; the agent reads `--help` or the skill file when it needs to | tool schemas occupy the context window every turn |
-| Selection awareness | node ids passed explicitly | reads the current selection in the Figma desktop app |
-| Code generation | none; the agent writes the code with full repo context | generates React and Tailwind from the design |
-| Setup | one binary, one token | Figma desktop app, Dev Mode, a running server |
-| Works in CI | yes | no |
+[Figma's MCP server](https://developers.figma.com/docs/figma-mcp-server/) connects
+supported agents to design context, Code Connect, and canvas-writing tools.
+Figma recommends its hosted remote server, which also needs no desktop app;
+a desktop server is available for local workflows.
 
-The CLI gives up bidirectional communication with the Figma app. In exchange
-there is no server process, no per-turn tool schema tax, and the same commands
-run in CI, in a Dockerfile, and over SSH.
+Choose figctl when you want commands you can inspect, pipe, cache, and pin to a
+version. Choose Figma MCP when you want its native agent integration and Figma
+features. Authentication, available tools, and client support differ; consult
+Figma's documentation for current MCP requirements.
 
 The binary is called `figctl` because `figma` is already taken by Figma's own
 Code Connect CLI, which is widely installed in design-system repositories.
@@ -289,9 +304,9 @@ Full generated reference: [docs/commands.md](docs/commands.md). Or run
 | `variables list\|get` | raw variables and collections per mode (Enterprise) |
 | `styles list\|get` | styles with resolved values, for files and team libraries |
 | `components list\|get` | components, sets, and variant property definitions |
-| `comments list\|add` | designer intent; `add` is the only write |
+| `comments list\|add` | designer intent; `add` posts a comment |
 | `versions list` | saved file versions, for use with `--file-version` |
-| `devresources list` | Dev Mode resource links attached to nodes |
+| `devresources list\|add\|update\|remove` | Read and manage Dev Mode resource links attached to nodes |
 | `projects list\|files` | discovery through the v1 projects API |
 | `folders list\|files` | discovery through the v2 folders API |
 | `profile add\|list\|use\|show\|remove` | named accounts |
@@ -486,9 +501,9 @@ so in `hints`, so a design system without variables is still usable.
 | Channel | Command |
 | --- | --- |
 | Install script | `curl -fsSL https://raw.githubusercontent.com/tiaanduplessis/figctl/main/install.sh \| sh` |
-| npm | `npm i -D figctl` then `npx figctl`, or `npm i -g figctl` |
-| Homebrew (macOS) | `brew install tiaanduplessis/tap/figctl` |
-| Go | `go install github.com/tiaanduplessis/figctl/cmd/figctl@latest` |
+| npm | `npm i -D --save-exact figctl@0.1.0` then `npx figctl`, or `npm i -g figctl@0.1.0` |
+| Release archive | Download the archive for your OS and CPU from [Releases](https://github.com/tiaanduplessis/figctl/releases), verify it, extract it, and add its directory to `PATH` |
+| Go (Go 1.27+) | `go install github.com/tiaanduplessis/figctl/cmd/figctl@v0.1.0` |
 
 The install script covers macOS and Linux on amd64 and arm64, needs no
 toolchain, and always verifies the download against the release checksums. It
@@ -503,21 +518,20 @@ curl -fsSL https://raw.githubusercontent.com/tiaanduplessis/figctl/main/install.
 `FIGCTL_INSTALL_DIR` overrides the destination. When [cosign](https://docs.sigstore.dev/)
 is on `PATH` the script also verifies the signature on the checksum file.
 
-npm is worth preferring inside a project. `npm i -D figctl` pins the version in
+npm is worth preferring inside a project. `npm i -D --save-exact figctl@0.1.0` pins the version in
 `package.json`, so a repository gets a known figctl rather than whatever the
 machine happens to have, which matters when an agent depends on the output
 contract. Windows is served by npm or a release archive.
 
-Homebrew ships figctl as a cask, which is macOS only. On Linux use the install
-script, npm, or `go install`.
-
-Every release signs `checksums.txt` with cosign keylessly, so a download can be
-traced back to the workflow that built it:
+The release workflow signs `checksums.txt` with cosign keylessly, so a download
+can be traced back to the workflow that built it. Download the checksum file,
+its `.sig` signature, and its `.pem` certificate alongside the archive. These
+commands verify release `v0.1.0`; use the matching tag for another version:
 
 ```sh
 cosign verify-blob checksums.txt \
   --signature checksums.txt.sig --certificate checksums.txt.pem \
-  --certificate-identity-regexp 'https://github.com/tiaanduplessis/figctl/.*' \
+  --certificate-identity 'https://github.com/tiaanduplessis/figctl/.github/workflows/release.yml@refs/tags/v0.1.0' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 sha256sum -c checksums.txt --ignore-missing
 ```
@@ -530,6 +544,8 @@ figctl completion zsh > "${fpath[1]}/_figctl"
 
 ## Documentation
 
+- [docs/walkthrough.md](docs/walkthrough.md) a design-to-code workflow
+- [docs/releasing.md](docs/releasing.md) maintainer launch and release checklist
 - [docs/index.md](docs/index.md) documentation index
 - [docs/commands.md](docs/commands.md) generated reference for every command and flag
 - [docs/agents.md](docs/agents.md) wiring figctl into Claude Code, Cursor, Copilot, and Codex
