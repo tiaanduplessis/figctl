@@ -26,8 +26,15 @@ a fake API server.
 
 ## The gate
 
-CI also runs Gitleaks against Git history. Run `gitleaks git --log-opts=--all
---redact --no-banner .` before pushing credential-related changes. Review
+Install Gitleaks v8.30.1 and enable the staged-secret check in each checkout:
+
+```sh
+git config --local core.hooksPath .githooks
+```
+
+The hook fails closed if the scanner is unavailable and redacts detected values.
+CI also scans Git history. Run `gitleaks git --log-opts=--all --redact --no-banner .`
+before pushing credential-related changes. Review
 `.gitleaks.toml` exceptions narrowly; never exempt an entire test directory.
 
 Packaging changes also require Node 24: run `npm test --prefix npm` and
