@@ -1,6 +1,6 @@
 # GoReleaser v2 configuration.
 # Validate with: goreleaser check
-# Dry run with:  goreleaser release --snapshot --clean
+# Dry run with:  goreleaser release --snapshot --clean --skip=sign
 version: 2
 
 project_name: figctl
@@ -119,7 +119,6 @@ release:
     ## Installation
 
     ```sh
-    brew install tiaanduplessis/tap/figctl
     go install github.com/tiaanduplessis/figctl/cmd/figctl@{{ .Tag }}
     npx figctl@{{ .Version }} --help
     ```
@@ -129,38 +128,3 @@ release:
     ```sh
     sha256sum -c checksums.txt --ignore-missing
     ```
-
-homebrew_casks:
-  - name: figctl
-    ids:
-      - figctl
-    binaries:
-      - figctl
-    repository:
-      owner: tiaanduplessis
-      name: homebrew-tap
-      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
-    directory: Casks
-    homepage: https://github.com/tiaanduplessis/figctl
-    description: Agent-first Figma CLI - read a design and everything needed to implement it
-    license: MIT
-    commit_author:
-      name: goreleaser
-      email: noreply@github.com
-    generate_completions_from_executable:
-      executable: figctl
-      args:
-        - completion
-      shells:
-        - bash
-        - zsh
-        - fish
-    hooks:
-      post:
-        # The binaries are not notarized, so clear the quarantine flag macOS
-        # adds to anything downloaded, or the first run is blocked.
-        install: |
-          if system_command("/usr/bin/xattr", args: ["-h"]).exit_status == 0
-            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/figctl"]
-          end
-
