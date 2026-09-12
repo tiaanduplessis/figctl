@@ -12,6 +12,11 @@ breaking change.
 
 ## [Unreleased]
 
+### Security
+
+- Refuse authenticated API redirects to another origin, preventing the Figma
+  token from being forwarded to a different host, port, or scheme.
+
 ## [0.1.0] - 2026-09-12
 
 First public release. Output contract `schemaVersion` 1.

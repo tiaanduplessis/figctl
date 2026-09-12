@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -15,6 +16,66 @@ import (
 	"github.com/tiaanduplessis/figctl/internal/figma"
 	"github.com/tiaanduplessis/figctl/internal/figma/figmatest"
 )
+
+func TestAPIRedirectDoesNotSendTokenToAnotherOrigin(t *testing.T) {
+	var received string
+	destination := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		received = r.Header.Get("X-Figma-Token")
+		_, _ = w.Write([]byte(`{"id":"123","handle":"test"}`))
+	}))
+	defer destination.Close()
+	source := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, destination.URL, http.StatusFound)
+	}))
+	defer source.Close()
+	c := figma.New(figma.Options{BaseURL: source.URL, Token: figmatest.Token, MaxAttempts: 1})
+	if _, err := c.GetMe(context.Background()); err == nil {
+		t.Fatal("expected the cross-origin API redirect to fail")
+	}
+	if received != "" {
+		t.Fatal("redirect forwarded the API token to another origin")
+	}
+}
+
+func TestAPIRedirectWithinOriginPreservesAuthentication(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/v1/me" {
+			http.Redirect(w, r, "/moved", http.StatusFound)
+			return
+		}
+		if r.Header.Get("X-Figma-Token") != figmatest.Token {
+			t.Error("same-origin redirect lost authentication")
+		}
+		_, _ = w.Write([]byte(`{"id":"123","handle":"test"}`))
+	}))
+	defer server.Close()
+	c := figma.New(figma.Options{BaseURL: server.URL, Token: figmatest.Token, MaxAttempts: 1})
+	if _, err := c.GetMe(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestDownloadRedirectNeverSendsAPIToken(t *testing.T) {
+	destination := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("X-Figma-Token") != "" {
+			t.Error("download sent the API token")
+		}
+		_, _ = w.Write([]byte("image"))
+	}))
+	defer destination.Close()
+	source := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, destination.URL, http.StatusFound)
+	}))
+	defer source.Close()
+	c := figma.New(figma.Options{Token: figmatest.Token})
+	var data bytes.Buffer
+	if err := c.Download(context.Background(), source.URL, &data); err != nil {
+		t.Fatal(err)
+	}
+	if data.String() != "image" {
+		t.Fatal("redirected download returned the wrong content")
+	}
+}
 
 type recorder struct {
 	lines []string
