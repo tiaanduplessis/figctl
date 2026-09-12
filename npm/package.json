@@ -38,10 +38,12 @@
   "files": [
     "bin/figctl.js",
     "postinstall.js",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
-    "postinstall": "node postinstall.js"
+    "postinstall": "node postinstall.js",
+    "test": "node --test"
   },
   "engines": {
     "node": ">=18"

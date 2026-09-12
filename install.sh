@@ -96,15 +96,14 @@ verify_checksum() {
 	archive="$1"
 	sums="$2"
 	name="$3"
-	expected=$(grep " \*\{0,1\}$name\$" "$sums" | awk '{print $1}' | head -n 1)
+	expected=$(awk -v name="$name" '$2 == name || $2 == "*" name { print $1; exit }' "$sums")
 	[ -n "$expected" ] || fail "$name is not listed in checksums.txt"
 	if command -v sha256sum >/dev/null 2>&1; then
 		actual=$(sha256sum "$archive" | awk '{print $1}')
 	elif command -v shasum >/dev/null 2>&1; then
 		actual=$(shasum -a 256 "$archive" | awk '{print $1}')
 	else
-		log "install: no sha256 tool found, skipping checksum verification"
-		return
+		fail "sha256sum or shasum is required to verify the download"
 	fi
 	[ "$actual" = "$expected" ] || fail "checksum mismatch for $name: expected $expected, got $actual"
 	log "install: checksum verified"
@@ -119,11 +118,11 @@ verify_signature() {
 	command -v cosign >/dev/null 2>&1 || return 0
 	sig="$sums.sig"
 	cert="$sums.pem"
-	fetch "$base/checksums.txt.sig" "$sig" 2>/dev/null || return 0
-	fetch "$base/checksums.txt.pem" "$cert" 2>/dev/null || return 0
+	fetch "$base/checksums.txt.sig" "$sig" || fail "could not download checksums.txt.sig"
+	fetch "$base/checksums.txt.pem" "$cert" || fail "could not download checksums.txt.pem"
 	if cosign verify-blob "$sums" \
 		--signature "$sig" --certificate "$cert" \
-		--certificate-identity-regexp "https://github.com/$REPO/.*" \
+		--certificate-identity "https://github.com/$REPO/.github/workflows/release.yml@refs/tags/$version" \
 		--certificate-oidc-issuer https://token.actions.githubusercontent.com >/dev/null 2>&1; then
 		log "install: signature verified"
 	else
@@ -147,7 +146,9 @@ main() {
 	base="https://github.com/$REPO/releases/download/$version"
 
 	tmp=$(mktemp -d)
-	trap 'rm -rf "$tmp"' EXIT INT TERM
+	staged=""
+	trap 'rm -rf "$tmp"; if [ -n "$staged" ]; then rm -f "$staged"; fi' EXIT
+	trap 'exit 1' INT TERM
 
 	log "install: downloading $BINARY $version for $plat"
 	fetch "$base/$name" "$tmp/$name" ||
@@ -167,16 +168,20 @@ main() {
 	if [ ! -w "$dir" ]; then
 		fail "$dir is not writable. Set FIGCTL_INSTALL_DIR to a directory you own, or re-run with sudo."
 	fi
-	chmod 0755 "$tmp/$BINARY"
-	mv "$tmp/$BINARY" "$dir/$BINARY" || fail "could not install into $dir"
+	# Validate on the destination filesystem before replacing an existing binary.
+	staged=$(mktemp "$dir/.figctl.XXXXXX") || fail "could not stage the binary in $dir"
+	cp "$tmp/$BINARY" "$staged" || fail "could not copy the binary into $dir"
+	chmod 0755 "$staged"
+	"$staged" version >/dev/null 2>&1 ||
+		fail "the downloaded binary did not run; check the architecture and executable permissions on $dir"
+	mv -f "$staged" "$dir/$BINARY" || fail "could not install into $dir"
+	staged=""
 
 	log "install: installed $dir/$BINARY"
 	case ":$PATH:" in
 	*":$dir:"*) ;;
 	*) log "install: $dir is not on PATH; add it with: export PATH=\"$dir:\$PATH\"" ;;
 	esac
-	"$dir/$BINARY" version >/dev/null 2>&1 ||
-		log "install: the binary was written but did not run; check the architecture"
 }
 
 main "$@"

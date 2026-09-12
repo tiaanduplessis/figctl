@@ -8,7 +8,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 
-const binary = path.join(
+const binary = process.env.FIGCTL_BINARY || path.join(
   __dirname,
   process.platform === "win32" ? "figctl.exe" : "figctl"
 );
@@ -17,12 +17,11 @@ if (!fs.existsSync(binary)) {
   process.stderr.write(
     [
       "",
-      "figctl: the binary was not downloaded during install.",
+      "figctl: no executable found; install it or set FIGCTL_BINARY to its path.",
       "",
       "Re-run the install, or get figctl another way:",
       "  npm rebuild figctl",
       "  go install github.com/tiaanduplessis/figctl/cmd/figctl@latest",
-      "  brew install tiaanduplessis/tap/figctl",
       "  https://github.com/tiaanduplessis/figctl/releases",
       "",
     ].join("\n") + "\n"

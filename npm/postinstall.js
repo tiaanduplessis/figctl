@@ -5,7 +5,7 @@
 // No dependencies: node:https, node:fs, node:zlib, and node:crypto only.
 //
 // Environment overrides:
-//   FIGCTL_SKIP_DOWNLOAD=1   skip entirely (the shim then needs figctl on PATH)
+//   FIGCTL_SKIP_DOWNLOAD=1   skip downloading; set FIGCTL_BINARY to run an existing binary
 //   FIGCTL_BINARY=/path      use an existing binary instead of downloading
 //   FIGCTL_DOWNLOAD_BASE=URL download from somewhere other than GitHub releases
 
@@ -46,11 +46,9 @@ function fail(message, detail) {
   lines.push("");
   lines.push("Install it another way instead:");
   lines.push("  go install github.com/tiaanduplessis/figctl/cmd/figctl@latest");
-  lines.push("  brew install tiaanduplessis/tap/figctl");
   lines.push(`  https://github.com/${REPO}/releases/tag/${TAG}`);
   lines.push("");
-  process.stderr.write(lines.join("\n") + "\n");
-  process.exit(1);
+  throw new Error(lines.join("\n"));
 }
 
 function platformKey() {
@@ -141,9 +139,15 @@ function extractTarGz(buf, name) {
     }
     const entry = header.subarray(0, 100).toString("utf8").replace(/\0.*$/, "");
     const sizeField = header.subarray(124, 136).toString("utf8").replace(/\0.*$/, "").trim();
-    const size = parseInt(sizeField, 8) || 0;
+    if (!/^[0-7]+$/.test(sizeField)) {
+      throw new Error("invalid tar entry size");
+    }
+    const size = parseInt(sizeField, 8);
     const typeFlag = String.fromCharCode(header[156]);
     const start = offset + 512;
+    if (!Number.isSafeInteger(size) || start + size > tar.length) {
+      throw new Error("truncated tar entry");
+    }
     if ((typeFlag === "0" || typeFlag === "\0") && path.posix.basename(entry) === name) {
       return tar.subarray(start, start + size);
     }
@@ -168,7 +172,7 @@ function extractZip(buf, name) {
   const count = buf.readUInt16LE(eocd + 10);
   let p = buf.readUInt32LE(eocd + 16);
   for (let i = 0; i < count; i++) {
-    if (buf.readUInt32LE(p) !== 0x02014b50) {
+    if (p + 46 > eocd || buf.readUInt32LE(p) !== 0x02014b50) {
       return null;
     }
     const method = buf.readUInt16LE(p + 10);
@@ -177,11 +181,20 @@ function extractZip(buf, name) {
     const extraLen = buf.readUInt16LE(p + 30);
     const commentLen = buf.readUInt16LE(p + 32);
     const localOffset = buf.readUInt32LE(p + 42);
+    if (p + 46 + nameLen + extraLen + commentLen > eocd) {
+      throw new Error("truncated zip directory");
+    }
     const entry = buf.subarray(p + 46, p + 46 + nameLen).toString("utf8");
     if (path.posix.basename(entry) === name) {
+      if (localOffset + 30 > p || buf.readUInt32LE(localOffset) !== 0x04034b50) {
+        throw new Error("invalid zip entry");
+      }
       const localNameLen = buf.readUInt16LE(localOffset + 26);
       const localExtraLen = buf.readUInt16LE(localOffset + 28);
       const start = localOffset + 30 + localNameLen + localExtraLen;
+      if (start + compressedSize > p) {
+        throw new Error("truncated zip entry");
+      }
       const data = buf.subarray(start, start + compressedSize);
       if (method === 0) {
         return data;
@@ -197,9 +210,9 @@ function extractZip(buf, name) {
 }
 
 async function main() {
-  if (process.env.FIGCTL_SKIP_DOWNLOAD) {
+  if (process.env.FIGCTL_SKIP_DOWNLOAD === "1") {
     process.stderr.write(
-      "figctl: FIGCTL_SKIP_DOWNLOAD is set; figctl must already be on PATH\n"
+      "figctl: download skipped; set FIGCTL_BINARY to an existing executable when running figctl\n"
     );
     return;
   }
@@ -208,6 +221,7 @@ async function main() {
   const dest = path.join(__dirname, "bin", t.bin);
 
   if (process.env.FIGCTL_BINARY) {
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
     fs.copyFileSync(process.env.FIGCTL_BINARY, dest);
     fs.chmodSync(dest, 0o755);
     return;
@@ -242,6 +256,11 @@ async function main() {
   fs.chmodSync(dest, 0o755);
 }
 
-main().catch((err) => {
-  fail("installation failed", String(err && err.stack ? err.stack : err));
-});
+if (require.main === module) {
+  main().catch((err) => {
+    process.stderr.write("figctl: installation failed: " + err.message + "\n");
+    process.exitCode = 1;
+  });
+}
+
+module.exports = { verify, extractTarGz, extractZip };
