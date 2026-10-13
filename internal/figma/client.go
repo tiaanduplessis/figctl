@@ -127,7 +127,20 @@ func New(opts Options) *Client {
 	if transport == nil {
 		transport = http.DefaultTransport
 	}
-	c.http = &http.Client{Transport: transport}
+	c.http = &http.Client{
+		Transport: transport,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			if len(via) >= 10 {
+				return errors.New("stopped after 10 redirects")
+			}
+			original := via[0]
+			if original.Header.Get(tokenHeader) != "" &&
+				(req.URL.Scheme != original.URL.Scheme || !strings.EqualFold(req.URL.Host, original.URL.Host)) {
+				return errors.New("refusing to send the Figma token to a different origin")
+			}
+			return nil
+		},
+	}
 	return c
 }
 

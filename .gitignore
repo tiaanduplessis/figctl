@@ -9,3 +9,14 @@ coverage.out
 npm/bin/figctl
 npm/bin/figctl.exe
 npm/node_modules/
+
+# Local credentials and captured design data must not enter the repository.
+.env
+.env.*
+!.env.example
+.npmrc
+*.pem
+*.key
+context.json
+render.json
+/style-dictionary/

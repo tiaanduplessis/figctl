@@ -72,6 +72,8 @@ signs:
     signature: "${artifact}.sig"
     args:
       - sign-blob
+      # Publish detached signature/certificate files for the shell installer.
+      - --use-signing-config=false
       - "--output-certificate=${certificate}"
       - "--output-signature=${signature}"
       - "${artifact}"

@@ -5,10 +5,6 @@ One static binary that reads a Figma file and hands a coding agent everything it
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/tiaanduplessis/figctl/blob/main/LICENSE)
 [![repository](https://img.shields.io/badge/source-github-181717.svg)](https://github.com/tiaanduplessis/figctl)
 
-The first public release, `0.1.0`, is being prepared. The repository remains
-private until the maintainer approves publication. These npm commands become
-available after the package and matching release are published.
-
 Create a Figma personal access token with `current_user:read`,
 `file_content:read`, `file_metadata:read`, and `library_content:read`.
 See [Tokens and scopes](#tokens-and-scopes) for optional features.

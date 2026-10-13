@@ -9,7 +9,7 @@ figctl needs Go 1.27 and these tools on `PATH`:
 
 ```sh
 go install golang.org/x/tools/cmd/goimports@v0.50.0
-go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.13.2
+go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0
 go install golang.org/x/vuln/cmd/govulncheck@v1.8.0    # for make vuln
 export PATH="$HOME/go/bin:$PATH"
 ```
@@ -25,6 +25,17 @@ No Figma token is needed to develop or to run the tests. Every test runs against
 a fake API server.
 
 ## The gate
+
+Install Gitleaks v8.30.1 and enable the staged-secret check in each checkout:
+
+```sh
+git config --local core.hooksPath .githooks
+```
+
+The hook fails closed if the scanner is unavailable and redacts detected values.
+CI also scans Git history. Run `gitleaks git --log-opts=--all --redact --no-banner .`
+before pushing credential-related changes. Review
+`.gitleaks.toml` exceptions narrowly; never exempt an entire test directory.
 
 Packaging changes also require Node 24: run `npm test --prefix npm` and
 `node --test scripts/check-release.test.mjs`. CI runs npm tests on Linux,
@@ -233,6 +244,9 @@ assertion, and put an expensive call before the ones that reuse its result.
 CI runs it from `.github/workflows/nightly.yml`, scheduled nightly and available
 through `workflow_dispatch`. The workflow needs a `FIGMA_TOKEN` repository
 secret; without one it says so and passes, so a fork is never permanently red.
+The public workflow pins the public demo file and node; use local environment
+overrides for private-file debugging. Raw live logs and exported designs are
+never uploaded by this workflow.
 The same job round trips a DTCG export through Style Dictionary v4, which is the
 live compatibility check for token consumers. Node also runs the npm wrapper
 and release validation tests.
@@ -376,10 +390,8 @@ docs: describe the DTCG gradient fallback
 
 ## Releasing
 
-Maintainers only. Follow the [release checklist](docs/releasing.md). The first
-planned version is `0.1.0`; it has not been released. Repository visibility,
-release publication, and npm publication require the maintainer's approval.
+Maintainers only. Follow the [release checklist](docs/releasing.md). Release
+publication and npm publication require the maintainer's approval.
 
-`install.sh` is served from `main`, so changes take effect for users immediately
-once the repository is public. Treat installer changes with the same care as a
+`install.sh` is served from `main`, so changes take effect for users immediately. Treat installer changes with the same care as a
 release.

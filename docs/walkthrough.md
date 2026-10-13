@@ -2,8 +2,7 @@
 
 This walkthrough uses a file you can already open in Figma. It reads the design
 and writes local files; implementing the UI is the coding agent's next step.
-Public installation awaits the first release. Collaborators can build from
-source until then; see the [quickstart](../README.md#quickstart).
+Install figctl using the [quickstart](../README.md#quickstart).
 
 ## Authenticate and choose a frame
 

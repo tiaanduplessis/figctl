@@ -12,8 +12,16 @@ breaking change.
 
 ## [Unreleased]
 
-First public release planned as `0.1.0`; not yet published. Output contract
-`schemaVersion` 1.
+## [0.1.1] - 2026-09-12
+
+### Security
+
+- Refuse authenticated API redirects to another origin, preventing the Figma
+  token from being forwarded to a different host, port, or scheme.
+
+## [0.1.0] - 2026-09-12
+
+First public release. Output contract `schemaVersion` 1.
 
 ### Added
 
@@ -150,4 +158,6 @@ First public release planned as `0.1.0`; not yet published. Output contract
 - Files whose document exceeds `--max-file-mb` are not cached whole; those
   commands fall back to `depth=2` or per-node requests and say so in `hints`.
 
-[Unreleased]: https://github.com/tiaanduplessis/figctl/commits/main
+[Unreleased]: https://github.com/tiaanduplessis/figctl/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/tiaanduplessis/figctl/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/tiaanduplessis/figctl/releases/tag/v0.1.0
