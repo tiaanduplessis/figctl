@@ -174,7 +174,12 @@ means adding it to `npm/postinstall.js` too.
 
 The skill reference files embedded in the binary are generated the same way and
 guarded by their own test. Run `make gen` after the same kinds of change, and
-`make verify-gen` to check without writing.
+`make verify-gen` to check without writing. The generator also mirrors the skill
+into `skills/figctl/` for skills.sh installers. Edit hand-written instructions in
+`internal/skill/templates/SKILL.md` and `reference/workflows.md` under that same
+directory, then run `make gen`; do not edit the published mirror. When behavior
+changes, review those workflows too: generated references cannot check whether
+the hand-written advice is still correct. See [skill installation checks](docs/agents.md#publication-and-maintenance).
 
 ### The schema contract
 

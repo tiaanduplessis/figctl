@@ -10,7 +10,7 @@ it is used automatically.
 figctl file tree "<url>" --depth 2 -o md
 
 # 2. Everything needed to build it, in one call.
-figctl node context "<url>" -o md --out ./design/login
+figctl node context "<url>" --screenshot-scale 1 -o md --out ./design/login
 ```
 
 `node context` writes a PNG of the node and the SVG icons under it, and prints
@@ -28,9 +28,13 @@ What to take from the output:
 - `comments` and `devResources` for designer intent and links to existing code.
 
 ```sh
-# 3. After implementing, render again and compare the two images.
-figctl render "<url>" --out ./design/after
+# 3. Capture implementation.png, then compare it with the context PNG.
+# Replace design.png with the screenshot path printed by node context.
+figctl diff design.png implementation.png --out diff.png --max-diff-ratio 0.01 --json
 ```
+
+Match viewport, crop, and device scale before comparing. Read the diff image
+and handle exit 7 as described in [visual comparison](#compare-an-implementation-with-a-design).
 
 If the screen is large, cut the output instead of skipping the command:
 
@@ -56,12 +60,14 @@ figctl tokens export "<url>" --format tailwind --tailwind-vars --out ./src
 Portable DTCG (Style Dictionary v4 reads it unchanged):
 
 ```sh
-figctl tokens export "<url>" > tokens.json
+figctl tokens export "<url>" --out tokens.json
 figctl tokens export "<url>" --mode-strategy separate --out ./tokens
 ```
 
 Notes:
 
+- Stdout is the figctl envelope. `--out` writes the token document itself;
+  redirecting stdout saves the wrapper instead of a consumable DTCG file.
 - Without an Enterprise plan the export contains styles only and says so in
   `hints`. That is a plan limit, not a broken token: the `file_variables:read`
   scope is offered only inside an Enterprise organization and does not appear
@@ -97,7 +103,10 @@ figctl diff design.png implementation.png --out diff.png \
   --threshold 0.1 --max-diff-ratio 0.01 --json
 ```
 
-Use the PNG path from the render manifest. Capture `implementation.png` with
+Reuse the screenshot from `node context --screenshot-scale 1` if already
+available; render separately only when another capture is needed. Replace
+`design.png` with that screenshot path or the PNG path from the render manifest.
+Capture `implementation.png` with
 browser tools at the same viewport, crop, and device scale. Wait for fonts and
 images to load; keep content and animation state consistent. `render` defaults
 to 2x, so explicitly use 1x when the browser screenshot is 1x.
@@ -112,6 +121,17 @@ Exit 0 means the ratio is within the limit; exit 7 means it exceeds the limit.
 Both print comparison data (`passed`, `mismatchedPixels`, `totalPixels`,
 `mismatchRatio`, dimensions, settings, and optional `diffPath`). Under `set -e`,
 handle exit 7 explicitly so the agent can inspect the result and continue.
+For example, this preserves the result while stopping on real errors:
+
+```sh
+status=0
+figctl diff design.png implementation.png --out diff.png --json > comparison.json || status=$?
+case "$status" in
+  0|7) cat comparison.json ;;
+  *) exit "$status" ;;
+esac
+```
+
 Other nonzero exits are input or I/O errors, not completed comparisons.
 
 `--out` writes the diff on pass or fail, replacing an existing output file.
@@ -138,7 +158,8 @@ almost always what a component library wants. The command writes a
 `manifest.json` next to the files mapping node ids to paths, and prints the same
 manifest. Renders are batched per format and scale and cached by file version,
 so re-running on an unchanged file costs no image requests. `--dry-run` prints
-the plan with no request at all.
+the plan without image requests or downloads; discovering the nodes can still
+need file data from Figma.
 
 If the icons are not named `icon/*`, `Icon*`, or `icons/*`, pass the real
 convention: `--icon-pattern "ic/*"`.
@@ -146,8 +167,9 @@ convention: `--icon-pattern "ic/*"`.
 ## Link a component library to Storybook
 
 Dev resource links show up in Figma's Dev Mode beside the design, so a designer
-opening a component sees the story that implements it. This is the one write
-worth doing from a design system pipeline.
+opening a component sees the story that implements it. Use this workflow when
+the user has requested publishing those links; implementing a design alone
+does not authorize Figma writes.
 
 Link one component:
 
@@ -198,8 +220,8 @@ figctl file find "<url>" --name "Button*" --type INSTANCE -o md
 ```
 
 `file find` prints the ancestor path of each hit, so the page and frame each
-instance sits in are visible without another call. Both calls are served from
-the one cached document, so the search is free after the first fetch.
+instance sits in are visible without another call. The search reuses the cached
+document; freshness checks can still need a metadata request.
 
 To see how one instance is configured, inspect it: `component.componentProperties`
 holds the variant values.
@@ -247,8 +269,10 @@ figctl file info "<url>" --json | jq .profile
 ```
 
 Override for one call with `--profile globex`, or for a shell with
-`FIGCTL_PROFILE=globex`. `FIGMA_TOKEN` wins over both and creates an implicit
-profile named `env`, which is what CI should use.
+`FIGCTL_PROFILE=globex`. `--profile` wins over `FIGCTL_PROFILE`, and both win
+over `FIGMA_TOKEN`. With neither set, `FIGMA_TOKEN` selects the implicit
+profile named `env`, which CI can use without a stored account. `--token-file`
+overrides the credential source for the selected profile.
 
 A `FORBIDDEN` or `NOT_FOUND` on a file that clearly exists usually means the
 wrong account: the hint lists the other configured profiles. The cache is keyed

@@ -4,6 +4,7 @@ One static Go binary that reads a Figma file and hands a coding agent everything
 
 [![ci](https://github.com/tiaanduplessis/figctl/actions/workflows/ci.yml/badge.svg)](https://github.com/tiaanduplessis/figctl/actions/workflows/ci.yml)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![skills.sh](https://skills.sh/b/tiaanduplessis/figctl)](https://skills.sh/tiaanduplessis/figctl)
 
 ## Quickstart
 
@@ -318,9 +319,16 @@ Full generated reference: [docs/commands.md](docs/commands.md). Or run
 to `1:2` and used as the default `--node`, so an agent can paste the URL from
 the browser unchanged.
 
-The skill is also published at `skills/figctl/`, so it can be installed without
-figctl: `npx skills add tiaanduplessis/figctl`. See
-[docs/agents.md](docs/agents.md).
+Install the agent skill through [skills.sh](https://skills.sh) (Node.js 22.20+):
+
+```sh
+npx skills add tiaanduplessis/figctl --skill figctl
+```
+
+Choose agents when prompted; add `-g` for user scope. This installs instructions
+and references; the CLI must be [installed separately](#installation).
+See [docs/agents.md](docs/agents.md#install-through-skillssh) for agent selection,
+updates, and publication details.
 
 ## Output contract
 

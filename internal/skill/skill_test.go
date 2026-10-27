@@ -6,6 +6,8 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+
+	"gopkg.in/yaml.v3"
 )
 
 // dirs returns a temporary home and project directory for one install.
@@ -251,7 +253,11 @@ func TestMarkedBlockPreservesSurroundingContent(t *testing.T) {
 		t.Fatalf("op = %s, want %s", actions[0].Op, OpAppendBlock)
 	}
 	content := read(t, path)
-	for _, want := range []string{"# Project rules", "Use tabs.", "keep me", BlockBegin, BlockEnd, "## Workflow"} {
+	block, err := Render(AgentCopilot, "SKILL")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{original, block} {
 		if !strings.Contains(content, want) {
 			t.Fatalf("content is missing %q:\n%s", want, content)
 		}
@@ -266,7 +272,8 @@ func TestMarkedBlockPreservesSurroundingContent(t *testing.T) {
 	}
 
 	// A stale block is replaced in place, keeping what is around it.
-	stale := strings.Replace(read(t, path), "## Workflow", "## Stale", 1)
+	staleBlock := BlockBegin + "\nObsolete instructions.\n" + BlockEnd + "\n"
+	stale := strings.Replace(read(t, path), block, staleBlock, 1)
 	if err := os.WriteFile(path, []byte(stale), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -278,7 +285,7 @@ func TestMarkedBlockPreservesSurroundingContent(t *testing.T) {
 		t.Fatalf("op = %s, want %s", actions[0].Op, OpReplaceBlock)
 	}
 	content = read(t, path)
-	if strings.Contains(content, "## Stale") || !strings.Contains(content, "keep me") {
+	if strings.Contains(content, staleBlock) || !strings.Contains(content, block) || !strings.Contains(content, original) {
 		t.Fatalf("stale block was not replaced cleanly:\n%s", content)
 	}
 
@@ -533,6 +540,30 @@ func TestRenderAndLocationPerAgent(t *testing.T) {
 	}
 	if got := Location(AgentCodex, "workflows"); got != "reference/workflows.md" {
 		t.Fatalf("reference location = %s", got)
+	}
+}
+
+func TestAgentDescriptionsMatchSkill(t *testing.T) {
+	for _, agent := range []Agent{AgentAgents, AgentClaude, AgentCodex, AgentGeneric, AgentCursor} {
+		t.Run(string(agent), func(t *testing.T) {
+			content, err := Render(agent, "SKILL")
+			if err != nil {
+				t.Fatal(err)
+			}
+			head, _, found := splitFrontMatter(content)
+			if !found {
+				t.Fatal("missing front matter")
+			}
+			var metadata struct {
+				Description string `yaml:"description"`
+			}
+			if err := yaml.Unmarshal([]byte(head), &metadata); err != nil {
+				t.Fatal(err)
+			}
+			if metadata.Description != Description {
+				t.Fatalf("agent description = %q, want %q", metadata.Description, Description)
+			}
+		})
 	}
 }
 

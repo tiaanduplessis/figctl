@@ -12,6 +12,13 @@ breaking change.
 
 ## [Unreleased]
 
+### Changed
+
+- Refresh the agent skill for visual comparisons, screenshot reuse, offline
+  diff handling, token exports, account selection, and API request budgets.
+  Keep discovery descriptions consistent across agent formats and document
+  skills.sh installation, updates, and publication.
+
 ## [0.1.1] - 2026-09-12
 
 ### Security

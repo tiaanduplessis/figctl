@@ -17,27 +17,60 @@ figctl skill uninstall --yes               # remove what was installed
 and `all`. `--file` on `skill print` accepts `SKILL`, `commands`, `schemas`,
 and `workflows`.
 
-## Installing the skill without figctl
+## Install through skills.sh
 
-The skill is also published in this repository at `skills/figctl/`, so a skill
-installer that walks a repository can pick it up without figctl being on the
-machine yet:
+The [skills.sh](https://skills.sh) CLI discovers `skills/figctl/SKILL.md` in
+this public repository. With Node.js 22.20 or later, run from your project:
 
 ```sh
-npx skills add tiaanduplessis/figctl        # from the repository
-npx skills add ./path/to/figctl             # from a local checkout
-npx skills add tiaanduplessis/figctl -g     # user scope rather than project
+npx skills add tiaanduplessis/figctl --skill figctl
 ```
 
-That installs the same four documents `figctl skill install` writes, to
-`.agents/skills/figctl/` with a copy for each agent selected. The published
-copy is generated from the same embedded templates the binary carries and a
-test fails if the two drift, so neither can go stale.
+Choose your coding agents when prompted. The default scope is the current
+project; add `-g` for all projects. To select agents explicitly:
 
-Use whichever fits. `figctl skill install` needs figctl already installed and
-knows every target it supports; the installer above works before figctl is on
-the machine and manages skills from many projects in one place. The skill
-still expects `figctl` on `PATH` at the time an agent runs it.
+```sh
+npx skills add tiaanduplessis/figctl --skill figctl -a claude-code -a codex
+npx skills add tiaanduplessis/figctl --skill figctl -g
+npx skills add tiaanduplessis/figctl --list # discover without installing
+```
+
+The skills CLI uses `claude-code`; the built-in figctl installer uses `claude`.
+It installs `SKILL.md` and the three reference documents in the selected agents'
+skill locations, using links to a shared copy by default. These are skills CLI
+installs, managed with `npx skills check`, `npx skills update`, and
+`npx skills remove figctl`. Avoid installing over the same location with both
+installers: figctl refuses to replace files owned by another installer.
+
+The skill does not install the binary. Follow the [CLI installation options](../README.md#installation)
+to put `figctl` on `PATH`. Local PNG comparison with `figctl diff` needs no
+Figma token; Figma API commands require authentication.
+
+### Publication and maintenance
+
+There is no separate upload or registry manifest. According to the
+[skills.sh FAQ](https://skills.sh/docs/faq), public skills appear in its
+directory through installation telemetry from `npx skills add`. Installability
+can be verified before a directory listing appears; ranking is managed by
+skills.sh. See its [skill format and discovery rules](https://github.com/vercel-labs/skills/blob/main/docs/creating-skills.md).
+
+Edit `internal/skill/templates/SKILL.md` and
+`internal/skill/templates/reference/workflows.md` for hand-written guidance.
+Run `make gen` to regenerate command and schema references and mirror the whole
+skill into `skills/figctl/`; do not edit the published copy directly. Tests and
+`make verify-gen` check both generated references and the published mirror.
+These checks detect structural drift; review the hand-written workflows when
+adding behavior or changing recommended usage.
+
+To check discovery and installation from a checkout without changing your own
+agent setup, replace the source path below and use a temporary project:
+
+```sh
+npx skills add /absolute/path/to/figctl --list
+mkdir -p /tmp/figctl-skill-check
+cd /tmp/figctl-skill-check
+DISABLE_TELEMETRY=1 npx skills add /absolute/path/to/figctl --skill figctl -a codex -a claude-code -y
+```
 
 ## Where each agent reads from
 
@@ -114,16 +147,20 @@ without walking.
 the model, screenshot, assets, tokens, component definitions, comments, and dev
 resources. Prefer it over composing four commands by hand.
 
-**Read the exit code.** 0 success, 2 usage, 3 auth, 4 not found, 5 rate limited,
-6 partial. Exit 6 means the payload is usable and `data.failures` says what did
-not work; do not discard the result.
+**Read the exit code.** 0 success, 1 runtime error, 2 usage, 3 auth, 4 not found,
+5 rate limited, 6 partial, 7 image mismatch. Exit 6 retains usable data and
+`data.failures`. Exit 7 retains comparison metrics with `data.passed: false`.
+Inspect the diff image and fix the implementation; do not treat it as an API
+failure. Match screenshot dimensions and scale before comparing.
 
 **Do not guess field names.** `figctl schema node.context` prints the JSON Schema
 of that command's `data`. `figctl schema envelope` prints the wrapper.
 
-**Repeated reads are free.** The document is fetched once per file version and
-cached, so calling `node inspect` twenty times costs one API request. Adding
-`--refresh` or `--no-cache` to every call throws that away. See
+**Reuse cached reads.** The document is cached per file version. Freshness
+validation, large-file fallbacks, optional context data, and uncached renders
+can still need API requests. Reuse `node context --screenshot-scale 1` output
+for a 1x visual comparison. Adding `--refresh` or `--no-cache` to every call
+throws the cache away. See
 [caching.md](caching.md).
 
 **A null token means nothing is bound.** In `node inspect` and `node context`

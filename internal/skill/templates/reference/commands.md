@@ -1086,7 +1086,7 @@ says so in hints.
 Example:
 
 ```
-figctl tokens export KEY > tokens.json
+figctl tokens export KEY --out tokens.json
 ```
 
 ### figctl tokens resolve
