@@ -12,6 +12,8 @@ breaking change.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-27
+
 ### Added
 
 - Compact `node context --preset implement` with a 1x screenshot and explicit
