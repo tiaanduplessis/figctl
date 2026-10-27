@@ -68,6 +68,23 @@ remains on stdout with `data.passed: false`).
 | `nodes[].screenshot.scale` | number | yes |  |
 | `nodes[].screenshot.bytes` | integer | yes |  |
 | `nodes[].screenshot.cached` | boolean | yes |  |
+| `nodes[].screenshot.pixelWidth` | integer |  |  |
+| `nodes[].screenshot.pixelHeight` | integer |  |  |
+| `nodes[].screenshot.bounds` | Rectangle |  |  |
+| `nodes[].screenshot.bounds.x` | number | yes |  |
+| `nodes[].screenshot.bounds.y` | number | yes |  |
+| `nodes[].screenshot.bounds.width` | number | yes |  |
+| `nodes[].screenshot.bounds.height` | number | yes |  |
+| `nodes[].screenshot.renderBounds` | Rectangle |  |  |
+| `nodes[].screenshot.renderBounds.x` | number | yes |  |
+| `nodes[].screenshot.renderBounds.y` | number | yes |  |
+| `nodes[].screenshot.renderBounds.width` | number | yes |  |
+| `nodes[].screenshot.renderBounds.height` | number | yes |  |
+| `nodes[].screenshot.background` | Color |  |  |
+| `nodes[].screenshot.background.r` | number | yes |  |
+| `nodes[].screenshot.background.g` | number | yes |  |
+| `nodes[].screenshot.background.b` | number | yes |  |
+| `nodes[].screenshot.background.a` | number | yes |  |
 | `nodes[].inspect` | Node or null | yes |  |
 | `nodes[].inspect.id` | string | yes |  |
 | `nodes[].inspect.name` | string | yes |  |
@@ -408,6 +425,23 @@ remains on stdout with `data.passed: false`).
 | `assets.icons[].bytes` | integer | yes |  |
 | `assets.icons[].cached` | boolean | yes |  |
 | `assets.icons[].error` | string |  |  |
+| `assets.icons[].pixelWidth` | integer |  |  |
+| `assets.icons[].pixelHeight` | integer |  |  |
+| `assets.icons[].bounds` | Rectangle |  |  |
+| `assets.icons[].bounds.x` | number | yes |  |
+| `assets.icons[].bounds.y` | number | yes |  |
+| `assets.icons[].bounds.width` | number | yes |  |
+| `assets.icons[].bounds.height` | number | yes |  |
+| `assets.icons[].renderBounds` | Rectangle |  |  |
+| `assets.icons[].renderBounds.x` | number | yes |  |
+| `assets.icons[].renderBounds.y` | number | yes |  |
+| `assets.icons[].renderBounds.width` | number | yes |  |
+| `assets.icons[].renderBounds.height` | number | yes |  |
+| `assets.icons[].background` | Color |  |  |
+| `assets.icons[].background.r` | number | yes |  |
+| `assets.icons[].background.g` | number | yes |  |
+| `assets.icons[].background.b` | number | yes |  |
+| `assets.icons[].background.a` | number | yes |  |
 | `assets.imageFills` | array of fillEntry | yes |  |
 | `assets.imageFills[].imageRef` | string | yes |  |
 | `assets.imageFills[].scaleMode` | string |  |  |
@@ -473,6 +507,7 @@ remains on stdout with `data.passed: false`).
 | `failures[].name` | string |  |  |
 | `failures[].error` | string | yes |  |
 | `requests` | integer | yes |  |
+| `sections` | object | yes |  |
 
 ### node.inspect
 
@@ -869,6 +904,27 @@ remains on stdout with `data.passed: false`).
 | `includeAA` | boolean | yes |  |
 | `passed` | boolean | yes |  |
 | `diffPath` | string |  |  |
+| `reference` | diffReference |  |  |
+| `reference.manifest` | string | yes |  |
+| `reference.nodeId` | string | yes |  |
+| `reference.file` | FileInfo |  |  |
+| `reference.file.key` | string | yes |  |
+| `reference.file.name` | string |  |  |
+| `reference.file.version` | string |  |  |
+| `reference.file.lastModified` | string |  |  |
+| `reference.scale` | number | yes |  |
+| `reference.pixelWidth` | integer |  |  |
+| `reference.pixelHeight` | integer |  |  |
+| `reference.bounds` | Rectangle |  |  |
+| `reference.bounds.x` | number | yes |  |
+| `reference.bounds.y` | number | yes |  |
+| `reference.bounds.width` | number | yes |  |
+| `reference.bounds.height` | number | yes |  |
+| `reference.background` | Color |  |  |
+| `reference.background.r` | number | yes |  |
+| `reference.background.g` | number | yes |  |
+| `reference.background.b` | number | yes |  |
+| `reference.background.a` | number | yes |  |
 
 ### render
 
@@ -885,6 +941,23 @@ remains on stdout with `data.passed: false`).
 | `items[].bytes` | integer | yes |  |
 | `items[].cached` | boolean | yes |  |
 | `items[].error` | string |  |  |
+| `items[].pixelWidth` | integer |  |  |
+| `items[].pixelHeight` | integer |  |  |
+| `items[].bounds` | Rectangle |  |  |
+| `items[].bounds.x` | number | yes |  |
+| `items[].bounds.y` | number | yes |  |
+| `items[].bounds.width` | number | yes |  |
+| `items[].bounds.height` | number | yes |  |
+| `items[].renderBounds` | Rectangle |  |  |
+| `items[].renderBounds.x` | number | yes |  |
+| `items[].renderBounds.y` | number | yes |  |
+| `items[].renderBounds.width` | number | yes |  |
+| `items[].renderBounds.height` | number | yes |  |
+| `items[].background` | Color |  |  |
+| `items[].background.r` | number | yes |  |
+| `items[].background.g` | number | yes |  |
+| `items[].background.b` | number | yes |  |
+| `items[].background.a` | number | yes |  |
 | `failures` | array of renderFailure | yes |  |
 | `failures[].nodeId` | string | yes |  |
 | `failures[].name` | string |  |  |
@@ -907,6 +980,23 @@ remains on stdout with `data.passed: false`).
 | `icons[].bytes` | integer | yes |  |
 | `icons[].cached` | boolean | yes |  |
 | `icons[].error` | string |  |  |
+| `icons[].pixelWidth` | integer |  |  |
+| `icons[].pixelHeight` | integer |  |  |
+| `icons[].bounds` | Rectangle |  |  |
+| `icons[].bounds.x` | number | yes |  |
+| `icons[].bounds.y` | number | yes |  |
+| `icons[].bounds.width` | number | yes |  |
+| `icons[].bounds.height` | number | yes |  |
+| `icons[].renderBounds` | Rectangle |  |  |
+| `icons[].renderBounds.x` | number | yes |  |
+| `icons[].renderBounds.y` | number | yes |  |
+| `icons[].renderBounds.width` | number | yes |  |
+| `icons[].renderBounds.height` | number | yes |  |
+| `icons[].background` | Color |  |  |
+| `icons[].background.r` | number | yes |  |
+| `icons[].background.g` | number | yes |  |
+| `icons[].background.b` | number | yes |  |
+| `icons[].background.a` | number | yes |  |
 | `exports` | array of Result | yes |  |
 | `exports[].nodeId` | string | yes |  |
 | `exports[].name` | string | yes |  |
@@ -917,6 +1007,23 @@ remains on stdout with `data.passed: false`).
 | `exports[].bytes` | integer | yes |  |
 | `exports[].cached` | boolean | yes |  |
 | `exports[].error` | string |  |  |
+| `exports[].pixelWidth` | integer |  |  |
+| `exports[].pixelHeight` | integer |  |  |
+| `exports[].bounds` | Rectangle |  |  |
+| `exports[].bounds.x` | number | yes |  |
+| `exports[].bounds.y` | number | yes |  |
+| `exports[].bounds.width` | number | yes |  |
+| `exports[].bounds.height` | number | yes |  |
+| `exports[].renderBounds` | Rectangle |  |  |
+| `exports[].renderBounds.x` | number | yes |  |
+| `exports[].renderBounds.y` | number | yes |  |
+| `exports[].renderBounds.width` | number | yes |  |
+| `exports[].renderBounds.height` | number | yes |  |
+| `exports[].background` | Color |  |  |
+| `exports[].background.r` | number | yes |  |
+| `exports[].background.g` | number | yes |  |
+| `exports[].background.b` | number | yes |  |
+| `exports[].background.a` | number | yes |  |
 | `imageFills` | array of fillEntry | yes |  |
 | `imageFills[].imageRef` | string | yes |  |
 | `imageFills[].scaleMode` | string |  |  |

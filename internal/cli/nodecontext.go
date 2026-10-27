@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -50,6 +51,13 @@ to a variable and have to be hardcoded. Screenshot and asset failures do
 not fail the command: they are listed in data.failures and the exit code
 is 6 (PARTIAL) with the rest of the bundle intact.
 
+Use --preset implement for a compact 1x screenshot and depth-2 model without
+assets or collaboration data. Explicit flags override the preset. Designer
+intent is unchecked when comments are skipped. Every section reports complete,
+skipped, or failed. Comments and dev resources share --extras-timeout
+(default 5s) after screenshots and assets, capped by the remaining --timeout.
+Comments and dev resources are cached for one minute; --refresh bypasses that.
+
 Trim the work with --no-screenshot, --no-assets, --no-comments, --no-css,
 --depth, and --max-nodes. A node-id in the ref URL is used when no --node
 is given.`,
@@ -62,11 +70,16 @@ is given.`,
 
 // contextScreenshotInfo is the rendered PNG of one requested node.
 type contextScreenshotInfo struct {
-	Path   string  `json:"path"`
-	Format string  `json:"format"`
-	Scale  float64 `json:"scale"`
-	Bytes  int64   `json:"bytes"`
-	Cached bool    `json:"cached"`
+	Path         string           `json:"path"`
+	Format       string           `json:"format"`
+	Scale        float64          `json:"scale"`
+	Bytes        int64            `json:"bytes"`
+	Cached       bool             `json:"cached"`
+	PixelWidth   int              `json:"pixelWidth,omitempty"`
+	PixelHeight  int              `json:"pixelHeight,omitempty"`
+	Bounds       *figma.Rectangle `json:"bounds,omitempty"`
+	RenderBounds *figma.Rectangle `json:"renderBounds,omitempty"`
+	Background   *figma.Color     `json:"background,omitempty"`
 }
 
 // contextNode is one requested node: where it lives, its screenshot, and
@@ -79,6 +92,12 @@ type contextNode struct {
 	Path       []string               `json:"path"`
 	Screenshot *contextScreenshotInfo `json:"screenshot,omitempty"`
 	Inspect    *model.Node            `json:"inspect"`
+}
+
+// contextSection distinguishes unavailable context from an empty successful read.
+type contextSection struct {
+	Status string `json:"status"`
+	Reason string `json:"reason,omitempty"`
 }
 
 // contextAssets are the files written for the subtree.
@@ -129,18 +148,19 @@ type contextSummary struct {
 
 // contextData is the data of node context.
 type contextData struct {
-	OutDir       string              `json:"outDir"`
-	Nodes        []contextNode       `json:"nodes"`
-	Tokens       []model.TokenRef    `json:"tokens"`
-	Styles       []model.StyleRef    `json:"styles"`
-	Components   []contextComponent  `json:"components"`
-	Assets       contextAssets       `json:"assets"`
-	Comments     []commentRow        `json:"comments"`
-	DevResources []devResourceRow    `json:"devResources"`
-	Measurements []model.Measurement `json:"measurements"`
-	Summary      contextSummary      `json:"summary"`
-	Failures     []contextFailure    `json:"failures"`
-	Requests     int                 `json:"requests"`
+	OutDir       string                    `json:"outDir"`
+	Nodes        []contextNode             `json:"nodes"`
+	Tokens       []model.TokenRef          `json:"tokens"`
+	Styles       []model.StyleRef          `json:"styles"`
+	Components   []contextComponent        `json:"components"`
+	Assets       contextAssets             `json:"assets"`
+	Comments     []commentRow              `json:"comments"`
+	DevResources []devResourceRow          `json:"devResources"`
+	Measurements []model.Measurement       `json:"measurements"`
+	Summary      contextSummary            `json:"summary"`
+	Failures     []contextFailure          `json:"failures"`
+	Requests     int                       `json:"requests"`
+	Sections     map[string]contextSection `json:"sections"`
 
 	// devResources indexes every dev resource of the file by node id so
 	// component entries can pick up the ones on their main component. It
@@ -166,6 +186,12 @@ func (d contextData) Rows() [][]string {
 		{"comments", strconv.Itoa(d.Summary.Comments)},
 		{"devResources", strconv.Itoa(d.Summary.DevResources)},
 		{"outDir", d.OutDir},
+	}
+	for _, name := range []string{"screenshot", "assets", "comments", "devResources"} {
+		section := d.Sections[name]
+		if section.Status != "complete" {
+			kv = append(kv, [2]string{name + " status", section.Status + ": " + section.Reason})
+		}
 	}
 	for _, n := range d.Nodes {
 		if n.Screenshot != nil {
@@ -283,6 +309,10 @@ func componentLabel(c contextComponent) string {
 
 func (d contextData) writeAssetsMarkdown(b *strings.Builder) {
 	b.WriteString("## Assets\n\n")
+	if section := d.Sections["assets"]; section.Status == "skipped" {
+		b.WriteString("Skipped: " + section.Reason + "\n\n")
+		return
+	}
 	if len(d.Assets.Icons) == 0 && len(d.Assets.ImageFills) == 0 {
 		b.WriteString("None: no icon-like layer and no raster image fill was found under this node.\n\n")
 		return
@@ -357,6 +387,10 @@ func pinLabel(p model.MeasurementPin) string {
 
 func (d contextData) writeCommentsMarkdown(b *strings.Builder) {
 	b.WriteString("## Comments\n\n")
+	if section := d.Sections["comments"]; section.Status != "" && section.Status != "complete" {
+		b.WriteString(section.Status + ": " + section.Reason + "\n\n")
+		return
+	}
 	if len(d.Comments) == 0 {
 		b.WriteString("None pinned on this node or its children.\n\n")
 		return
@@ -380,6 +414,10 @@ func (d contextData) writeCommentsMarkdown(b *strings.Builder) {
 }
 
 func (d contextData) writeDevResourcesMarkdown(b *strings.Builder) {
+	if section := d.Sections["devResources"]; section.Status != "" && section.Status != "complete" {
+		b.WriteString("## Dev resources\n\n" + section.Status + ": " + section.Reason + "\n\n")
+		return
+	}
 	if len(d.DevResources) == 0 {
 		return
 	}
@@ -466,12 +504,16 @@ type contextOptions struct {
 	noScreenshot    bool
 	noAssets        bool
 	noComments      bool
+	preset          string
+	extrasTimeout   time.Duration
 	noCSS           bool
 }
 
 func init() {
 	var opts contextOptions
 	f := nodeContextCmd.Flags()
+	f.StringVar(&opts.preset, "preset", "full", "bundle preset: full, or implement (depth 2, max 120 nodes, 1x screenshot, no assets or comments)")
+	f.DurationVar(&opts.extrasTimeout, "extras-timeout", 5*time.Second, "combined budget for comments and dev resources after assets (within --timeout)")
 	f.StringArrayVar(&opts.nodes, "node", nil, "node id (1:2, 1-2, or a URL with node-id); repeatable")
 	f.IntVar(&opts.depth, "depth", contextDepth, "levels of children to inspect (-1 for all)")
 	f.IntVar(&opts.maxNodes, "max-nodes", inspect.DefaultMaxNodes, "stop inspecting after this many nodes and report truncation")
@@ -482,8 +524,33 @@ func init() {
 	f.BoolVar(&opts.noAssets, "no-assets", false, "skip icon exports and image fill downloads")
 	f.BoolVar(&opts.noComments, "no-comments", false, "skip comments and dev resources")
 	f.BoolVar(&opts.noCSS, "no-css", false, "omit the CSS declaration map from the inspected nodes")
-	nodeContextCmd.RunE = run(func(ctx *Context, _ *cobra.Command, args []string) error {
-		return runNodeContext(ctx, refArg(args), &opts)
+	nodeContextCmd.RunE = run(func(ctx *Context, cmd *cobra.Command, args []string) error {
+		selected := opts
+		switch selected.preset {
+		case "full":
+		case "implement":
+			if !cmd.Flags().Changed("depth") {
+				selected.depth = 2
+			}
+			if !cmd.Flags().Changed("max-nodes") {
+				selected.maxNodes = 120
+			}
+			if !cmd.Flags().Changed("screenshot-scale") {
+				selected.screenshotScale = 1
+			}
+			if !cmd.Flags().Changed("no-assets") {
+				selected.noAssets = true
+			}
+			if !cmd.Flags().Changed("no-comments") {
+				selected.noComments = true
+			}
+		default:
+			return usageErr("invalid --preset value", "Use full or implement.")
+		}
+		if selected.extrasTimeout <= 0 {
+			return usageErr("--extras-timeout must be positive", "Use a positive duration such as 5s; --timeout bounds the complete request chain.")
+		}
+		return runNodeContext(ctx, refArg(args), &selected)
 	})
 	nodeCmd.AddCommand(nodeContextCmd)
 }
@@ -557,6 +624,10 @@ func runNodeContext(ctx *Context, arg string, opts *contextOptions) error {
 		DevResources: []devResourceRow{},
 		Measurements: []model.Measurement{},
 		Failures:     []contextFailure{},
+		Sections: map[string]contextSection{
+			"screenshot": {Status: "complete"}, "assets": {Status: "complete"},
+			"comments": {Status: "complete"}, "devResources": {Status: "complete"},
+		},
 	}
 	inspectOpts := inspect.Options{
 		Depth:        opts.depth,
@@ -626,37 +697,57 @@ func runNodeContext(ctx *Context, arg string, opts *contextOptions) error {
 // attempted work that failed becomes an entry in data.Failures.
 func collectContextExtras(rctx context.Context, session *Session, ctx *Context, key, version, dir string, roots []*figma.Node, opts *contextOptions, data *contextData) ([]string, error) {
 	var hints []string
+	if opts.noScreenshot {
+		data.Sections["screenshot"] = contextSection{Status: "skipped", Reason: "--no-screenshot"}
+	}
+	if opts.noAssets {
+		data.Sections["assets"] = contextSection{Status: "skipped", Reason: "--no-assets or --preset implement"}
+	}
+	if opts.noComments {
+		section := contextSection{Status: "skipped", Reason: "--no-comments or --preset implement; designer intent has not been checked"}
+		data.Sections["comments"], data.Sections["devResources"] = section, section
+	}
 	if !opts.noScreenshot {
 		if err := renderContextScreenshots(rctx, session, key, version, dir, roots, opts, data); err != nil {
 			return nil, err
 		}
+	}
+	if failuresOfKind(data.Failures, failureScreenshot) > 0 {
+		data.Sections["screenshot"] = contextSection{Status: "failed", Reason: "See failures for missing screenshots."}
 	}
 	if !opts.noAssets {
 		if err := exportContextAssets(rctx, session, key, version, dir, roots, opts, data); err != nil {
 			return nil, err
 		}
 	}
+	if failuresOfKind(data.Failures, failureIcon, failureImageFill) > 0 {
+		data.Sections["assets"] = contextSection{Status: "failed", Reason: "See failures for missing assets."}
+	}
 	if opts.noComments {
 		return hints, nil
 	}
+	extrasCtx, cancel := context.WithTimeout(rctx, opts.extrasTimeout)
+	defer cancel()
 	subtree := subtreeIDs(roots)
-	comments, hint, err := contextComments(rctx, session, key, subtree)
+	comments, hint, err := contextComments(extrasCtx, session, key, subtree)
 	if err != nil {
 		return nil, err
 	}
 	if hint != "" {
 		hints = append(hints, hint)
+		data.Sections["comments"] = contextSection{Status: "failed", Reason: hint}
 		ctx.Log.Warnf("%s", hint)
 	}
 	data.Comments = comments
 	data.Summary.Comments = len(comments)
 
-	resources, hint, err := contextDevResources(rctx, session, key)
+	resources, hint, err := contextDevResources(extrasCtx, session, key)
 	if err != nil {
 		return nil, err
 	}
 	if hint != "" {
 		hints = append(hints, hint)
+		data.Sections["devResources"] = contextSection{Status: "failed", Reason: hint}
 		ctx.Log.Warnf("%s", hint)
 	}
 	for _, dr := range resources {
@@ -666,13 +757,14 @@ func collectContextExtras(rctx context.Context, session *Session, ctx *Context, 
 	}
 	data.Summary.DevResources = len(data.DevResources)
 	data.devResources = devResourceIndex(resources)
+	hints = append(hints, "Comments and dev resources are cached for up to one minute independently of the design version; use --refresh for current designer intent.")
 	return hints, nil
 }
 
 func renderContextScreenshots(rctx context.Context, session *Session, key, version, dir string, roots []*figma.Node, opts *contextOptions, data *contextData) error {
 	req := assets.RenderRequest{OutDir: dir, NameBy: assets.NameByName}
 	for _, root := range roots {
-		req.Items = append(req.Items, assets.Item{NodeID: root.ID, Name: root.Name, Format: contextScreenshot, Scale: opts.screenshotScale})
+		req.Items = append(req.Items, assets.Item{NodeID: root.ID, Name: root.Name, Format: contextScreenshot, Scale: opts.screenshotScale, Bounds: root.AbsoluteBoundingBox, RenderBounds: root.AbsoluteRenderBounds, Background: root.BackgroundColor})
 	}
 	out, err := assets.Render(rctx, session.Client, session.Cache, key, version, req)
 	if err != nil {
@@ -697,7 +789,7 @@ func renderContextScreenshots(rctx context.Context, session *Session, key, versi
 			data.Failures = append(data.Failures, contextFailure{Kind: failureScreenshot, ID: res.NodeID, Name: res.Name, Error: res.Error})
 			continue
 		}
-		data.Nodes[i].Screenshot = &contextScreenshotInfo{Path: res.Path, Format: res.Format, Scale: res.Scale, Bytes: res.Bytes, Cached: res.Cached}
+		data.Nodes[i].Screenshot = &contextScreenshotInfo{Path: res.Path, Format: res.Format, Scale: res.Scale, Bytes: res.Bytes, Cached: res.Cached, PixelWidth: res.PixelWidth, PixelHeight: res.PixelHeight, Bounds: res.Bounds, RenderBounds: res.RenderBounds, Background: res.Background}
 	}
 	return nil
 }
@@ -769,7 +861,7 @@ func failuresOfKind(failures []contextFailure, kinds ...string) int {
 // contextComments returns the comments pinned on the subtree and their
 // replies. A missing comments scope degrades to a hint.
 func contextComments(rctx context.Context, session *Session, key string, subtree map[string]bool) ([]commentRow, string, error) {
-	resp, err := session.Client.GetComments(rctx, key, false)
+	resp, err := session.comments(rctx, key, false)
 	if err != nil {
 		if hint, soft := softFailure(err, "Comments were not read"); soft {
 			return []commentRow{}, hint, nil
@@ -795,7 +887,7 @@ func contextComments(rctx context.Context, session *Session, key string, subtree
 // contextDevResources reads every dev resource of the file in one request
 // so both the subtree and the main components can be matched locally.
 func contextDevResources(rctx context.Context, session *Session, key string) ([]devResourceRow, string, error) {
-	resp, err := session.Client.GetDevResources(rctx, key, nil)
+	resp, err := session.devResources(rctx, key)
 	if err != nil {
 		if hint, soft := softFailure(err, "Dev resources were not read"); soft {
 			return nil, hint, nil

@@ -8,6 +8,8 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"image"
+	"image/png"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -574,8 +576,12 @@ func (s *Server) serveBlob(w http.ResponseWriter, r *http.Request) {
 		content = []byte("%PDF-1.4\n% figmatest\n")
 	default:
 		ctype = "image/png"
-		content = []byte{0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n'}
-		content = append(content, []byte(name)...)
+		var buf bytes.Buffer
+		if err := png.Encode(&buf, image.NewNRGBA(image.Rect(0, 0, 24, 24))); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		content = buf.Bytes()
 	}
 	w.Header().Set("Content-Type", ctype)
 	w.WriteHeader(http.StatusOK)

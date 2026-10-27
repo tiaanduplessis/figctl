@@ -189,11 +189,21 @@ figctl cache clear --yes
 
 ### figctl cache status
 
-Show cache size and entries per profile and file.
+Show a compact cache summary per profile and file.
 
 ```
-figctl cache status
+figctl cache status [flags]
 ```
+
+Show file summaries without dumping individual cache entries. Use --details
+to page through entries, and --file and --profile to narrow the inventory.
+--limit and --cursor page files by default, or entries with --details.
+Bytes and entryCount describe the full matching inventory, not just the page.
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--details` |  | include individual entries (paged with --limit and --cursor) |
+| `--file string` |  | only this file key or Figma URL |
 
 Example:
 
@@ -229,16 +239,26 @@ figctl comments add KEY "Implemented in src/Login.tsx" --node 1:2 --yes
 
 ### figctl comments list
 
-List comments, optionally only those pinned on a node.
+List a bounded page of comments or one discussion thread.
 
 ```
 figctl comments list <ref> [flags]
 ```
 
+Filter by node, thread id (a parent or reply), resolution state, and creation
+date. Replies inherit the parent thread's resolution state. --since filters
+individual comments by creation time. --limit defaults to 200; --cursor
+continues the same query. Figma still returns the full upstream comment file,
+cached for one minute independently of the design version. Use --refresh
+for fresh collaboration data.
+
 | Flag | Default | Description |
 | --- | --- | --- |
 | `--md` |  | return messages as markdown (as_md) |
 | `--node string` |  | only comments pinned on this node id |
+| `--resolved string` | `any` | thread resolution state: any, true, or false |
+| `--since string` |  | comments created on or after this RFC3339 timestamp or YYYY-MM-DD date |
+| `--thread string` |  | only this discussion, identified by a parent or reply comment id |
 
 Example:
 
@@ -392,10 +412,15 @@ figctl devresources update KEY --id abc123 --url https://storybook.example.com/?
 Compare local PNG screenshots and optionally write a visual diff.
 
 ```
-figctl diff <expected.png> <actual.png> [flags]
+figctl diff [expected.png] <actual.png> [flags]
 ```
 
 Compare two local PNGs without credentials or network requests.
+Use --manifest render.json (or a node context JSON envelope) to select the
+expected PNG without guessing its filename. Pass --node for a multi-node
+manifest; only the actual PNG argument is needed in this mode. Comparison
+results retain the reference file version, node, and capture geometry.
+
 Images must have equal pixel dimensions; no resizing or cropping is applied.
 Each input is limited to 16 million pixels. Match viewport, crop, fonts, content,
 and capture scale. Render defaults to 2x; use --scale 1 for a 1x screenshot.
@@ -416,7 +441,9 @@ are faded. Without --out, only the comparison result is produced.
 | Flag | Default | Description |
 | --- | --- | --- |
 | `--include-aa` |  | count detected anti-aliasing differences |
+| `--manifest string` |  | JSON envelope from render or node context supplying the expected PNG |
 | `--max-diff-ratio float64` |  | allowed mismatch fraction between 0 and 1 (0.01 = 1%) |
+| `--node string` |  | node id to select from --manifest |
 | `--out string` |  | destination PNG path (optional) |
 | `--threshold float64` | `0.1` | per-pixel color tolerance between 0 and 1 |
 
@@ -647,6 +674,13 @@ to a variable and have to be hardcoded. Screenshot and asset failures do
 not fail the command: they are listed in data.failures and the exit code
 is 6 (PARTIAL) with the rest of the bundle intact.
 
+Use --preset implement for a compact 1x screenshot and depth-2 model without
+assets or collaboration data. Explicit flags override the preset. Designer
+intent is unchecked when comments are skipped. Every section reports complete,
+skipped, or failed. Comments and dev resources share --extras-timeout
+(default 5s) after screenshots and assets, capped by the remaining --timeout.
+Comments and dev resources are cached for one minute; --refresh bypasses that.
+
 Trim the work with --no-screenshot, --no-assets, --no-comments, --no-css,
 --depth, and --max-nodes. A node-id in the ref URL is used when no --node
 is given.
@@ -654,6 +688,7 @@ is given.
 | Flag | Default | Description |
 | --- | --- | --- |
 | `--depth int` | `4` | levels of children to inspect (-1 for all) |
+| `--extras-timeout duration` | `5s` | combined budget for comments and dev resources after assets (within --timeout) |
 | `--icon-pattern stringArray` |  | name glob that marks an icon (default icon/*, Icon*, icons/*); repeatable |
 | `--max-nodes int` | `500` | stop inspecting after this many nodes and report truncation |
 | `--no-assets` |  | skip icon exports and image fill downloads |
@@ -662,6 +697,7 @@ is given.
 | `--no-screenshot` |  | skip the PNG render |
 | `--node stringArray` |  | node id (1:2, 1-2, or a URL with node-id); repeatable |
 | `--out string` |  | directory for the screenshot and assets (default ./.figctl/<fileKey>/context) |
+| `--preset string` | `full` | bundle preset: full, or implement (depth 2, max 120 nodes, 1x screenshot, no assets or comments) |
 | `--screenshot-scale float64` | `2` | screenshot render scale between 0.01 and 4 |
 
 Example:
@@ -1236,4 +1272,3 @@ Example:
 ```
 figctl versions list KEY
 ```
-

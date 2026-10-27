@@ -237,6 +237,9 @@ func init() {
 		}
 		rctx, cancel := session.Context()
 		defer cancel()
+		if err := session.Cache.Invalidate(r.FileKey, "dev_resources"); err != nil {
+			return err
+		}
 		resp, err := session.Client.PostDevResources(rctx, resources)
 		if err != nil {
 			return err
@@ -296,6 +299,9 @@ func init() {
 		}
 		rctx, cancel := session.Context()
 		defer cancel()
+		if err := session.Cache.Invalidate(r.FileKey, "dev_resources"); err != nil {
+			return err
+		}
 		resp, err := session.Client.PutDevResources(rctx, updates)
 		if err != nil {
 			return err
@@ -330,6 +336,9 @@ func init() {
 		}
 		rctx, cancel := session.Context()
 		defer cancel()
+		if err := session.Cache.Invalidate(r.FileKey, "dev_resources"); err != nil {
+			return err
+		}
 		data := devResourceWriteData{FileKey: r.FileKey}
 		for _, id := range rmIDs {
 			if err := session.Client.DeleteDevResource(rctx, r.FileKey, id); err != nil {

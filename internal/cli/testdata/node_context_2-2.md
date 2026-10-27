@@ -413,6 +413,7 @@ Distances the designer pinned in Dev Mode. Prefer these over a gap read off the 
 
 
 Hints:
+- Comments and dev resources are cached for up to one minute independently of the design version; use --refresh for current designer intent.
 - Read the screenshot with your image or vision tool before writing code: <OUT>/login@2x.png
 - Every value with "token": null is not bound to a variable: hardcode it, or ask the designer for a token. Values with a token name should use that design token in code.
 - Assets were written to <OUT>: inline or import the SVG icons and reference the image fills by path.

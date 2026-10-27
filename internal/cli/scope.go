@@ -59,7 +59,7 @@ func (s *Session) loadScope(ctx context.Context, key, nodeID, page string, depth
 			components:    entry.Components,
 			componentSets: entry.ComponentSets,
 			partial:       true,
-			hint:          "File " + key + " is above --max-file-mb, so only the subtree of " + nodeID + " was fetched.",
+			hint:          s.wholeFileFallbackHint(key) + " Only the subtree of " + nodeID + " was fetched.",
 		}
 		if page != "" {
 			sc.hint += " --page was not checked."
@@ -75,8 +75,15 @@ func (s *Session) loadScope(ctx context.Context, key, nodeID, page string, depth
 		return nil, err
 	}
 	sc.partial = true
-	sc.hint = "File " + key + " is above --max-file-mb; only pages and their top level nodes are available. Use --node <id> to work on one subtree."
+	sc.hint = s.wholeFileFallbackHint(key) + " Only pages and their top level nodes are available. Use --node <id> to work on one subtree."
 	return sc, nil
+}
+
+func (s *Session) wholeFileFallbackHint(key string) string {
+	if s.state(key).networkFallback {
+		return "The whole-file fetch of " + key + " recently failed; targeted requests are being used. Use --refresh to retry the whole document."
+	}
+	return "File " + key + " is above --max-file-mb."
 }
 
 func scopeFromDocument(doc *figma.Node, components map[string]figma.Component, sets map[string]figma.ComponentSet, key, nodeID, page string) (*docScope, error) {

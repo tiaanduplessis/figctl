@@ -36,6 +36,22 @@ Paste URLs as given: `node-id=1-2` becomes the default `--node 1:2` automaticall
 `--node` also accepts `1:2`, `1-2`, or a URL. An unknown configured name lists
 valid names in the error.
 
+## Choose the smallest read
+
+| Need | Command |
+| --- | --- |
+| Locate a frame | `file find <ref> --name "Login*" -o md` |
+| Read layout without files | `node inspect <ref> --node <id> --depth 2 -o md` |
+| Build from an agreed frame without new assets | `node context <ref> --node <id> --preset implement -o md` |
+| Include assets and designer discussion | `node context <ref> --node <id> --preset full -o md` |
+| Read one discussion from a ticket | `comments list <ref> --thread <comment-id> -o md` |
+| Check local cache availability | `cache status -o table` |
+| Compare screenshots | `diff --manifest render.json implementation.png --out diff.png --json` |
+
+Keep shell calls simple. Batch supported node ids with repeated `--node` rather
+than shell loops. If a permission checker rejects a compound command, split it
+into separate calls in the current checkout; do not bypass the checker.
+
 ## Implement a design
 
 1. Orient with a shallow outline or search to find the relevant frame.
@@ -43,12 +59,18 @@ valid names in the error.
    figctl file tree "<url>" -o md
    figctl file find "<url>" --name "Login*"
    ```
-2. Get layout, styles, tokens, screenshot, assets, components, measurements,
-   comments, and dev links in one call. Match the planned capture scale (1x here).
+2. Get a compact layout, styles, tokens, components, measurements, and 1x
+   screenshot from the agreed frame. Use the full preset when assets or
+   designer discussion are needed.
    ```sh
-   figctl node context "<url>" --node 2:2 --screenshot-scale 1 -o md
+   figctl node context "<url>" --node 2:2 --preset implement -o md
    ```
    Read the PNG at the reported absolute path with an image tool before coding.
+   Check `sections`: skipped or failed is different from an empty successful
+   read. The implementation preset skips assets and comments; designer intent
+   remains unchecked. Use `--preset full --screenshot-scale 1` to include them.
+   Full context caps collaboration reads at `--extras-timeout` (default 5s),
+   within the remaining `--timeout`; `--refresh` bypasses their one-minute cache.
    Use `--depth`, `--max-nodes`, `--no-assets`, `--no-comments`, `--no-screenshot`,
    or `--no-css` to reduce work when those results are unnecessary.
 3. Implement using existing codebase conventions and the reported tokens.
@@ -85,7 +107,11 @@ Success responses wrap the payload in `data`:
 ```
 
 Read `hints`: they explain degradation, truncation, and useful next steps.
-`--fields a,b` selects top-level keys of `data`. `--limit` and `--cursor` page
+`--fields a,b` selects top-level keys of `data`; it does not trim nested arrays.
+`file find` and `comments list` return `data` as an array, not an object with
+`matches` or `comments`. Comment `user` is a string. Context layout is under
+`data.nodes[].inspect.layout`. Read the schema before writing a parser.
+ `--limit` and `--cursor` page
 lists; continue when `nextCursor` is non-null.
 
 `tokens export` also prints an envelope. Use `--out tokens.json` for a DTCG file;
@@ -130,7 +156,11 @@ requests. Inspect `hints` rather than assuming every repeated call is free.
 - Batch node ids with repeated `--node` where supported instead of calling once
   per node. `--depth` controls inspection detail.
 - Avoid `--refresh` and `--no-cache` unless fresh data is needed.
-- `figctl cache status` shows cached data. Local `diff` spends no API requests.
+- `figctl cache status` returns file summaries. Individual entries need
+  `--details --file KEY`; `--limit` and `--cursor` bound those entries.
+- After a whole-file network failure, targeted reads are preferred for two
+  minutes for that file/version. Use `--refresh` to retry whole-file retrieval.
+- Local `diff` spends no API requests.
 
 ## Tokens and measurements
 

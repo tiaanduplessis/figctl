@@ -34,11 +34,12 @@ type Session struct {
 }
 
 type fileState struct {
-	stamp    cache.Stamp
-	stamped  bool
-	full     *figma.GetFileResponse
-	raw      json.RawMessage
-	tooLarge bool
+	stamp           cache.Stamp
+	stamped         bool
+	full            *figma.GetFileResponse
+	raw             json.RawMessage
+	tooLarge        bool
+	networkFallback bool
 }
 
 // Session resolves the active profile, builds the client and cache, and
@@ -277,6 +278,49 @@ func cached[T any](ctx context.Context, s *Session, key, entryKey string, fetch 
 	return out, nil
 }
 
+// freshResponse caches mutable collaboration data for one minute. It deliberately
+// does not use the document stamp: a comment can change without a file edit.
+func freshResponse[T any](ctx context.Context, s *Session, key, entryKey string, fetch func(context.Context) (*T, error)) (*T, error) {
+	raw, hit, err := s.Cache.GetFresh(key, entryKey, time.Minute)
+	if err != nil {
+		return nil, err
+	}
+	if hit {
+		var out T
+		if json.Unmarshal(raw, &out) == nil {
+			return &out, nil
+		}
+	}
+	out, err := fetch(ctx)
+	if err != nil {
+		return nil, err
+	}
+	raw, err = json.Marshal(out)
+	if err != nil {
+		return nil, figctl.Wrap(figctl.CodeInternal, err, "encoding collaboration response: "+err.Error())
+	}
+	if err := s.Cache.Put(key, entryKey, cache.Stamp{}, raw); err != nil {
+		s.ctx.Log.Warnf("cache write failed: %v", err)
+	}
+	return out, nil
+}
+
+func (s *Session) comments(ctx context.Context, key string, markdown bool) (*figma.GetCommentsResponse, error) {
+	query := url.Values{"as_md": {"false"}}
+	if markdown {
+		query.Set("as_md", "true")
+	}
+	return freshResponse(ctx, s, key, cache.Key("comments", query), func(ctx context.Context) (*figma.GetCommentsResponse, error) {
+		return s.Client.GetComments(ctx, key, markdown)
+	})
+}
+
+func (s *Session) devResources(ctx context.Context, key string) (*figma.GetDevResourcesResponse, error) {
+	return freshResponse(ctx, s, key, "dev_resources", func(ctx context.Context) (*figma.GetDevResourcesResponse, error) {
+		return s.Client.GetDevResources(ctx, key, nil)
+	})
+}
+
 // File returns the whole document of a file, fetched once per version and
 // cached. It returns errTooLarge when the document exceeds --max-file-mb
 // and the caller must fall back to narrower requests.
@@ -317,7 +361,15 @@ func (s *Session) FileRaw(ctx context.Context, key string) (json.RawMessage, err
 		if err != nil {
 			return nil, err
 		}
-		if state.TooLarge {
+		deferred, err := s.Cache.WholeFileDeferred(key, stamp)
+		if err != nil {
+			return nil, err
+		}
+		if deferred {
+			st.networkFallback = true
+			s.ctx.Log.Warnf("a recent whole-file failure for %s is using targeted requests for up to two minutes; --refresh retries the whole document", key)
+		}
+		if state.TooLarge || deferred {
 			st.tooLarge = true
 			return nil, errTooLarge
 		}
@@ -352,7 +404,11 @@ func (s *Session) FileRaw(ctx context.Context, key string) (json.RawMessage, err
 				st.tooLarge = true
 				return nil, errTooLarge
 			case figctl.From(err).Code == figctl.CodeNetwork:
-				// Transient, so this is not recorded against the file.
+				// Remember transient failures briefly; a new stamp or --refresh retries.
+				st.networkFallback = true
+				if cerr := s.Cache.DeferWholeFile(key, stamp, 2*time.Minute); cerr != nil {
+					s.ctx.Log.Warnf("cache write failed: %v", cerr)
+				}
 				s.ctx.Log.Warnf("fetching the whole document of %s failed (%v); using targeted requests instead", key, figctl.From(err).Message)
 				st.tooLarge = true
 				return nil, errTooLarge
@@ -373,6 +429,11 @@ func (s *Session) FileRaw(ctx context.Context, key string) (json.RawMessage, err
 	var head fileHead
 	if err := json.Unmarshal(raw, &head); err != nil {
 		return nil, figctl.Wrap(figctl.CodeInternal, err, "decoding file document: "+err.Error())
+	}
+	if !hit {
+		if err := s.Cache.ClearWholeFileDeferral(key); err != nil {
+			s.ctx.Log.Warnf("cache write failed: %v", err)
+		}
 	}
 	st.raw = raw
 	s.touch(key, head.Name, head.Version, head.LastModified)
