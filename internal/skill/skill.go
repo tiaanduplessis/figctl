@@ -32,7 +32,7 @@ const (
 
 // Description is the one line trigger sentence shared by the SKILL.md
 // front matter and the Cursor rule front matter.
-const Description = "Read Figma designs from the shell with figctl - outline a file, get one node's layout, styles and design tokens, render screenshots, export icons, and export the design system. Use when a task mentions Figma, a figma.com URL, a design file, design tokens, or implementing a screen from a design."
+const Description = "Use figctl to inspect Figma designs, implement screens from Figma URLs, export assets and design tokens, or compare local PNG screenshots with a visual diff. Use for Figma design-to-code tasks and figctl commands; local image comparisons need no Figma account."
 
 // File is one document of the skill.
 type File struct {

@@ -1739,7 +1739,7 @@ says so in hints.
 Examples:
 
 ```sh
-figctl tokens export KEY > tokens.json
+figctl tokens export KEY --out tokens.json
 figctl tokens export KEY --format css --out ./src/styles
 figctl tokens export KEY --mode Dark --format css
 figctl tokens export KEY --mode-strategy separate --out ./tokens

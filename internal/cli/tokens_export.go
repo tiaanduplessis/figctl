@@ -129,7 +129,7 @@ modes named by --mode (which also switches the strategy on its own).
 Without variables access (any plan below Enterprise, or a token without
 the file_variables:read scope) the command still exports the styles and
 says so in hints.`,
-	Example: `  figctl tokens export KEY > tokens.json
+	Example: `  figctl tokens export KEY --out tokens.json
   figctl tokens export KEY --format css --out ./src/styles
   figctl tokens export KEY --mode Dark --format css
   figctl tokens export KEY --mode-strategy separate --out ./tokens
