@@ -10,7 +10,7 @@ it is used automatically.
 figctl file tree "<url>" --depth 2 -o md
 
 # 2. Everything needed to build it, in one call.
-figctl node context "<url>" --screenshot-scale 1 -o md --out ./design/login
+figctl node context "<url>" --preset full --screenshot-scale 1 -o md --out ./design/login
 ```
 
 `node context` writes a PNG of the node and the SVG icons under it, and prints
@@ -18,9 +18,9 @@ their absolute paths. Read the PNG with a vision tool before writing code.
 
 What to take from the output:
 
-- `nodes[].layout` for flex direction, gap, padding, sizing (`fixed`, `hug`,
+- `nodes[].inspect.layout` for flex direction, gap, padding, sizing (`fixed`, `hug`,
   `fill`), and alignment, already expressed in CSS terms.
-- `nodes[].visual` and `nodes[].text` for colors, radius, shadows, and type.
+- `nodes[].inspect.visual` and `nodes[].inspect.text` for colors, radius, shadows, and type.
 - `tokens` for the design system names. A value whose `token` is null is not
   tokenized; hardcode it and mention that in the summary.
 - `components` for the variant properties of every instance, so the props of
@@ -36,11 +36,68 @@ figctl diff design.png implementation.png --out diff.png --max-diff-ratio 0.01 -
 Match viewport, crop, and device scale before comparing. Read the diff image
 and handle exit 7 as described in [visual comparison](#compare-an-implementation-with-a-design).
 
+For an agreed frame that needs no new assets or discussion, use
+`--preset implement`: depth 2, at most 120 nodes, a 1x screenshot, and skipped
+assets/comments/dev resources. Explicit flags override these defaults, such as
+`--preset implement --no-comments=false`. `sections` reports complete, skipped,
+or failed; skipped discussion does not establish designer approval. Full
+context bounds comments/dev resources with `--extras-timeout` (default 5s)
+and reuses collaboration responses for one minute. Use `--refresh` for current
+intent, even when the design version has not changed.
+
 If the screen is large, cut the output instead of skipping the command:
 
 ```sh
 figctl node context "<url>" --depth 2 --no-assets --max-nodes 120 -o md
 ```
+
+## Read structured results without guessing
+
+Read `figctl schema file.find -o md` or `figctl schema comments.list -o md`
+before parsing unfamiliar output. These commands return arrays directly in
+`data`. Context wraps its normalized model in `nodes[].inspect`.
+
+```sh
+figctl file find "<url>" --name "Login*" --json > frames.json
+jq -r '.data[] | [.id, .name, .path] | @tsv' frames.json
+figctl comments list "<url>" --thread 9001 --limit 20 --json > discussion.json
+jq -r '.data[] | [.id, .user, .createdAt, .message] | @tsv' discussion.json
+```
+
+`user` is already the person's display name. Keep stderr separate from JSON;
+never pipe `2>&1` into `jq`. Pass the same filters with `--cursor` when
+`nextCursor` is present. `--thread` accepts either a parent or reply id;
+`--resolved true|false` selects the thread state, and `--since 2026-09-01`
+selects individual comments created on or after that UTC date. Upstream Figma
+still sends the comment file; local filtering and pagination bound agent output.
+
+Under `set -e`, keep usable partial context results and inspect their failures:
+
+```sh
+status=0
+figctl node context "<url>" --screenshot-scale 1 --json > context.json || status=$?
+case "$status" in
+  0|6) cat context.json ;;
+  *) exit "$status" ;;
+esac
+```
+
+Run separate simple shell calls if the host cannot verify compound commands.
+Use repeated `--node` for supported batches rather than a loop.
+
+## Inspect cache availability
+
+```sh
+figctl cache status -o table
+figctl cache status --profile acme --file KEY --details --limit 20
+```
+
+Default JSON contains file summaries, empty `entries` arrays, and the full
+`entryCount`. `--details` pages entries; otherwise `--limit` pages files.
+`--profile` and `--file` filter the inventory without contacting Figma.
+`--fields profiles` does not trim nested arrays. A recent whole-file network
+failure selects targeted requests for two minutes at the same file stamp;
+expiry, a changed stamp, or `--refresh` retries the whole document.
 
 ## Extract the design system
 
@@ -98,14 +155,25 @@ Notes:
 ## Compare an implementation with a design
 
 ```sh
-figctl render "<url>" --scale 1 --out ./design
-figctl diff design.png implementation.png --out diff.png \
+figctl render "<url>" --scale 1 --out ./design --json > render.json
+figctl diff --manifest render.json implementation.png --out diff.png \
   --threshold 0.1 --max-diff-ratio 0.01 --json
 ```
 
 Reuse the screenshot from `node context --screenshot-scale 1` if already
 available; render separately only when another capture is needed. Replace
 `design.png` with that screenshot path or the PNG path from the render manifest.
+`--manifest` accepts the JSON envelope from either `render` or `node context`,
+selects the exact successful PNG path, and retains reference provenance in the
+diff result. For several captures, pass `--node <id>`. A manifest with no
+successful PNG or an ambiguous selection is an input error.
+
+The capture reports actual `pixelWidth`/`pixelHeight` for PNG/JPG alongside
+Figma `bounds`, `renderBounds`, and the authored `background` color when
+available. Bounds are design coordinates, not a promise about raster crop.
+The authored background is not an inferred/composited pixel background. Use
+actual pixel dimensions for the browser capture; never resize to hide a mismatch.
+
 Capture `implementation.png` with
 browser tools at the same viewport, crop, and device scale. Wait for fonts and
 images to load; keep content and animation state consistent. `render` defaults

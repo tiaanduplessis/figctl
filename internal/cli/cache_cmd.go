@@ -24,6 +24,7 @@ type cacheFileView struct {
 	Key           string           `json:"key"`
 	Bytes         int64            `json:"bytes"`
 	Entries       []cacheEntryView `json:"entries"`
+	EntryCount    int              `json:"entryCount"`
 	Blobs         int              `json:"blobs"`
 	Version       string           `json:"version,omitempty"`
 	LastTouchedAt string           `json:"lastTouchedAt,omitempty"`
@@ -42,6 +43,7 @@ type cacheStatusView struct {
 	Bytes    int64              `json:"bytes"`
 	Size     string             `json:"size"`
 	Profiles []cacheProfileView `json:"profiles"`
+	Details  bool               `json:"details"`
 }
 
 func (v cacheStatusView) Columns() []string {
@@ -55,7 +57,7 @@ func (v cacheStatusView) Rows() [][]string {
 			rows = append(rows, []string{p.Name, "", "0", "0", cache.FormatBytes(p.Bytes), "", ""})
 		}
 		for _, f := range p.Files {
-			rows = append(rows, []string{p.Name, f.Key, strconv.Itoa(len(f.Entries)), strconv.Itoa(f.Blobs), cache.FormatBytes(f.Bytes), f.Version, f.CheckedAge})
+			rows = append(rows, []string{p.Name, f.Key, strconv.Itoa(f.EntryCount), strconv.Itoa(f.Blobs), cache.FormatBytes(f.Bytes), f.Version, f.CheckedAge})
 		}
 	}
 	return rows
@@ -105,9 +107,13 @@ var cacheCmd = &cobra.Command{
 }
 
 var cacheStatusCmd = &cobra.Command{
-	Use:     "status",
-	Short:   "Show cache size and entries per profile and file",
-	Example: "  figctl cache status\n  figctl cache status --json",
+	Use:   "status",
+	Short: "Show a compact cache summary per profile and file",
+	Long: `Show file summaries without dumping individual cache entries. Use --details
+to page through entries, and --file and --profile to narrow the inventory.
+--limit and --cursor page files by default, or entries with --details.
+Bytes and entryCount describe the full matching inventory, not just the page.`,
+	Example: "  figctl cache status\n  figctl cache status --details --file KEY --limit 20",
 	Args:    cobra.NoArgs,
 }
 
@@ -123,6 +129,10 @@ confirmation on a terminal and --yes otherwise.`,
 }
 
 func init() {
+	var details bool
+	var statusFile string
+	cacheStatusCmd.Flags().BoolVar(&details, "details", false, "include individual entries (paged with --limit and --cursor)")
+	cacheStatusCmd.Flags().StringVar(&statusFile, "file", "", "only this file key or Figma URL")
 	cacheStatusCmd.RunE = run(func(ctx *Context, _ *cobra.Command, _ []string) error {
 		root, err := cache.Dir()
 		if err != nil {
@@ -132,25 +142,71 @@ func init() {
 		if err != nil {
 			return err
 		}
-		now := time.Now()
-		view := cacheStatusView{Root: root, Bytes: status.Bytes, Size: cache.FormatBytes(status.Bytes), Profiles: []cacheProfileView{}}
+		fileKey := ""
+		if statusFile != "" {
+			r, err := ref.Parse(statusFile)
+			if err != nil {
+				return err
+			}
+			fileKey = r.FileKey
+		}
+		type record struct {
+			profile string
+			file    cache.FileStatus
+			entry   *cache.EntryInfo
+		}
+		var records []record
+		var total int64
+		profileBytes := map[string]int64{}
 		for _, p := range status.Profiles {
-			pv := cacheProfileView{Name: p.Name, Bytes: p.Bytes, Files: []cacheFileView{}}
+			if ctx.Flags.Profile != "" && p.Name != ctx.Flags.Profile {
+				continue
+			}
 			for _, f := range p.Files {
-				fv := cacheFileView{Key: f.Key, Bytes: f.Bytes, Entries: []cacheEntryView{}, Blobs: f.Blobs, Version: f.Version, LastTouchedAt: f.LastTouchedAt, TooLarge: f.TooLarge}
+				if fileKey != "" && f.Key != fileKey {
+					continue
+				}
+				total += f.Bytes
+				profileBytes[p.Name] += f.Bytes
+				if details && len(f.Entries) > 0 {
+					for _, e := range f.Entries {
+						records = append(records, record{p.Name, f, &e})
+					}
+				} else {
+					records = append(records, record{p.Name, f, nil})
+				}
+			}
+		}
+		page, next, err := paginate(records, ctx.Flags.Limit, ctx.Flags.Cursor)
+		if err != nil {
+			return err
+		}
+		now := time.Now()
+		view := cacheStatusView{Root: root, Bytes: total, Size: cache.FormatBytes(total), Details: details, Profiles: []cacheProfileView{}}
+		for _, row := range page {
+			if len(view.Profiles) == 0 || view.Profiles[len(view.Profiles)-1].Name != row.profile {
+				view.Profiles = append(view.Profiles, cacheProfileView{Name: row.profile, Bytes: profileBytes[row.profile], Files: []cacheFileView{}})
+			}
+			pv := &view.Profiles[len(view.Profiles)-1]
+			f := row.file
+			if len(pv.Files) == 0 || pv.Files[len(pv.Files)-1].Key != f.Key {
+				fv := cacheFileView{Key: f.Key, Bytes: f.Bytes, Entries: []cacheEntryView{}, EntryCount: len(f.Entries), Blobs: f.Blobs, Version: f.Version, LastTouchedAt: f.LastTouchedAt, TooLarge: f.TooLarge}
 				if f.CheckedAt != nil {
 					fv.CheckedAge = age(*f.CheckedAt, now)
 				}
-				for _, e := range f.Entries {
-					fv.Entries = append(fv.Entries, cacheEntryView{Key: e.Key, Bytes: e.Bytes, Age: age(e.FetchedAt, now), Version: e.Version})
-				}
 				pv.Files = append(pv.Files, fv)
 			}
-			view.Profiles = append(view.Profiles, pv)
+			if e := row.entry; e != nil {
+				fv := &pv.Files[len(pv.Files)-1]
+				fv.Entries = append(fv.Entries, cacheEntryView{Key: e.Key, Bytes: e.Bytes, Age: age(e.FetchedAt, now), Version: e.Version})
+			}
 		}
 		env := ctx.Envelope(view)
-		if len(view.Profiles) == 0 {
-			env.AddHint("The cache is empty; it fills as you run file commands.")
+		env.NextCursor, env.Truncated = next, next != nil
+		if total == 0 {
+			env.AddHint("No cached files match these filters.")
+		} else if !details {
+			env.AddHint("Summary only: entryCount includes all entries; use --details --file KEY to read a bounded page of entries.")
 		}
 		return ctx.Printer.Print(env)
 	})

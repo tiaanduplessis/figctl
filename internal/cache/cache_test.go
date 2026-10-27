@@ -259,3 +259,52 @@ func TestScanAndClear(t *testing.T) {
 		t.Fatal("FormatBytes")
 	}
 }
+
+// Mutable discussion data must expire even when the design version stays fixed.
+func TestFreshResponsesExpireAndRespectOverrides(t *testing.T) {
+	c, ck := open(t, t.TempDir(), nil)
+	if err := c.Put("FILE", "comments", Stamp{}, []byte(`{"comments":[]}`)); err != nil {
+		t.Fatal(err)
+	}
+	if _, hit, err := c.GetFresh("FILE", "comments", time.Minute); err != nil || !hit {
+		t.Fatalf("fresh response: %v %v", hit, err)
+	}
+	c.refresh = true
+	if _, hit, _ := c.GetFresh("FILE", "comments", time.Minute); hit {
+		t.Fatal("refresh served stale collaboration data")
+	}
+	c.refresh = false
+	ck.now = ck.now.Add(time.Minute)
+	if _, hit, _ := c.GetFresh("FILE", "comments", time.Minute); hit {
+		t.Fatal("discussion did not expire")
+	}
+}
+
+// A failed speculative optimisation must not permanently disable whole-file reads.
+func TestWholeFileDeferralExpiresAndIsScoped(t *testing.T) {
+	c, ck := open(t, t.TempDir(), nil)
+	stamp := Stamp{Version: "1"}
+	if err := c.DeferWholeFile("FILE", stamp, 2*time.Minute); err != nil {
+		t.Fatal(err)
+	}
+	if hit, err := c.WholeFileDeferred("FILE", stamp); err != nil || !hit {
+		t.Fatalf("missing deferral: %v %v", hit, err)
+	}
+	for _, tc := range []struct {
+		file  string
+		stamp Stamp
+	}{{"OTHER", stamp}, {"FILE", Stamp{Version: "2"}}} {
+		if hit, _ := c.WholeFileDeferred(tc.file, tc.stamp); hit {
+			t.Fatal("deferral leaked to another file or version")
+		}
+	}
+	c.refresh = true
+	if hit, _ := c.WholeFileDeferred("FILE", stamp); hit {
+		t.Fatal("refresh did not retry the full document")
+	}
+	c.refresh = false
+	ck.now = ck.now.Add(2 * time.Minute)
+	if hit, _ := c.WholeFileDeferred("FILE", stamp); hit {
+		t.Fatal("deferral did not expire")
+	}
+}

@@ -418,7 +418,7 @@ func TestCacheCommands(t *testing.T) {
 		t.Fatalf("empty status: %v", d)
 	}
 	ok(t, execute(t, "", "file", "info", figmatest.FileKey))
-	r = execute(t, "", "cache", "status")
+	r = execute(t, "", "cache", "status", "--details")
 	ok(t, r)
 	d = data(t, r, "cache.status")
 	profiles := d["profiles"].([]any)

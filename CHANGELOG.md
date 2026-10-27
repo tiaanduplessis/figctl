@@ -12,6 +12,27 @@ breaking change.
 
 ## [Unreleased]
 
+### Added
+
+- Compact `node context --preset implement` with a 1x screenshot and explicit
+  complete/skipped/failed section states; full bundles bound collaboration
+  reads with `--extras-timeout` and reuse them for one minute independently of
+  the design version. `--refresh` bypasses that cache; writes invalidate it.
+- Comment thread selection by parent or reply id, resolution/date filtering,
+  and bounded `--limit`/`--cursor` output.
+- Actual raster dimensions, design bounds, and authored background metadata in
+  render/context captures. Offline `diff --manifest` selects their exact paths
+  and retains file/version/node provenance without changing comparison rules.
+
+### Changed
+
+- Cache status defaults to file summaries with `entryCount` and empty `entries`
+  arrays. Use `--details` for paginated entries and `--file`/`--profile` to filter.
+- Whole-document network failures prefer targeted requests for two minutes at
+  the same file stamp, instead of repeating the slow attempt on every command.
+- Agent recipes document actual payload fields, simple batched commands, and
+  partial-result handling; generated references stay synchronized with schemas.
+
 ## [0.1.2] - 2026-10-27
 
 ### Changed

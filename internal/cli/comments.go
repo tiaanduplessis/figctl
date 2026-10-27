@@ -3,7 +3,11 @@ package cli
 import (
 	"fmt"
 	"io"
+	"net/url"
 	"strings"
+	"time"
+
+	"github.com/tiaanduplessis/figctl/internal/cache"
 
 	"github.com/spf13/cobra"
 
@@ -74,7 +78,13 @@ var commentsCmd = &cobra.Command{
 
 var commentsListCmd = &cobra.Command{
 	Use:   "list <ref>",
-	Short: "List comments, optionally only those pinned on a node",
+	Short: "List a bounded page of comments or one discussion thread",
+	Long: `Filter by node, thread id (a parent or reply), resolution state, and creation
+date. Replies inherit the parent thread's resolution state. --since filters
+individual comments by creation time. --limit defaults to 200; --cursor
+continues the same query. Figma still returns the full upstream comment file,
+cached for one minute independently of the design version. Use --refresh
+for fresh collaboration data.`,
 	Example: `  figctl comments list KEY
   figctl comments list KEY --node 1:2 --md`,
 	Args: cobra.MaximumNArgs(1),
@@ -95,10 +105,27 @@ and requires --yes otherwise.`,
 
 func init() {
 	var md bool
-	var listNode string
+	var listNode, thread, resolved, since string
 	commentsListCmd.Flags().BoolVar(&md, "md", false, "return messages as markdown (as_md)")
 	commentsListCmd.Flags().StringVar(&listNode, "node", "", "only comments pinned on this node id")
+	commentsListCmd.Flags().StringVar(&thread, "thread", "", "only this discussion, identified by a parent or reply comment id")
+	commentsListCmd.Flags().StringVar(&resolved, "resolved", "any", "thread resolution state: any, true, or false")
+	commentsListCmd.Flags().StringVar(&since, "since", "", "comments created on or after this RFC3339 timestamp or YYYY-MM-DD date")
 	commentsListCmd.RunE = run(func(ctx *Context, _ *cobra.Command, args []string) error {
+		if resolved != "any" && resolved != "true" && resolved != "false" {
+			return usageErr("invalid --resolved value", "Use any, true, or false.")
+		}
+		var createdSince time.Time
+		if since != "" {
+			var err error
+			createdSince, err = time.Parse(time.RFC3339, since)
+			if err != nil {
+				createdSince, err = time.Parse(time.DateOnly, since)
+			}
+			if err != nil {
+				return usageErr("invalid --since date", "Use an RFC3339 timestamp or YYYY-MM-DD date (UTC).")
+			}
+		}
 		session, err := ctx.Session()
 		if err != nil {
 			return err
@@ -118,30 +145,65 @@ func init() {
 		}
 		rctx, cancel := session.Context()
 		defer cancel()
-		resp, err := session.Client.GetComments(rctx, r.FileKey, md)
+		resp, err := session.comments(rctx, r.FileKey, md)
 		if err != nil {
 			return err
 		}
 		session.Touch(r.FileKey)
-		list := commentList{}
-		parents := map[string]bool{}
+		byID := map[string]figma.Comment{}
 		for _, c := range resp.Comments {
-			if filter == "" || (c.ClientMeta != nil && c.ClientMeta.NodeID == filter) {
-				list = append(list, commentRowFrom(c))
-				parents[c.ID] = true
-			}
+			byID[c.ID] = c
 		}
-		if filter != "" {
-			for _, c := range resp.Comments {
-				if c.ParentID != "" && parents[c.ParentID] && !parents[c.ID] {
-					list = append(list, commentRowFrom(c))
+		rootOf := func(id string) figma.Comment {
+			c := byID[id]
+			for range len(byID) {
+				parent, ok := byID[c.ParentID]
+				if !ok || c.ParentID == "" {
+					break
+				}
+				c = parent
+			}
+			return c
+		}
+		threadRoot := ""
+		if thread != "" {
+			if _, ok := byID[thread]; !ok {
+				return figctl.Newf(figctl.CodeNotFound, "comment %s not found in file %s", thread, r.FileKey).WithHint("Check the comment id or use --refresh if it was just added.")
+			}
+			threadRoot = rootOf(thread).ID
+		}
+		list := commentList{}
+		for _, c := range resp.Comments {
+			root := rootOf(c.ID)
+			if threadRoot != "" && root.ID != threadRoot {
+				continue
+			}
+			if filter != "" && (root.ClientMeta == nil || root.ClientMeta.NodeID != filter) {
+				continue
+			}
+			isResolved := root.ResolvedAt != nil && *root.ResolvedAt != ""
+			if resolved != "any" && (resolved == "true") != isResolved {
+				continue
+			}
+			if !createdSince.IsZero() {
+				created, err := time.Parse(time.RFC3339, c.CreatedAt)
+				if err != nil || created.Before(createdSince) {
+					continue
 				}
 			}
+			list = append(list, commentRowFrom(c))
 		}
-		env := ctx.Envelope(list)
+		page, next, err := paginate(list, ctx.Flags.Limit, ctx.Flags.Cursor)
+		if err != nil {
+			return err
+		}
+		env := ctx.Envelope(commentList(page))
+		env.NextCursor, env.Truncated = next, next != nil
+		env.AddHint("Comments are cached for up to one minute independently of the design version; use --refresh for current discussion state.")
 		if filter != "" {
 			env.AddHint("Showing comments pinned on " + filter + " and their replies; drop --node to see all.")
 		}
+
 		return ctx.Printer.Print(env)
 	})
 
@@ -194,6 +256,11 @@ func init() {
 		}
 		rctx, cancel := session.Context()
 		defer cancel()
+		for _, form := range []string{"false", "true"} {
+			if err := session.Cache.Invalidate(r.FileKey, cache.Key("comments", url.Values{"as_md": {form}})); err != nil {
+				return err
+			}
+		}
 		posted, err := session.Client.PostComment(rctx, r.FileKey, body)
 		if err != nil {
 			return err

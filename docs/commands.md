@@ -21,10 +21,10 @@ codes, and error codes.
 | [`figctl auth status`](#figctl-auth-status) | Show the active profile and how it was selected |
 | [`figctl cache`](#figctl-cache) | Inspect and clear the on-disk response cache |
 | [`figctl cache clear`](#figctl-cache-clear) | Delete cached data for every profile, one profile, or one file |
-| [`figctl cache status`](#figctl-cache-status) | Show cache size and entries per profile and file |
+| [`figctl cache status`](#figctl-cache-status) | Show a compact cache summary per profile and file |
 | [`figctl comments`](#figctl-comments) | Read designer comments and leave implementation notes |
 | [`figctl comments add`](#figctl-comments-add) | Add a comment, pinned on a node or at canvas coordinates |
-| [`figctl comments list`](#figctl-comments-list) | List comments, optionally only those pinned on a node |
+| [`figctl comments list`](#figctl-comments-list) | List a bounded page of comments or one discussion thread |
 | [`figctl completion`](#figctl-completion) | Generate the autocompletion script for the specified shell |
 | [`figctl completion bash`](#figctl-completion-bash) | Generate the autocompletion script for bash |
 | [`figctl completion fish`](#figctl-completion-fish) | Generate the autocompletion script for fish |
@@ -308,7 +308,7 @@ figctl cache [command]
 Subcommands:
 
 - [`figctl cache clear`](#figctl-cache-clear) Delete cached data for every profile, one profile, or one file
-- [`figctl cache status`](#figctl-cache-status) Show cache size and entries per profile and file
+- [`figctl cache status`](#figctl-cache-status) Show a compact cache summary per profile and file
 
 Plus the [global flags](#global-flags).
 
@@ -341,18 +341,30 @@ Plus the [global flags](#global-flags).
 
 ## figctl cache status
 
-Show cache size and entries per profile and file
+Show a compact cache summary per profile and file
 
 ```
-figctl cache status
+figctl cache status [flags]
 ```
+
+Show file summaries without dumping individual cache entries. Use --details
+to page through entries, and --file and --profile to narrow the inventory.
+--limit and --cursor page files by default, or entries with --details.
+Bytes and entryCount describe the full matching inventory, not just the page.
 
 Examples:
 
 ```sh
 figctl cache status
-figctl cache status --json
+figctl cache status --details --file KEY --limit 20
 ```
+
+Flags:
+
+| Flag | Type | Default | Description |
+| --- | --- | --- | --- |
+| `--details` | `bool` | `false` | include individual entries (paged with --limit and --cursor) |
+| `--file` | `string` | - | only this file key or Figma URL |
 
 Plus the [global flags](#global-flags).
 
@@ -367,7 +379,7 @@ figctl comments [command]
 Subcommands:
 
 - [`figctl comments add`](#figctl-comments-add) Add a comment, pinned on a node or at canvas coordinates
-- [`figctl comments list`](#figctl-comments-list) List comments, optionally only those pinned on a node
+- [`figctl comments list`](#figctl-comments-list) List a bounded page of comments or one discussion thread
 
 Plus the [global flags](#global-flags).
 
@@ -404,11 +416,18 @@ Plus the [global flags](#global-flags).
 
 ## figctl comments list
 
-List comments, optionally only those pinned on a node
+List a bounded page of comments or one discussion thread
 
 ```
 figctl comments list <ref> [flags]
 ```
+
+Filter by node, thread id (a parent or reply), resolution state, and creation
+date. Replies inherit the parent thread's resolution state. --since filters
+individual comments by creation time. --limit defaults to 200; --cursor
+continues the same query. Figma still returns the full upstream comment file,
+cached for one minute independently of the design version. Use --refresh
+for fresh collaboration data.
 
 Examples:
 
@@ -423,6 +442,9 @@ Flags:
 | --- | --- | --- | --- |
 | `--md` | `bool` | `false` | return messages as markdown (as_md) |
 | `--node` | `string` | - | only comments pinned on this node id |
+| `--resolved` | `string` | `any` | thread resolution state: any, true, or false |
+| `--since` | `string` | - | comments created on or after this RFC3339 timestamp or YYYY-MM-DD date |
+| `--thread` | `string` | - | only this discussion, identified by a parent or reply comment id |
 
 Plus the [global flags](#global-flags).
 
@@ -793,10 +815,15 @@ Plus the [global flags](#global-flags).
 Compare local PNG screenshots and optionally write a visual diff
 
 ```
-figctl diff <expected.png> <actual.png> [flags]
+figctl diff [expected.png] <actual.png> [flags]
 ```
 
 Compare two local PNGs without credentials or network requests.
+Use --manifest render.json (or a node context JSON envelope) to select the
+expected PNG without guessing its filename. Pass --node for a multi-node
+manifest; only the actual PNG argument is needed in this mode. Comparison
+results retain the reference file version, node, and capture geometry.
+
 Images must have equal pixel dimensions; no resizing or cropping is applied.
 Each input is limited to 16 million pixels. Match viewport, crop, fonts, content,
 and capture scale. Render defaults to 2x; use --scale 1 for a 1x screenshot.
@@ -819,6 +846,7 @@ Examples:
 ```sh
 figctl diff design.png implementation.png --out diff.png --max-diff-ratio 0.01 --json
 figctl diff before.png after.png --threshold 0 --include-aa
+figctl diff --manifest render.json --node 2:2 implementation.png --out diff.png
 ```
 
 Flags:
@@ -826,7 +854,9 @@ Flags:
 | Flag | Type | Default | Description |
 | --- | --- | --- | --- |
 | `--include-aa` | `bool` | `false` | count detected anti-aliasing differences |
+| `--manifest` | `string` | - | JSON envelope from render or node context supplying the expected PNG |
 | `--max-diff-ratio` | `float` | `0` | allowed mismatch fraction between 0 and 1 (0.01 = 1%) |
+| `--node` | `string` | - | node id to select from --manifest |
 | `--out` | `string` | - | destination PNG path (optional) |
 | `--threshold` | `float` | `0.1` | per-pixel color tolerance between 0 and 1 |
 
@@ -1145,6 +1175,13 @@ to a variable and have to be hardcoded. Screenshot and asset failures do
 not fail the command: they are listed in data.failures and the exit code
 is 6 (PARTIAL) with the rest of the bundle intact.
 
+Use --preset implement for a compact 1x screenshot and depth-2 model without
+assets or collaboration data. Explicit flags override the preset. Designer
+intent is unchecked when comments are skipped. Every section reports complete,
+skipped, or failed. Comments and dev resources share --extras-timeout
+(default 5s) after screenshots and assets, capped by the remaining --timeout.
+Comments and dev resources are cached for one minute; --refresh bypasses that.
+
 Trim the work with --no-screenshot, --no-assets, --no-comments, --no-css,
 --depth, and --max-nodes. A node-id in the ref URL is used when no --node
 is given.
@@ -1163,6 +1200,7 @@ Flags:
 | Flag | Type | Default | Description |
 | --- | --- | --- | --- |
 | `--depth` | `int` | `4` | levels of children to inspect (-1 for all) |
+| `--extras-timeout` | `duration` | `5s` | combined budget for comments and dev resources after assets (within --timeout) |
 | `--icon-pattern` | `string (repeatable)` | - | name glob that marks an icon (default icon/*, Icon*, icons/*); repeatable |
 | `--max-nodes` | `int` | `500` | stop inspecting after this many nodes and report truncation |
 | `--no-assets` | `bool` | `false` | skip icon exports and image fill downloads |
@@ -1171,6 +1209,7 @@ Flags:
 | `--no-screenshot` | `bool` | `false` | skip the PNG render |
 | `--node` | `string (repeatable)` | - | node id (1:2, 1-2, or a URL with node-id); repeatable |
 | `--out` | `string` | - | directory for the screenshot and assets (default ./.figctl/<fileKey>/context) |
+| `--preset` | `string` | `full` | bundle preset: full, or implement (depth 2, max 120 nodes, 1x screenshot, no assets or comments) |
 | `--screenshot-scale` | `float` | `2` | screenshot render scale between 0.01 and 4 |
 
 Plus the [global flags](#global-flags).

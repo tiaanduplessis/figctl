@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"image/jpeg"
+	"image/png"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -38,7 +40,10 @@ type Item struct {
 	Scale  float64
 	// Suffix is the filename suffix before the extension. Empty means the
 	// suffix is derived from the scale ("@2x").
-	Suffix string
+	Suffix       string
+	Bounds       *figma.Rectangle
+	RenderBounds *figma.Rectangle
+	Background   *figma.Color
 }
 
 // SVGOptions map to the svg_* query parameters. Nil leaves Figma's default.
@@ -71,15 +76,20 @@ type RenderRequest struct {
 
 // Result is the manifest entry of one item.
 type Result struct {
-	NodeID string  `json:"nodeId"`
-	Name   string  `json:"name"`
-	Format string  `json:"format"`
-	Scale  float64 `json:"scale"`
-	Suffix string  `json:"suffix,omitempty"`
-	Path   string  `json:"path"`
-	Bytes  int64   `json:"bytes"`
-	Cached bool    `json:"cached"`
-	Error  string  `json:"error,omitempty"`
+	NodeID       string           `json:"nodeId"`
+	Name         string           `json:"name"`
+	Format       string           `json:"format"`
+	Scale        float64          `json:"scale"`
+	Suffix       string           `json:"suffix,omitempty"`
+	Path         string           `json:"path"`
+	Bytes        int64            `json:"bytes"`
+	Cached       bool             `json:"cached"`
+	Error        string           `json:"error,omitempty"`
+	PixelWidth   int              `json:"pixelWidth,omitempty"`
+	PixelHeight  int              `json:"pixelHeight,omitempty"`
+	Bounds       *figma.Rectangle `json:"bounds,omitempty"`
+	RenderBounds *figma.Rectangle `json:"renderBounds,omitempty"`
+	Background   *figma.Color     `json:"background,omitempty"`
 }
 
 // RenderOutput is the manifest of a render run.
@@ -175,7 +185,8 @@ func Render(ctx context.Context, client *figma.Client, store BlobStore, fileKey,
 			Format: Extension(it.Format),
 			Scale:  it.Scale,
 			Suffix: it.Suffix,
-			Path:   filepath.Join(req.OutDir, names[i]),
+			Bounds: it.Bounds, RenderBounds: it.RenderBounds, Background: it.Background,
+			Path: filepath.Join(req.OutDir, names[i]),
 		}
 	}
 	if req.DryRun {
@@ -337,5 +348,15 @@ func writeResult(res *Result, data []byte, clean SVGCleanOptions) error {
 		return figctl.Wrap(figctl.CodeInternal, err, "writing "+res.Path+": "+err.Error())
 	}
 	res.Bytes = int64(len(data))
+	switch res.Format {
+	case "png":
+		if cfg, err := png.DecodeConfig(bytes.NewReader(data)); err == nil {
+			res.PixelWidth, res.PixelHeight = cfg.Width, cfg.Height
+		}
+	case "jpg":
+		if cfg, err := jpeg.DecodeConfig(bytes.NewReader(data)); err == nil {
+			res.PixelWidth, res.PixelHeight = cfg.Width, cfg.Height
+		}
+	}
 	return nil
 }

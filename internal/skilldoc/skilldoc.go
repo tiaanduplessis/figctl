@@ -56,7 +56,7 @@ func Commands() string {
 	for _, cmd := range walk(root) {
 		writeCommand(&b, cmd)
 	}
-	return b.String()
+	return strings.TrimRight(b.String(), "\n") + "\n"
 }
 
 // walk returns the runnable commands of the tree in path order, skipping

@@ -156,7 +156,7 @@ func init() {
 		}
 		for _, id := range ids {
 			if node, ok := found[id]; ok {
-				req.Items = append(req.Items, assets.Item{NodeID: id, Name: node.Name, Format: format, Scale: scale})
+				req.Items = append(req.Items, assets.Item{NodeID: id, Name: node.Name, Format: format, Scale: scale, Bounds: node.AbsoluteBoundingBox, RenderBounds: node.AbsoluteRenderBounds, Background: node.BackgroundColor})
 			}
 		}
 		out, err := assets.Render(rctx, session.Client, session.Cache, r.FileKey, version, req)

@@ -448,11 +448,9 @@ func TestLive(t *testing.T) {
 			Profiles []struct {
 				Name  string `json:"name"`
 				Files []struct {
-					Key     string `json:"key"`
-					Version string `json:"version"`
-					Entries []struct {
-						Key string `json:"key"`
-					} `json:"entries"`
+					Key        string `json:"key"`
+					Version    string `json:"version"`
+					EntryCount int    `json:"entryCount"`
 				} `json:"files"`
 			} `json:"profiles"`
 		}
@@ -461,7 +459,7 @@ func TestLive(t *testing.T) {
 		for _, p := range status.Profiles {
 			for _, f := range p.Files {
 				if f.Key == rt.fileKey {
-					entries += len(f.Entries)
+					entries += f.EntryCount
 				}
 			}
 		}

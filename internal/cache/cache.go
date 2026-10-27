@@ -135,7 +135,9 @@ type State struct {
 	CheckedAt time.Time `json:"checkedAt"`
 	// TooLarge records that the whole document exceeded --max-file-mb, so
 	// later runs skip the full fetch.
-	TooLarge bool `json:"tooLarge,omitempty"`
+	TooLarge            bool      `json:"tooLarge,omitempty"`
+	WholeFileRetryAfter time.Time `json:"wholeFileRetryAfter,omitempty"`
+	WholeFileRetryStamp Stamp     `json:"wholeFileRetryStamp,omitempty"`
 }
 
 // Key builds an entry key from an endpoint name and its query parameters,
@@ -220,6 +222,45 @@ func (c *Cache) SetTooLarge(fileKey string, tooLarge bool) error {
 	return c.writeState(fileKey, state)
 }
 
+// DeferWholeFile remembers a transient whole-document failure for a bounded time.
+// The marker is account- and file-scoped, and applies only to the failed stamp.
+func (c *Cache) DeferWholeFile(fileKey string, stamp Stamp, delay time.Duration) error {
+	state, err := c.FileState(fileKey)
+	if err != nil {
+		return err
+	}
+	state.WholeFileRetryAfter = c.now().Add(delay)
+	state.WholeFileRetryStamp = stamp
+	return c.writeState(fileKey, state)
+}
+
+// ClearWholeFileDeferral clears the transient strategy marker after recovery.
+func (c *Cache) ClearWholeFileDeferral(fileKey string) error {
+	state, err := c.FileState(fileKey)
+	if err != nil {
+		return err
+	}
+	if state.WholeFileRetryAfter.IsZero() {
+		return nil
+	}
+	state.WholeFileRetryAfter = time.Time{}
+	state.WholeFileRetryStamp = Stamp{}
+	return c.writeState(fileKey, state)
+}
+
+// WholeFileDeferred reports whether a recent failure should use targeted requests.
+// Refresh and no-cache explicitly bypass this strategy marker.
+func (c *Cache) WholeFileDeferred(fileKey string, stamp Stamp) (bool, error) {
+	if c.noCache || c.refresh {
+		return false, nil
+	}
+	state, err := c.FileState(fileKey)
+	if err != nil {
+		return false, err
+	}
+	return state.WholeFileRetryStamp == stamp && c.now().Before(state.WholeFileRetryAfter), nil
+}
+
 // Validate returns the current stamp of a file. It calls fetch (the file
 // meta endpoint) at most once per TTL and otherwise reuses the stored
 // stamp. With --refresh or --no-cache it always calls fetch.
@@ -275,6 +316,43 @@ func (c *Cache) Get(fileKey, key string, stamp Stamp) ([]byte, bool, error) {
 		return nil, false, nil
 	}
 	return data, true, nil
+}
+
+// GetFresh returns a response cached within maxAge, independent of document version.
+// Comments and dev resources change without changing a design file's version.
+func (c *Cache) GetFresh(fileKey, key string, maxAge time.Duration) ([]byte, bool, error) {
+	if c.noCache || c.refresh {
+		return nil, false, nil
+	}
+	dir, err := c.fileDir(fileKey)
+	if err != nil {
+		return nil, false, err
+	}
+	h, data, err := readEntry(filepath.Join(dir, entriesDir, hashKey(key)+entryExt), true)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil, false, nil
+	}
+	if err != nil {
+		return nil, false, nil
+	}
+	age := c.now().Sub(h.FetchedAt)
+	if h.Key != key || age < 0 || age >= maxAge {
+		return nil, false, nil
+	}
+	return data, true, nil
+}
+
+// Invalidate removes one response so an authorised write can be read back fresh.
+func (c *Cache) Invalidate(fileKey, key string) error {
+	dir, err := c.fileDir(fileKey)
+	if err != nil {
+		return err
+	}
+	err = os.Remove(filepath.Join(dir, entriesDir, hashKey(key)+entryExt))
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return figctl.Wrap(figctl.CodeInternal, err, "invalidating cached response: "+err.Error())
+	}
+	return nil
 }
 
 // Put stores data for key at the given stamp. It is a no-op with
